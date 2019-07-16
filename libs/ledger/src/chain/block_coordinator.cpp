@@ -1050,6 +1050,7 @@ BlockCoordinator::State BlockCoordinator::OnTransmitBlock()
     {
       // update the telemetry
       mined_block_count_->increment();
+      executed_block_count_->increment();
 
       FETCH_LOG_INFO(LOGGING_NAME, "Broadcasting new block: 0x", next_block_->body.hash.ToHex(),
                      " txs: ", next_block_->GetTransactionCount(),
