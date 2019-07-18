@@ -50,7 +50,6 @@ TEST_F(VmChargeTests, NoLimitTest)
       endfunction
     )";
 
-
   ASSERT_TRUE(toolkit.Compile(TEXT));
   ASSERT_EQ(0, toolkit.vm().GetChargeLimit());
   ASSERT_TRUE(toolkit.Run());
@@ -75,7 +74,6 @@ TEST_F(VmChargeTests, ExecutionFailsWhenLimitReached)
       endfunction
     )";
 
-
   ASSERT_TRUE(toolkit.Compile(TEXT));
   toolkit.vm().SetChargeLimit(10);
   ASSERT_EQ(10, toolkit.vm().GetChargeLimit());
@@ -90,9 +88,7 @@ TEST_F(VmChargeTests, DISABLED_BindWithChargeEstimate)
   };
   FETCH_UNUSED(estimator);
 
-  toolkit.module()->CreateFreeFunction("expensive", [](VM *, uint32_t, uint32_t) {
-    return true;
-  });
+  toolkit.module()->CreateFreeFunction("expensive", [](VM *, uint32_t, uint32_t) { return true; });
 
   static char const *TEXT = R"(
       function main()
@@ -101,9 +97,8 @@ TEST_F(VmChargeTests, DISABLED_BindWithChargeEstimate)
       endfunction
     )";
 
-
   ASSERT_TRUE(toolkit.Compile(TEXT));
   ASSERT_FALSE(toolkit.Run());
 }
 
-} // namespace
+}  // namespace

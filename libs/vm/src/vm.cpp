@@ -216,8 +216,8 @@ bool VM::Execute(std::string &error, Variant &output)
 
   do
   {
-    instruction_pc_  = pc_;
-    instruction_     = &function_->instructions[pc_++];
+    instruction_pc_ = pc_;
+    instruction_    = &function_->instructions[pc_++];
 
     OpcodeInfo &info = opcode_info_array_[instruction_->opcode];
     assert(instruction_->opcode < opcode_info_array_.size());

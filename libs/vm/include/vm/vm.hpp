@@ -514,9 +514,9 @@ private:
     {}
 
     OpcodeInfo(std::string name__, Handler handler__, ChargeAmount charge)
-        : name(std::move(name__))
-        , handler(std::move(handler__))
-        , charge{charge}
+      : name(std::move(name__))
+      , handler(std::move(handler__))
+      , charge{charge}
     {}
 
     std::string     name;
