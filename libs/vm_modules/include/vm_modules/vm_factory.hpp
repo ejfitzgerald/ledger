@@ -121,7 +121,7 @@ public:
   }
 
   /**
-   * Compile a source file, returning a executable
+   * Compile a source file, producing an executable
    *
    * @param: module The module which the user might have added various bindings/classes to etc.
    * @param: source The raw source to compile
