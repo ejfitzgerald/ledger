@@ -26,7 +26,7 @@ struct StaticMemberFunctionInvokerHelper
   static void Invoke(VM *vm, int sp_offset, TypeId type_id, TypeId return_type_id,
                      StaticMemberFunction f, Estimator &&e, Ts const &... parameters)
   {
-    VM::ChargeAmount const charge = e(vm, parameters...);
+    VM::ChargeAmount const charge = VM::ChargeAmount(e(vm, parameters...));
     if (charge + vm->GetChargeTotal() > vm->GetChargeLimit())
     {
       vm->RuntimeError("Charge limit exceeded");
@@ -45,7 +45,7 @@ struct StaticMemberFunctionInvokerHelper<Estimator, void, StaticMemberFunction, 
   static void Invoke(VM *vm, int sp_offset, TypeId type_id, TypeId /* return_type_id */,
                      StaticMemberFunction f, Estimator &&e, Ts const &... parameters)
   {
-    VM::ChargeAmount const charge = e(vm, parameters...);
+    VM::ChargeAmount const charge = VM::ChargeAmount(e(vm, parameters...));
     if (charge + vm->GetChargeTotal() > vm->GetChargeLimit())
     {
       vm->RuntimeError("Charge limit exceeded");

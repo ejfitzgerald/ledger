@@ -35,6 +35,7 @@
 #include "vm_modules/vm_factory.hpp"
 
 #include <algorithm>
+#include <limits>
 #include <stdexcept>
 #include <string>
 
@@ -434,6 +435,7 @@ Contract::Status SmartContract::InvokeAction(std::string const &name, Transactio
 
   // Get clean VM instance
   auto vm = std::make_unique<vm::VM>(module_.get());
+  vm->SetChargeLimit(std::numeric_limits<vm::VM::ChargeAmount>::max());
   vm->SetIOObserver(state());
 
   // lookup the function / entry point which will be executed
@@ -496,6 +498,7 @@ Contract::Status SmartContract::InvokeInit(Address const &owner)
 {
   // Get clean VM instance
   auto vm = std::make_unique<vm::VM>(module_.get());
+  vm->SetChargeLimit(std::numeric_limits<vm::VM::ChargeAmount>::max());
   vm->SetIOObserver(state());
 
   FETCH_LOG_DEBUG(LOGGING_NAME, "Running SC init function: ", init_fn_name_);
@@ -547,6 +550,7 @@ SmartContract::Status SmartContract::InvokeQuery(std::string const &name, Query 
 {
   // get clean VM instance
   auto vm = std::make_unique<vm::VM>(module_.get());
+  vm->SetChargeLimit(std::numeric_limits<vm::VM::ChargeAmount>::max());
   vm->SetIOObserver(state());
 
   // lookup the executable

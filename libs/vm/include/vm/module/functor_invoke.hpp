@@ -28,7 +28,7 @@ struct FunctorInvokerHelper
   static void Invoke(VM *vm, int sp_offset, TypeId return_type_id, Functor &&functor, Estimator &&e,
                      Ts const &... parameters)
   {
-    auto const charge = e(vm, parameters...);
+    auto const charge = VM::ChargeAmount(e(vm, parameters...));
     if (charge + vm->GetChargeTotal() > vm->GetChargeLimit())
     {
       vm->RuntimeError("Charge limit exceeded");
@@ -47,7 +47,7 @@ struct FunctorInvokerHelper<void, Functor, Estimator, Ts...>
   static void Invoke(VM *vm, int sp_offset, TypeId /* return_type_id */, Functor &&functor,
                      Estimator &&e, Ts const &... parameters)
   {
-    auto const charge = e(vm, parameters...);
+    auto const charge = VM::ChargeAmount(e(vm, parameters...));
     if (charge + vm->GetChargeTotal() > vm->GetChargeLimit())
     {
       vm->RuntimeError("Charge limit exceeded");

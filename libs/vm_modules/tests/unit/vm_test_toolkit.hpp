@@ -28,6 +28,7 @@
 
 #include "gmock/gmock.h"
 
+#include <limits>
 #include <memory>
 #include <sstream>
 #include <string>
@@ -80,6 +81,7 @@ public:
     vm_         = std::make_unique<VM>(module_.get());
     vm_->SetIOObserver(*observer_);
     vm_->AttachOutputDevice(fetch::vm::VM::STDOUT, *stdout_);
+    vm_->SetChargeLimit(std::numeric_limits<VM::ChargeAmount>::max());
     if (!vm_->GenerateExecutable(*ir_, "default_ir", *executable_, errors))
     {
       PrintErrors(errors);

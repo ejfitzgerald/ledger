@@ -26,7 +26,7 @@ struct ConstructorInvokerHelper
 {
   static void Invoke(VM *vm, int sp_offset, TypeId type_id, Estimator &&e, Ts const &... parameters)
   {
-    auto const charge = e(vm, parameters...);
+    auto const charge = VM::ChargeAmount(e(vm, parameters...));
     if (charge + vm->GetChargeTotal() > vm->GetChargeLimit())
     {
       vm->RuntimeError("Charge limit exceeded");
