@@ -137,21 +137,38 @@ public:
 
   static void Bind(fetch::vm::Module &module)
   {
+    auto const graph_ctor_estimator = [](fetch::vm::VM *) { return 1u; };
     module.CreateClassType<VMGraph>("Graph")
-        .CreateConstuctor<>()
-        .CreateMemberFunction("setInput", &VMGraph::SetInput)
-        .CreateMemberFunction("evaluate", &VMGraph::Evaluate)
-        .CreateMemberFunction("backPropagate", &VMGraph::BackPropagateError)
-        .CreateMemberFunction("step", &VMGraph::Step)
-        .CreateMemberFunction("addPlaceholder", &VMGraph::AddPlaceholder)
-        .CreateMemberFunction("addFullyConnected", &VMGraph::AddFullyConnected)
-        .CreateMemberFunction("addConv1D", &VMGraph::AddConv1D)
-        .CreateMemberFunction("addRelu", &VMGraph::AddRelu)
-        .CreateMemberFunction("addSoftmax", &VMGraph::AddSoftmax)
-        .CreateMemberFunction("addDropout", &VMGraph::AddDropout)
-        .CreateMemberFunction("addCrossEntropyLoss", &VMGraph::AddCrossEntropyLoss)
-        .CreateMemberFunction("loadStateDict", &VMGraph::LoadStateDict)
-        .CreateMemberFunction("stateDict", &VMGraph::StateDict);
+        .CreateConstuctor<decltype(graph_ctor_estimator)>(std::move(graph_ctor_estimator))
+        .CreateMemberFunction("setInput", &VMGraph::SetInput,
+                              [](fetch::vm::VM *, auto const &, auto const &) { return 1u; })
+        .CreateMemberFunction("evaluate", &VMGraph::Evaluate,
+                              [](fetch::vm::VM *, auto const &) { return 1u; })
+        .CreateMemberFunction("backPropagate", &VMGraph::BackPropagateError,
+                              [](fetch::vm::VM *, auto const &) { return 1u; })
+        .CreateMemberFunction("step", &VMGraph::Step,
+                              [](fetch::vm::VM *, auto const &) { return 1u; })
+        .CreateMemberFunction("addPlaceholder", &VMGraph::AddPlaceholder,
+                              [](fetch::vm::VM *, auto const &) { return 1u; })
+        .CreateMemberFunction("addFullyConnected", &VMGraph::AddFullyConnected,
+                              [](fetch::vm::VM *, auto const &, auto const &, auto const &,
+                                 auto const &) { return 1u; })
+        .CreateMemberFunction("addConv1D", &VMGraph::AddConv1D,
+                              [](fetch::vm::VM *, auto const &, auto const &, auto const &,
+                                 auto const &, auto const &, auto const &) { return 1u; })
+        .CreateMemberFunction("addRelu", &VMGraph::AddRelu,
+                              [](fetch::vm::VM *, auto const &, auto const &) { return 1u; })
+        .CreateMemberFunction("addSoftmax", &VMGraph::AddSoftmax,
+                              [](fetch::vm::VM *, auto const &, auto const &) { return 1u; })
+        .CreateMemberFunction(
+            "addDropout", &VMGraph::AddDropout,
+            [](fetch::vm::VM *, auto const &, auto const &, auto const &) { return 1u; })
+        .CreateMemberFunction(
+            "addCrossEntropyLoss", &VMGraph::AddCrossEntropyLoss,
+            [](fetch::vm::VM *, auto const &, auto const &, auto const &) { return 1u; })
+        .CreateMemberFunction("loadStateDict", &VMGraph::LoadStateDict,
+                              [](fetch::vm::VM *, auto const &) { return 1u; })
+        .CreateMemberFunction("stateDict", &VMGraph::StateDict, [](fetch::vm::VM *) { return 1u; });
   }
 
   GraphType graph_;

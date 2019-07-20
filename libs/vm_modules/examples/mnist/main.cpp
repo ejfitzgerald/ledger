@@ -78,8 +78,9 @@ int main(int argc, char **argv)
   auto module = std::make_shared<fetch::vm::Module>();
 
   module->CreateClassType<System>("System")
-      .CreateStaticMemberFunction("Argc", &System::Argc)
-      .CreateStaticMemberFunction("Argv", &System::Argv);
+      .CreateStaticMemberFunction("Argc", &System::Argc, [](fetch::vm::VM *) { return 1u; })
+      .CreateStaticMemberFunction("Argv", &System::Argv,
+                                  [](fetch::vm::VM *, auto const &) { return 1u; });
 
   fetch::vm_modules::ml::BindML(*module);
 

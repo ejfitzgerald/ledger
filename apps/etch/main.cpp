@@ -312,8 +312,8 @@ int main(int argc, char **argv)
 
   // additional module bindings
   module->CreateClassType<System>("System")
-      .CreateStaticMemberFunction("Argc", &Argc)
-      .CreateStaticMemberFunction("Argv", &Argv);
+      .CreateStaticMemberFunction("Argc", &Argc, [](VM *) { return 1u; })
+      .CreateStaticMemberFunction("Argv", &Argv, [](VM *, auto const &) { return 1u; });
 
   // attempt to compile the program
   auto errors = VMFactory::Compile(module, source, *executable);

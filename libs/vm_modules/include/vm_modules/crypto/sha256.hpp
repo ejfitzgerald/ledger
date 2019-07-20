@@ -39,13 +39,17 @@ public:
 
   static void Bind(vm::Module &module)
   {
+    auto const sha256_ctor_estimator = [](fetch::vm::VM *) { return 1u; };
     module.CreateClassType<SHA256Wrapper>("SHA256")
-        .CreateConstuctor<>()
-        .CreateMemberFunction("update", &SHA256Wrapper::UpdateUInt256)
-        .CreateMemberFunction("update", &SHA256Wrapper::UpdateString)
-        .CreateMemberFunction("update", &SHA256Wrapper::UpdateBuffer)
-        .CreateMemberFunction("final", &SHA256Wrapper::Final)
-        .CreateMemberFunction("reset", &SHA256Wrapper::Reset);
+        .CreateConstuctor<decltype(sha256_ctor_estimator)>(std::move(sha256_ctor_estimator))
+        .CreateMemberFunction("update", &SHA256Wrapper::UpdateUInt256,
+                              [](fetch::vm::VM *, auto const &) { return 1u; })
+        .CreateMemberFunction("update", &SHA256Wrapper::UpdateString,
+                              [](fetch::vm::VM *, auto const &) { return 1u; })
+        .CreateMemberFunction("update", &SHA256Wrapper::UpdateBuffer,
+                              [](fetch::vm::VM *, auto const &) { return 1u; })
+        .CreateMemberFunction("final", &SHA256Wrapper::Final, [](fetch::vm::VM *) { return 1u; })
+        .CreateMemberFunction("reset", &SHA256Wrapper::Reset, [](fetch::vm::VM *) { return 1u; });
   }
 
   void UpdateUInt256(vm::Ptr<vm_modules::math::UInt256Wrapper> const &uint)

@@ -57,12 +57,18 @@ std::vector<std::string> System::args;
 
 // read the weights and bias csv files
 fetch::vm::Ptr<fetch::vm_modules::math::VMTensor> read_csv(
-    fetch::vm::VM *vm, fetch::vm::Ptr<fetch::vm::String> const &filename, bool transpose = false)
+    fetch::vm::VM *vm, fetch::vm::Ptr<fetch::vm::String> const &filename, bool transpose)
 {
   ArrayType tensor = fetch::ml::dataloaders::ReadCSV<ArrayType>(filename->str, 0, 0, transpose);
   tensor.Reshape({1, tensor.shape(0), tensor.shape(1)});
 
   return vm->CreateNewObject<fetch::vm_modules::math::VMTensor>(tensor);
+}
+
+fetch::vm::Ptr<fetch::vm_modules::math::VMTensor> read_csv_no_transpose(
+    fetch::vm::VM *vm, fetch::vm::Ptr<fetch::vm::String> const &filename)
+{
+  return read_csv(vm, filename, false);
 }
 
 // read the weights and bias csv files
@@ -102,15 +108,20 @@ int main(int argc, char **argv)
   auto module = std::make_shared<fetch::vm::Module>();
 
   module->CreateClassType<System>("System")
-      .CreateStaticMemberFunction("Argc", &System::Argc)
-      .CreateStaticMemberFunction("Argv", &System::Argv);
+      .CreateStaticMemberFunction("Argc", &System::Argc, [](fetch::vm::VM *) { return 1u; })
+      .CreateStaticMemberFunction("Argv", &System::Argv,
+                                  [](fetch::vm::VM *, auto const &) { return 1u; });
 
   fetch::vm_modules::ml::BindML(*module);
 
   fetch::vm_modules::CreatePrint(*module);
 
-  module->CreateFreeFunction("read_csv", &read_csv);
-  module->CreateFreeFunction("remove_leading_dimension", &remove_leading_dimension);
+  module->CreateFreeFunction("read_csv", &read_csv,
+                             [](fetch::vm::VM *, auto const &, auto const &) { return 1u; });
+  module->CreateFreeFunction("read_csv", &read_csv_no_transpose,
+                             [](fetch::vm::VM *, auto const &) { return 1u; });
+  module->CreateFreeFunction("remove_leading_dimension", &remove_leading_dimension,
+                             [](fetch::vm::VM *, auto const &) { return 1u; });
 
   // Setting compiler up
   auto                     compiler = std::make_unique<fetch::vm::Compiler>(module.get());

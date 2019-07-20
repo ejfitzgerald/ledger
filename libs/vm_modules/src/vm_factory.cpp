@@ -21,15 +21,48 @@
 namespace fetch {
 namespace vm_modules {
 
-/**
- * Compile a source file, returning a executable
- *
- * @param: module The module which the user might have added various bindings/classes to etc.
- * @param: source The raw source to compile
- * @param: executable executable to fill
- *
- * @return: Vector of strings which represent errors found during compilation
- */
+std::shared_ptr<fetch::vm::Module> VMFactory::GetModule(uint64_t enabled)
+{
+  auto module = std::make_shared<fetch::vm::Module>();
+
+  // core modules
+  if (MOD_CORE & enabled)
+  {
+    CreatePrint(*module);
+    CreatePanic(*module);
+    CreateToString(*module);
+    CreateToBool(*module);
+
+    StructuredData::Bind(*module);
+    ByteArrayWrapper::Bind(*module);
+    math::UInt256Wrapper::Bind(*module);
+    SHA256Wrapper::Bind(*module);
+  }
+
+  // math modules
+  if (MOD_MATH & enabled)
+  {
+    math::BindExp(*module);
+    math::BindSqrt(*module);
+    math::BindMath(*module);
+  }
+
+  // synergetic modules
+  if (MOD_SYN & enabled)
+  {
+    BindBitShift(*module);
+    BindBitwiseOps(*module);
+  }
+
+  // ml modules
+  if (MOD_ML & enabled)
+  {
+    ml::BindML(*module);
+  }
+
+  return module;
+}
+
 VMFactory::Errors VMFactory::Compile(std::shared_ptr<fetch::vm::Module> const &module,
                                      std::string const &source, fetch::vm::Executable &executable)
 {

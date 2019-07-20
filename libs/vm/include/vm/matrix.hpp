@@ -27,8 +27,8 @@ namespace vm {
 class IMatrix : public Object
 {
 public:
-  IMatrix()          = delete;
-  virtual ~IMatrix() = default;
+  IMatrix()           = delete;
+  ~IMatrix() override = default;
   static Ptr<IMatrix> Constructor(VM *vm, TypeId type_id, int32_t num_rows, int32_t num_columns);
   virtual TemplateParameter1 GetIndexedValue(AnyInteger const &row, AnyInteger const &column) = 0;
   virtual void               SetIndexedValue(AnyInteger const &row, AnyInteger const &column,

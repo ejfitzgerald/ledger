@@ -51,22 +51,26 @@ fetch::math::meta::IfIsMath<T, T> Log10(fetch::vm::VM *, T const &a)
   return x;
 }
 
+static auto const log_estimator = [](fetch::vm::VM *, auto const &) { return 1u; };
+
 inline void BindLog(fetch::vm::Module &module)
 {
-  module.CreateFreeFunction<float_t>("log", &Log<float_t>);
-  module.CreateFreeFunction<double_t>("log", &Log<double_t>);
-  module.CreateFreeFunction<fixed_point::fp32_t>("log", &Log<fixed_point::fp32_t>);
-  module.CreateFreeFunction<fixed_point::fp64_t>("log", &Log<fixed_point::fp64_t>);
+  module.CreateFreeFunction<float_t>("log", &Log<float_t>, log_estimator);
+  module.CreateFreeFunction<double_t>("log", &Log<double_t>, log_estimator);
+  module.CreateFreeFunction<fixed_point::fp32_t>("log", &Log<fixed_point::fp32_t>, log_estimator);
+  module.CreateFreeFunction<fixed_point::fp64_t>("log", &Log<fixed_point::fp64_t>, log_estimator);
 
-  module.CreateFreeFunction<float_t>("log2", &Log2<float_t>);
-  module.CreateFreeFunction<double_t>("log2", &Log2<double_t>);
-  module.CreateFreeFunction<fixed_point::fp32_t>("log2", &Log2<fixed_point::fp32_t>);
-  module.CreateFreeFunction<fixed_point::fp64_t>("log2", &Log2<fixed_point::fp64_t>);
+  module.CreateFreeFunction<float_t>("log2", &Log2<float_t>, log_estimator);
+  module.CreateFreeFunction<double_t>("log2", &Log2<double_t>, log_estimator);
+  module.CreateFreeFunction<fixed_point::fp32_t>("log2", &Log2<fixed_point::fp32_t>, log_estimator);
+  module.CreateFreeFunction<fixed_point::fp64_t>("log2", &Log2<fixed_point::fp64_t>, log_estimator);
 
-  module.CreateFreeFunction<float_t>("log10", &Log10<float_t>);
-  module.CreateFreeFunction<double_t>("log10", &Log10<double_t>);
-  module.CreateFreeFunction<fixed_point::fp32_t>("log10", &Log10<fixed_point::fp32_t>);
-  module.CreateFreeFunction<fixed_point::fp64_t>("log10", &Log10<fixed_point::fp64_t>);
+  module.CreateFreeFunction<float_t>("log10", &Log10<float_t>, log_estimator);
+  module.CreateFreeFunction<double_t>("log10", &Log10<double_t>, log_estimator);
+  module.CreateFreeFunction<fixed_point::fp32_t>("log10", &Log10<fixed_point::fp32_t>,
+                                                 log_estimator);
+  module.CreateFreeFunction<fixed_point::fp64_t>("log10", &Log10<fixed_point::fp64_t>,
+                                                 log_estimator);
 }
 
 }  // namespace math

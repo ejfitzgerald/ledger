@@ -35,12 +35,14 @@ fetch::math::meta::IfIsMath<T, T> Pow(fetch::vm::VM *, T const &a, T const &b)
   return x;
 }
 
+static auto const pow_estimator = [](fetch::vm::VM *, auto const &, auto const &) { return 1u; };
+
 inline void BindPow(fetch::vm::Module &module)
 {
-  module.CreateFreeFunction<float_t>("pow", &Pow<float_t>);
-  module.CreateFreeFunction<double_t>("pow", &Pow<double_t>);
-  module.CreateFreeFunction<fixed_point::fp32_t>("pow", &Pow<fixed_point::fp32_t>);
-  module.CreateFreeFunction<fixed_point::fp64_t>("pow", &Pow<fixed_point::fp64_t>);
+  module.CreateFreeFunction<float_t>("pow", &Pow<float_t>, pow_estimator);
+  module.CreateFreeFunction<double_t>("pow", &Pow<double_t>, pow_estimator);
+  module.CreateFreeFunction<fixed_point::fp32_t>("pow", &Pow<fixed_point::fp32_t>, pow_estimator);
+  module.CreateFreeFunction<fixed_point::fp64_t>("pow", &Pow<fixed_point::fp64_t>, pow_estimator);
 }
 
 }  // namespace math

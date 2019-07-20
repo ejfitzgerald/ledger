@@ -57,9 +57,11 @@ public:
 
   static void Bind(fetch::vm::Module &module)
   {
+    auto const statedict_ctor_estimator = [](fetch::vm::VM *) { return 1u; };
     module.CreateClassType<VMStateDict>("StateDict")
-        .CreateConstuctor<>()
-        .CreateMemberFunction("setWeights", &VMStateDict::SetWeights);
+        .CreateConstuctor<decltype(statedict_ctor_estimator)>(std::move(statedict_ctor_estimator))
+        .CreateMemberFunction("setWeights", &VMStateDict::SetWeights,
+                              [](fetch::vm::VM *, auto const &, auto const &) { return 1u; });
   }
 
   fetch::ml::StateDict<MathTensorType> state_dict_;

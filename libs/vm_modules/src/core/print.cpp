@@ -152,74 +152,78 @@ void PrintArray(fetch::vm::VM *vm, vm::Ptr<vm::Array<T>> const &arr)
 
 void CreatePrint(vm::Module &module)
 {
-  module.CreateFreeFunction("print", &PrintString<>);
-  module.CreateFreeFunction("printLn", &PrintString<true>);
+  auto const print_estimator = [](fetch::vm::VM *, auto const &) { return 1u; };
 
-  module.CreateFreeFunction("print", &PrintBool<>);
-  module.CreateFreeFunction("printLn", &PrintBool<true>);
+  module.CreateFreeFunction("print", &PrintString<>, print_estimator);
+  module.CreateFreeFunction("printLn", &PrintString<true>, print_estimator);
 
-  module.CreateFreeFunction("print", &PrintNumber<uint8_t>);
-  module.CreateFreeFunction("printLn", &PrintNumber<uint8_t, true>);
-  module.CreateFreeFunction("print", &PrintNumber<int8_t>);
-  module.CreateFreeFunction("printLn", &PrintNumber<int8_t, true>);
+  module.CreateFreeFunction("print", &PrintBool<>, print_estimator);
+  module.CreateFreeFunction("printLn", &PrintBool<true>, print_estimator);
 
-  module.CreateFreeFunction("print", &PrintNumber<uint16_t>);
-  module.CreateFreeFunction("printLn", &PrintNumber<uint16_t, true>);
-  module.CreateFreeFunction("print", &PrintNumber<int16_t>);
-  module.CreateFreeFunction("printLn", &PrintNumber<int16_t, true>);
+  module.CreateFreeFunction("print", &PrintNumber<uint8_t>, print_estimator);
+  module.CreateFreeFunction("printLn", &PrintNumber<uint8_t, true>, print_estimator);
+  module.CreateFreeFunction("print", &PrintNumber<int8_t>, print_estimator);
+  module.CreateFreeFunction("printLn", &PrintNumber<int8_t, true>, print_estimator);
 
-  module.CreateFreeFunction("print", &PrintNumber<uint32_t>);
-  module.CreateFreeFunction("printLn", &PrintNumber<uint32_t, true>);
-  module.CreateFreeFunction("print", &PrintNumber<int32_t>);
-  module.CreateFreeFunction("printLn", &PrintNumber<int32_t, true>);
+  module.CreateFreeFunction("print", &PrintNumber<uint16_t>, print_estimator);
+  module.CreateFreeFunction("printLn", &PrintNumber<uint16_t, true>, print_estimator);
+  module.CreateFreeFunction("print", &PrintNumber<int16_t>, print_estimator);
+  module.CreateFreeFunction("printLn", &PrintNumber<int16_t, true>, print_estimator);
 
-  module.CreateFreeFunction("print", &PrintNumber<uint64_t>);
-  module.CreateFreeFunction("printLn", &PrintNumber<uint64_t, true>);
-  module.CreateFreeFunction("print", &PrintNumber<int64_t>);
-  module.CreateFreeFunction("printLn", &PrintNumber<int64_t, true>);
+  module.CreateFreeFunction("print", &PrintNumber<uint32_t>, print_estimator);
+  module.CreateFreeFunction("printLn", &PrintNumber<uint32_t, true>, print_estimator);
+  module.CreateFreeFunction("print", &PrintNumber<int32_t>, print_estimator);
+  module.CreateFreeFunction("printLn", &PrintNumber<int32_t, true>, print_estimator);
 
-  module.CreateFreeFunction("print", &PrintNumber<float>);
-  module.CreateFreeFunction("printLn", &PrintNumber<float, true>);
-  module.CreateFreeFunction("print", &PrintNumber<double>);
-  module.CreateFreeFunction("printLn", &PrintNumber<double, true>);
+  module.CreateFreeFunction("print", &PrintNumber<uint64_t>, print_estimator);
+  module.CreateFreeFunction("printLn", &PrintNumber<uint64_t, true>, print_estimator);
+  module.CreateFreeFunction("print", &PrintNumber<int64_t>, print_estimator);
+  module.CreateFreeFunction("printLn", &PrintNumber<int64_t, true>, print_estimator);
 
-  module.CreateFreeFunction("print", &PrintNumber<fixed_point::fp32_t>);
-  module.CreateFreeFunction("print", &PrintNumber<fixed_point::fp64_t>);
-  module.CreateFreeFunction("printLn", &PrintNumber<fixed_point::fp32_t, true>);
-  module.CreateFreeFunction("printLn", &PrintNumber<fixed_point::fp64_t, true>);
+  module.CreateFreeFunction("print", &PrintNumber<float>, print_estimator);
+  module.CreateFreeFunction("printLn", &PrintNumber<float, true>, print_estimator);
+  module.CreateFreeFunction("print", &PrintNumber<double>, print_estimator);
+  module.CreateFreeFunction("printLn", &PrintNumber<double, true>, print_estimator);
 
-  module.CreateFreeFunction("print", &PrintArray<bool>);
-  module.CreateFreeFunction("printLn", &PrintArray<bool, true>);
+  module.CreateFreeFunction("print", &PrintNumber<fixed_point::fp32_t>, print_estimator);
+  module.CreateFreeFunction("print", &PrintNumber<fixed_point::fp64_t>, print_estimator);
+  module.CreateFreeFunction("printLn", &PrintNumber<fixed_point::fp32_t, true>, print_estimator);
+  module.CreateFreeFunction("printLn", &PrintNumber<fixed_point::fp64_t, true>, print_estimator);
 
-  module.CreateFreeFunction("print", &PrintArray<uint8_t>);
-  module.CreateFreeFunction("printLn", &PrintArray<uint8_t, true>);
-  module.CreateFreeFunction("print", &PrintArray<int8_t>);
-  module.CreateFreeFunction("printLn", &PrintArray<int8_t, true>);
+  module.CreateFreeFunction("print", &PrintArray<bool>, print_estimator);
+  module.CreateFreeFunction("printLn", &PrintArray<bool, true>, print_estimator);
 
-  module.CreateFreeFunction("print", &PrintArray<uint16_t>);
-  module.CreateFreeFunction("printLn", &PrintArray<uint16_t, true>);
-  module.CreateFreeFunction("print", &PrintArray<int16_t>);
-  module.CreateFreeFunction("printLn", &PrintArray<int16_t, true>);
+  module.CreateFreeFunction("print", &PrintArray<uint8_t>, print_estimator);
+  module.CreateFreeFunction("printLn", &PrintArray<uint8_t, true>, print_estimator);
+  module.CreateFreeFunction("print", &PrintArray<int8_t>, print_estimator);
+  module.CreateFreeFunction("printLn", &PrintArray<int8_t, true>, print_estimator);
 
-  module.CreateFreeFunction("print", &PrintArray<uint32_t>);
-  module.CreateFreeFunction("printLn", &PrintArray<uint32_t, true>);
-  module.CreateFreeFunction("print", &PrintArray<int32_t>);
-  module.CreateFreeFunction("printLn", &PrintArray<int32_t, true>);
+  module.CreateFreeFunction("print", &PrintArray<uint16_t>, print_estimator);
+  module.CreateFreeFunction("printLn", &PrintArray<uint16_t, true>, print_estimator);
+  module.CreateFreeFunction("print", &PrintArray<int16_t>, print_estimator);
+  module.CreateFreeFunction("printLn", &PrintArray<int16_t, true>, print_estimator);
 
-  module.CreateFreeFunction("print", &PrintArray<uint64_t>);
-  module.CreateFreeFunction("printLn", &PrintArray<uint64_t, true>);
-  module.CreateFreeFunction("print", &PrintArray<int64_t>);
-  module.CreateFreeFunction("printLn", &PrintArray<int64_t, true>);
+  module.CreateFreeFunction("print", &PrintArray<uint32_t>, print_estimator);
+  module.CreateFreeFunction("printLn", &PrintArray<uint32_t, true>, print_estimator);
+  module.CreateFreeFunction("print", &PrintArray<int32_t>, print_estimator);
+  module.CreateFreeFunction("printLn", &PrintArray<int32_t, true>, print_estimator);
 
-  module.CreateFreeFunction("print", &PrintArray<float>);
-  module.CreateFreeFunction("printLn", &PrintArray<float, true>);
-  module.CreateFreeFunction("print", &PrintArray<double>);
-  module.CreateFreeFunction("printLn", &PrintArray<double, true>);
+  module.CreateFreeFunction("print", &PrintArray<uint64_t>, print_estimator);
+  module.CreateFreeFunction("printLn", &PrintArray<uint64_t, true>, print_estimator);
+  module.CreateFreeFunction("print", &PrintArray<int64_t>, print_estimator);
+  module.CreateFreeFunction("printLn", &PrintArray<int64_t, true>, print_estimator);
 
-  module.CreateFreeFunction("print", &PrintArray<fixed_point::FixedPoint<16, 16>>);
-  module.CreateFreeFunction("print", &PrintArray<fixed_point::FixedPoint<32, 32>>);
-  module.CreateFreeFunction("printLn", &PrintArray<fixed_point::FixedPoint<16, 16>, true>);
-  module.CreateFreeFunction("printLn", &PrintArray<fixed_point::FixedPoint<32, 32>, true>);
+  module.CreateFreeFunction("print", &PrintArray<float>, print_estimator);
+  module.CreateFreeFunction("printLn", &PrintArray<float, true>, print_estimator);
+  module.CreateFreeFunction("print", &PrintArray<double>, print_estimator);
+  module.CreateFreeFunction("printLn", &PrintArray<double, true>, print_estimator);
+
+  module.CreateFreeFunction("print", &PrintArray<fixed_point::FixedPoint<16, 16>>, print_estimator);
+  module.CreateFreeFunction("print", &PrintArray<fixed_point::FixedPoint<32, 32>>, print_estimator);
+  module.CreateFreeFunction("printLn", &PrintArray<fixed_point::FixedPoint<16, 16>, true>,
+                            print_estimator);
+  module.CreateFreeFunction("printLn", &PrintArray<fixed_point::FixedPoint<32, 32>, true>,
+                            print_estimator);
 }
 
 }  // namespace vm_modules

@@ -33,22 +33,22 @@ public:
   VmTestToolkit     toolkit{&stdout};
 };
 
-TEST_F(VmChargeTests, NoLimitTest)
+TEST_F(VmChargeTests, no_charge_limit)
 {
   static char const *TEXT = R"(
-      function main()
-        var u = 42u8;
-        print(u);
-        print(', ');
+    function main()
+      var u = 42u8;
+      print(u);
+      print(', ');
 
-        var pos_i = 42i8;
-        print(pos_i);
-        print(', ');
+      var pos_i = 42i8;
+      print(pos_i);
+      print(', ');
 
-        var neg_i = -42i8;
-        print(neg_i);
-      endfunction
-    )";
+      var neg_i = -42i8;
+      print(neg_i);
+    endfunction
+  )";
 
   ASSERT_TRUE(toolkit.Compile(TEXT));
   ASSERT_EQ(0, toolkit.vm().GetChargeLimit());
@@ -57,22 +57,22 @@ TEST_F(VmChargeTests, NoLimitTest)
   EXPECT_EQ(18, toolkit.vm().GetChargeTotal());
 }
 
-TEST_F(VmChargeTests, ExecutionFailsWhenLimitReached)
+TEST_F(VmChargeTests, execution_fails_when_limit_reached)
 {
   static char const *TEXT = R"(
-      function main()
-        var u = 42u8;
-        print(u);
-        print(', ');
+    function main()
+      var u = 42u8;
+      print(u);
+      print(', ');
 
-        var pos_i = 42i8;
-        print(pos_i);
-        print(', ');
+      var pos_i = 42i8;
+      print(pos_i);
+      print(', ');
 
-        var neg_i = -42i8;
-        print(neg_i);
-      endfunction
-    )";
+      var neg_i = -42i8;
+      print(neg_i);
+    endfunction
+  )";
 
   ASSERT_TRUE(toolkit.Compile(TEXT));
   toolkit.vm().SetChargeLimit(10);
@@ -80,22 +80,24 @@ TEST_F(VmChargeTests, ExecutionFailsWhenLimitReached)
   ASSERT_FALSE(toolkit.Run());
 }
 
-TEST_F(VmChargeTests, DISABLED_BindWithChargeEstimate)
+TEST_F(VmChargeTests, DISABLED_bind_with_charge_estimate)
 {
-  auto estimator = [](VM *, uint32_t x, uint32_t y) -> uint64_t {
+  auto handler   = [](VM *, uint32_t, uint32_t) -> bool { return true; };
+  auto estimator = [](VM *, uint32_t x, uint32_t y) -> VM::ChargeAmount {
     auto const base = x * y;
     return base * base;
   };
-  FETCH_UNUSED(estimator);
 
-  toolkit.module()->CreateFreeFunction("expensive", [](VM *, uint32_t, uint32_t) { return true; });
+  toolkit.module().CreateFreeFunction("expensive", std::move(handler), std::move(estimator));
 
   static char const *TEXT = R"(
-      function main()
-        var check = expensive(3, 3);
-        assert(check == true);
-      endfunction
-    )";
+    function main()
+      var check1 = expensive(3, 4);
+      var check2 = expensive(1, 1);
+      assert(check1 == true);
+      assert(check2 == true);
+    endfunction
+  )";
 
   ASSERT_TRUE(toolkit.Compile(TEXT));
   ASSERT_FALSE(toolkit.Run());

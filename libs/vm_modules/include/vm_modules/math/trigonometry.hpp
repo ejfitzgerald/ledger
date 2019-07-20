@@ -167,63 +167,89 @@ fetch::math::meta::IfIsMath<T, T> ATanH(fetch::vm::VM *, T const &a)
   return x;
 }
 
+static auto const trig_estimator = [](fetch::vm::VM *, auto const &) { return 1u; };
+
+static auto const trig_atan2_estimator = [](fetch::vm::VM *, auto const &, auto const &) {
+  return 1u;
+};
+
 inline void BindTrigonometry(fetch::vm::Module &module)
 {
-  module.CreateFreeFunction<float_t>("sin", &Sin<float_t>);
-  module.CreateFreeFunction<float_t>("cos", &Cos<float_t>);
-  module.CreateFreeFunction<float_t>("tan", &Tan<float_t>);
-  module.CreateFreeFunction<float_t>("asin", &ASin<float_t>);
-  module.CreateFreeFunction<float_t>("acos", &ACos<float_t>);
-  module.CreateFreeFunction<float_t>("atan", &ATan<float_t>);
-  module.CreateFreeFunction<float_t>("atan2", &ATan2<float_t>);
-  module.CreateFreeFunction<float_t>("sinh", &SinH<float_t>);
-  module.CreateFreeFunction<float_t>("cosh", &CosH<float_t>);
-  module.CreateFreeFunction<float_t>("tanh", &TanH<float_t>);
-  module.CreateFreeFunction<float_t>("asinh", &ASinH<float_t>);
-  module.CreateFreeFunction<float_t>("acosh", &ACosH<float_t>);
-  module.CreateFreeFunction<float_t>("atanh", &ATanH<float_t>);
+  module.CreateFreeFunction<float_t>("sin", &Sin<float_t>, trig_estimator);
+  module.CreateFreeFunction<float_t>("cos", &Cos<float_t>, trig_estimator);
+  module.CreateFreeFunction<float_t>("tan", &Tan<float_t>, trig_estimator);
+  module.CreateFreeFunction<float_t>("asin", &ASin<float_t>, trig_estimator);
+  module.CreateFreeFunction<float_t>("acos", &ACos<float_t>, trig_estimator);
+  module.CreateFreeFunction<float_t>("atan", &ATan<float_t>, trig_estimator);
+  module.CreateFreeFunction<float_t>("atan2", &ATan2<float_t>, trig_atan2_estimator);
+  module.CreateFreeFunction<float_t>("sinh", &SinH<float_t>, trig_estimator);
+  module.CreateFreeFunction<float_t>("cosh", &CosH<float_t>, trig_estimator);
+  module.CreateFreeFunction<float_t>("tanh", &TanH<float_t>, trig_estimator);
+  module.CreateFreeFunction<float_t>("asinh", &ASinH<float_t>, trig_estimator);
+  module.CreateFreeFunction<float_t>("acosh", &ACosH<float_t>, trig_estimator);
+  module.CreateFreeFunction<float_t>("atanh", &ATanH<float_t>, trig_estimator);
 
-  module.CreateFreeFunction<double_t>("sin", &Sin<double_t>);
-  module.CreateFreeFunction<double_t>("cos", &Cos<double_t>);
-  module.CreateFreeFunction<double_t>("tan", &Tan<double_t>);
-  module.CreateFreeFunction<double_t>("asin", &ASin<double_t>);
-  module.CreateFreeFunction<double_t>("acos", &ACos<double_t>);
-  module.CreateFreeFunction<double_t>("atan", &ATan<double_t>);
-  module.CreateFreeFunction<double_t>("atan2", &ATan2<double_t>);
-  module.CreateFreeFunction<double_t>("sinh", &SinH<double_t>);
-  module.CreateFreeFunction<double_t>("cosh", &CosH<double_t>);
-  module.CreateFreeFunction<double_t>("tanh", &TanH<double_t>);
-  module.CreateFreeFunction<double_t>("asinh", &ASinH<double_t>);
-  module.CreateFreeFunction<double_t>("acosh", &ACosH<double_t>);
-  module.CreateFreeFunction<double_t>("atanh", &ATanH<double_t>);
+  module.CreateFreeFunction<double_t>("sin", &Sin<double_t>, trig_estimator);
+  module.CreateFreeFunction<double_t>("cos", &Cos<double_t>, trig_estimator);
+  module.CreateFreeFunction<double_t>("tan", &Tan<double_t>, trig_estimator);
+  module.CreateFreeFunction<double_t>("asin", &ASin<double_t>, trig_estimator);
+  module.CreateFreeFunction<double_t>("acos", &ACos<double_t>, trig_estimator);
+  module.CreateFreeFunction<double_t>("atan", &ATan<double_t>, trig_estimator);
+  module.CreateFreeFunction<double_t>("atan2", &ATan2<double_t>, trig_atan2_estimator);
+  module.CreateFreeFunction<double_t>("sinh", &SinH<double_t>, trig_estimator);
+  module.CreateFreeFunction<double_t>("cosh", &CosH<double_t>, trig_estimator);
+  module.CreateFreeFunction<double_t>("tanh", &TanH<double_t>, trig_estimator);
+  module.CreateFreeFunction<double_t>("asinh", &ASinH<double_t>, trig_estimator);
+  module.CreateFreeFunction<double_t>("acosh", &ACosH<double_t>, trig_estimator);
+  module.CreateFreeFunction<double_t>("atanh", &ATanH<double_t>, trig_estimator);
 
-  module.CreateFreeFunction<fixed_point::fp32_t>("sin", &Sin<fixed_point::fp32_t>);
-  module.CreateFreeFunction<fixed_point::fp32_t>("cos", &Cos<fixed_point::fp32_t>);
-  module.CreateFreeFunction<fixed_point::fp32_t>("tan", &Tan<fixed_point::fp32_t>);
-  module.CreateFreeFunction<fixed_point::fp32_t>("asin", &ASin<fixed_point::fp32_t>);
-  module.CreateFreeFunction<fixed_point::fp32_t>("acos", &ACos<fixed_point::fp32_t>);
-  module.CreateFreeFunction<fixed_point::fp32_t>("atan", &ATan<fixed_point::fp32_t>);
-  module.CreateFreeFunction<fixed_point::fp32_t>("atan2", &ATan2<fixed_point::fp32_t>);
-  module.CreateFreeFunction<fixed_point::fp32_t>("sinh", &SinH<fixed_point::fp32_t>);
-  module.CreateFreeFunction<fixed_point::fp32_t>("cosh", &CosH<fixed_point::fp32_t>);
-  module.CreateFreeFunction<fixed_point::fp32_t>("tanh", &TanH<fixed_point::fp32_t>);
-  module.CreateFreeFunction<fixed_point::fp32_t>("asinh", &ASinH<fixed_point::fp32_t>);
-  module.CreateFreeFunction<fixed_point::fp32_t>("acosh", &ACosH<fixed_point::fp32_t>);
-  module.CreateFreeFunction<fixed_point::fp32_t>("atanh", &ATanH<fixed_point::fp32_t>);
+  module.CreateFreeFunction<fixed_point::fp32_t>("sin", &Sin<fixed_point::fp32_t>, trig_estimator);
+  module.CreateFreeFunction<fixed_point::fp32_t>("cos", &Cos<fixed_point::fp32_t>, trig_estimator);
+  module.CreateFreeFunction<fixed_point::fp32_t>("tan", &Tan<fixed_point::fp32_t>, trig_estimator);
+  module.CreateFreeFunction<fixed_point::fp32_t>("asin", &ASin<fixed_point::fp32_t>,
+                                                 trig_estimator);
+  module.CreateFreeFunction<fixed_point::fp32_t>("acos", &ACos<fixed_point::fp32_t>,
+                                                 trig_estimator);
+  module.CreateFreeFunction<fixed_point::fp32_t>("atan", &ATan<fixed_point::fp32_t>,
+                                                 trig_estimator);
+  module.CreateFreeFunction<fixed_point::fp32_t>("atan2", &ATan2<fixed_point::fp32_t>,
+                                                 trig_atan2_estimator);
+  module.CreateFreeFunction<fixed_point::fp32_t>("sinh", &SinH<fixed_point::fp32_t>,
+                                                 trig_estimator);
+  module.CreateFreeFunction<fixed_point::fp32_t>("cosh", &CosH<fixed_point::fp32_t>,
+                                                 trig_estimator);
+  module.CreateFreeFunction<fixed_point::fp32_t>("tanh", &TanH<fixed_point::fp32_t>,
+                                                 trig_estimator);
+  module.CreateFreeFunction<fixed_point::fp32_t>("asinh", &ASinH<fixed_point::fp32_t>,
+                                                 trig_estimator);
+  module.CreateFreeFunction<fixed_point::fp32_t>("acosh", &ACosH<fixed_point::fp32_t>,
+                                                 trig_estimator);
+  module.CreateFreeFunction<fixed_point::fp32_t>("atanh", &ATanH<fixed_point::fp32_t>,
+                                                 trig_estimator);
 
-  module.CreateFreeFunction<fixed_point::fp64_t>("sin", &Sin<fixed_point::fp64_t>);
-  module.CreateFreeFunction<fixed_point::fp64_t>("cos", &Cos<fixed_point::fp64_t>);
-  module.CreateFreeFunction<fixed_point::fp64_t>("tan", &Tan<fixed_point::fp64_t>);
-  module.CreateFreeFunction<fixed_point::fp64_t>("asin", &ASin<fixed_point::fp64_t>);
-  module.CreateFreeFunction<fixed_point::fp64_t>("acos", &ACos<fixed_point::fp64_t>);
-  module.CreateFreeFunction<fixed_point::fp64_t>("atan", &ATan<fixed_point::fp64_t>);
-  module.CreateFreeFunction<fixed_point::fp64_t>("atan2", &ATan2<fixed_point::fp64_t>);
-  module.CreateFreeFunction<fixed_point::fp64_t>("sinh", &SinH<fixed_point::fp64_t>);
-  module.CreateFreeFunction<fixed_point::fp64_t>("cosh", &CosH<fixed_point::fp64_t>);
-  module.CreateFreeFunction<fixed_point::fp64_t>("tanh", &TanH<fixed_point::fp64_t>);
-  module.CreateFreeFunction<fixed_point::fp64_t>("asinh", &ASinH<fixed_point::fp64_t>);
-  module.CreateFreeFunction<fixed_point::fp64_t>("acosh", &ACosH<fixed_point::fp64_t>);
-  module.CreateFreeFunction<fixed_point::fp64_t>("atanh", &ATanH<fixed_point::fp64_t>);
+  module.CreateFreeFunction<fixed_point::fp64_t>("sin", &Sin<fixed_point::fp64_t>, trig_estimator);
+  module.CreateFreeFunction<fixed_point::fp64_t>("cos", &Cos<fixed_point::fp64_t>, trig_estimator);
+  module.CreateFreeFunction<fixed_point::fp64_t>("tan", &Tan<fixed_point::fp64_t>, trig_estimator);
+  module.CreateFreeFunction<fixed_point::fp64_t>("asin", &ASin<fixed_point::fp64_t>,
+                                                 trig_estimator);
+  module.CreateFreeFunction<fixed_point::fp64_t>("acos", &ACos<fixed_point::fp64_t>,
+                                                 trig_estimator);
+  module.CreateFreeFunction<fixed_point::fp64_t>("atan", &ATan<fixed_point::fp64_t>,
+                                                 trig_estimator);
+  module.CreateFreeFunction<fixed_point::fp64_t>("atan2", &ATan2<fixed_point::fp64_t>,
+                                                 trig_atan2_estimator);
+  module.CreateFreeFunction<fixed_point::fp64_t>("sinh", &SinH<fixed_point::fp64_t>,
+                                                 trig_estimator);
+  module.CreateFreeFunction<fixed_point::fp64_t>("cosh", &CosH<fixed_point::fp64_t>,
+                                                 trig_estimator);
+  module.CreateFreeFunction<fixed_point::fp64_t>("tanh", &TanH<fixed_point::fp64_t>,
+                                                 trig_estimator);
+  module.CreateFreeFunction<fixed_point::fp64_t>("asinh", &ASinH<fixed_point::fp64_t>,
+                                                 trig_estimator);
+  module.CreateFreeFunction<fixed_point::fp64_t>("acosh", &ACosH<fixed_point::fp64_t>,
+                                                 trig_estimator);
+  module.CreateFreeFunction<fixed_point::fp64_t>("atanh", &ATanH<fixed_point::fp64_t>,
+                                                 trig_estimator);
 }
 
 }  // namespace math

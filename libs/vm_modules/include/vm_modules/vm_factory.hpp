@@ -49,7 +49,6 @@ namespace vm_modules {
 /**
  * VMFactory provides the user with convenient management of the VM
  * and its associated bindings
- *
  */
 class VMFactory
 {
@@ -78,47 +77,7 @@ public:
    *
    * @return: The module
    */
-  static std::shared_ptr<fetch::vm::Module> GetModule(uint64_t enabled)
-  {
-    auto module = std::make_shared<fetch::vm::Module>();
-
-    // core modules
-    if (MOD_CORE & enabled)
-    {
-      CreatePrint(*module);
-      CreatePanic(*module);
-      CreateToString(*module);
-      CreateToBool(*module);
-
-      StructuredData::Bind(*module);
-      ByteArrayWrapper::Bind(*module);
-      math::UInt256Wrapper::Bind(*module);
-      SHA256Wrapper::Bind(*module);
-    }
-
-    // math modules
-    if (MOD_MATH & enabled)
-    {
-      math::BindExp(*module);
-      math::BindSqrt(*module);
-      math::BindMath(*module);
-    }
-
-    // synergetic modules
-    if (MOD_SYN & enabled)
-    {
-      BindBitShift(*module);
-      BindBitwiseOps(*module);
-    }
-
-    // ml modules
-    if (MOD_ML & enabled)
-    {
-      ml::BindML(*module);
-    }
-
-    return module;
-  }
+  static std::shared_ptr<fetch::vm::Module> GetModule(uint64_t enabled);
 
   /**
    * Compile a source file, producing an executable
@@ -132,17 +91,6 @@ public:
   static std::vector<std::string> Compile(std::shared_ptr<fetch::vm::Module> const &module,
                                           std::string const &                       source,
                                           fetch::vm::Executable &                   executable);
-  /**
-   * Get an instance of the VM after binding to a module
-   *
-   * @param: module Module which the user has added bindings to
-   *
-   * @return: An instance of the VM
-   */
-  static std::unique_ptr<fetch::vm::VM> GetVM(std::shared_ptr<fetch::vm::Module> const &module)
-  {
-    return std::make_unique<fetch::vm::VM>(module.get());
-  }
 };
 
 }  // namespace vm_modules

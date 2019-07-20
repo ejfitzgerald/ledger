@@ -36,17 +36,21 @@ T Or(fetch::vm::VM * /*vm*/, T x, T s)
   return T(x | s);
 }
 
+static auto const bitwise_ops_estimator = [](fetch::vm::VM *, auto const &, auto const &) {
+  return 1u;
+};
+
 inline void BindBitwiseOps(vm::Module &module)
 {
-  module.CreateFreeFunction("and", &And<int32_t>);
-  module.CreateFreeFunction("and", &And<int64_t>);
-  module.CreateFreeFunction("and", &And<uint32_t>);
-  module.CreateFreeFunction("and", &And<uint64_t>);
+  module.CreateFreeFunction("and", &And<int32_t>, bitwise_ops_estimator);
+  module.CreateFreeFunction("and", &And<int64_t>, bitwise_ops_estimator);
+  module.CreateFreeFunction("and", &And<uint32_t>, bitwise_ops_estimator);
+  module.CreateFreeFunction("and", &And<uint64_t>, bitwise_ops_estimator);
 
-  module.CreateFreeFunction("or", &Or<int32_t>);
-  module.CreateFreeFunction("or", &Or<int64_t>);
-  module.CreateFreeFunction("or", &Or<uint32_t>);
-  module.CreateFreeFunction("or", &Or<uint64_t>);
+  module.CreateFreeFunction("or", &Or<int32_t>, bitwise_ops_estimator);
+  module.CreateFreeFunction("or", &Or<int64_t>, bitwise_ops_estimator);
+  module.CreateFreeFunction("or", &Or<uint32_t>, bitwise_ops_estimator);
+  module.CreateFreeFunction("or", &Or<uint64_t>, bitwise_ops_estimator);
 }
 
 }  // namespace vm_modules

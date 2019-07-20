@@ -557,15 +557,17 @@ private:
   friend struct TypeGetter;
   template <typename T, typename S>
   friend struct ParameterTypeGetter;
-  template <typename ReturnType, typename FreeFunction, typename... Ts>
+  template <typename ReturnType, typename FreeFunction, typename Estimator, typename... Ts>
   friend struct FreeFunctionInvokerHelper;
-  template <typename Type, typename ReturnType, typename MemberFunction, typename... Ts>
+  template <typename Type, typename ReturnType, typename MemberFunction, typename Estimator,
+            typename... Ts>
   friend struct MemberFunctionInvokerHelper;
-  template <typename Type, typename ReturnType, typename Constructor, typename... Ts>
+  template <typename Type, typename ReturnType, typename Constructor, typename Estimator,
+            typename... Ts>
   friend struct ConstructorInvokerHelper;
-  template <typename ReturnType, typename StaticMemberFunction, typename... Ts>
+  template <typename Estimator, typename ReturnType, typename StaticMemberFunction, typename... Ts>
   friend struct StaticMemberFunctionInvokerHelper;
-  template <typename ReturnType, typename Functor, typename... Ts>
+  template <typename ReturnType, typename Functor, typename Estimator, typename... Ts>
   friend struct FunctorInvokerHelper;
 
   TypeInfoArray                  type_info_array_;

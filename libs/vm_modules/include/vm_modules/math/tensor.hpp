@@ -61,16 +61,26 @@ public:
 
   static void Bind(fetch::vm::Module &module)
   {
+    auto const tensor_ctor_estimator = [](fetch::vm::VM *, auto const &) { return 1u; };
     module.CreateClassType<VMTensor>("Tensor")
-        .CreateConstuctor<fetch::vm::Ptr<fetch::vm::Array<VMTensor::SizeType>>>()
+        .CreateConstuctor<decltype(tensor_ctor_estimator),
+                          fetch::vm::Ptr<fetch::vm::Array<VMTensor::SizeType>>>(
+            std::move(tensor_ctor_estimator))
         .CreateSerializeDefaultConstuctor<>()
-        .CreateMemberFunction("at", &VMTensor::AtOne)
-        .CreateMemberFunction("at", &VMTensor::AtTwo)
-        .CreateMemberFunction("at", &VMTensor::AtThree)
-        .CreateMemberFunction("setAt", &VMTensor::SetAt)
-        .CreateMemberFunction("fill", &VMTensor::Fill)
-        .CreateMemberFunction("reshape", &VMTensor::Reshape)
-        .CreateMemberFunction("toString", &VMTensor::ToString);
+        .CreateMemberFunction("at", &VMTensor::AtOne,
+                              [](fetch::vm::VM *, auto const &) { return 1u; })
+        .CreateMemberFunction("at", &VMTensor::AtTwo,
+                              [](fetch::vm::VM *, auto const &, auto const &) { return 1u; })
+        .CreateMemberFunction(
+            "at", &VMTensor::AtThree,
+            [](fetch::vm::VM *, auto const &, auto const &, auto const &) { return 1u; })
+        .CreateMemberFunction("setAt", &VMTensor::SetAt,
+                              [](fetch::vm::VM *, auto const &, auto const &) { return 1u; })
+        .CreateMemberFunction("fill", &VMTensor::Fill,
+                              [](fetch::vm::VM *, auto const &) { return 1u; })
+        .CreateMemberFunction("reshape", &VMTensor::Reshape,
+                              [](fetch::vm::VM *, auto const &) { return 1u; })
+        .CreateMemberFunction("toString", &VMTensor::ToString, [](fetch::vm::VM *) { return 1u; });
   }
 
   SizeVector shape()

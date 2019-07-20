@@ -56,16 +56,18 @@ fetch::meta::IfIsFloat<T, T> Rand(fetch::vm::VM *vm, T const &a = T{.0}, T const
   return std::uniform_real_distribution<T>{a, b}(mt);
 }
 
+static auto const rand_estimator = [](fetch::vm::VM *, auto const &, auto const &) { return 1u; };
+
 inline void BindRand(fetch::vm::Module &module)
 {
-  module.CreateFreeFunction<int16_t>("rand", &Rand<int16_t>);
-  module.CreateFreeFunction<int32_t>("rand", &Rand<int32_t>);
-  module.CreateFreeFunction<int64_t>("rand", &Rand<int64_t>);
-  module.CreateFreeFunction<uint16_t>("rand", &Rand<uint16_t>);
-  module.CreateFreeFunction<uint32_t>("rand", &Rand<uint32_t>);
-  module.CreateFreeFunction<uint64_t>("rand", &Rand<uint64_t>);
-  module.CreateFreeFunction<float_t>("rand", &Rand<float_t>);
-  module.CreateFreeFunction<double_t>("rand", &Rand<double_t>);
+  module.CreateFreeFunction<int16_t>("rand", &Rand<int16_t>, rand_estimator);
+  module.CreateFreeFunction<int32_t>("rand", &Rand<int32_t>, rand_estimator);
+  module.CreateFreeFunction<int64_t>("rand", &Rand<int64_t>, rand_estimator);
+  module.CreateFreeFunction<uint16_t>("rand", &Rand<uint16_t>, rand_estimator);
+  module.CreateFreeFunction<uint32_t>("rand", &Rand<uint32_t>, rand_estimator);
+  module.CreateFreeFunction<uint64_t>("rand", &Rand<uint64_t>, rand_estimator);
+  module.CreateFreeFunction<float_t>("rand", &Rand<float_t>, rand_estimator);
+  module.CreateFreeFunction<double_t>("rand", &Rand<double_t>, rand_estimator);
 }
 
 }  // namespace math

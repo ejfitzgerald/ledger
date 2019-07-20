@@ -68,24 +68,26 @@ meta::IfIsUnsignedInteger<T, T> IntegerAbs(fetch::vm::VM *, T const &value)
   return value;
 }
 
+static auto const abs_estimator = [](fetch::vm::VM *, auto const &) { return 1u; };
+
 static void BindAbs(fetch::vm::Module &module)
 {
-  module.CreateFreeFunction<int8_t>("abs", &IntegerAbs<int8_t>);
-  module.CreateFreeFunction<int16_t>("abs", &IntegerAbs<int16_t>);
-  module.CreateFreeFunction<int32_t>("abs", &IntegerAbs<int32_t>);
-  module.CreateFreeFunction<int64_t>("abs", &IntegerAbs<int64_t>);
+  module.CreateFreeFunction<int8_t>("abs", &IntegerAbs<int8_t>, abs_estimator);
+  module.CreateFreeFunction<int16_t>("abs", &IntegerAbs<int16_t>, abs_estimator);
+  module.CreateFreeFunction<int32_t>("abs", &IntegerAbs<int32_t>, abs_estimator);
+  module.CreateFreeFunction<int64_t>("abs", &IntegerAbs<int64_t>, abs_estimator);
 
   // included for completeness sake
-  module.CreateFreeFunction<uint8_t>("abs", &IntegerAbs<uint8_t>);
-  module.CreateFreeFunction<uint16_t>("abs", &IntegerAbs<uint16_t>);
-  module.CreateFreeFunction<uint32_t>("abs", &IntegerAbs<uint32_t>);
-  module.CreateFreeFunction<uint64_t>("abs", &IntegerAbs<uint64_t>);
+  module.CreateFreeFunction<uint8_t>("abs", &IntegerAbs<uint8_t>, abs_estimator);
+  module.CreateFreeFunction<uint16_t>("abs", &IntegerAbs<uint16_t>, abs_estimator);
+  module.CreateFreeFunction<uint32_t>("abs", &IntegerAbs<uint32_t>, abs_estimator);
+  module.CreateFreeFunction<uint64_t>("abs", &IntegerAbs<uint64_t>, abs_estimator);
 
-  module.CreateFreeFunction<float_t>("abs", &Abs<float_t>);
-  module.CreateFreeFunction<double_t>("abs", &Abs<double_t>);
+  module.CreateFreeFunction<float_t>("abs", &Abs<float_t>, abs_estimator);
+  module.CreateFreeFunction<double_t>("abs", &Abs<double_t>, abs_estimator);
 
-  module.CreateFreeFunction<fixed_point::fp32_t>("abs", &Abs<fixed_point::fp32_t>);
-  module.CreateFreeFunction<fixed_point::fp64_t>("abs", &Abs<fixed_point::fp64_t>);
+  module.CreateFreeFunction<fixed_point::fp32_t>("abs", &Abs<fixed_point::fp32_t>, abs_estimator);
+  module.CreateFreeFunction<fixed_point::fp64_t>("abs", &Abs<fixed_point::fp64_t>, abs_estimator);
 }
 
 }  // namespace math

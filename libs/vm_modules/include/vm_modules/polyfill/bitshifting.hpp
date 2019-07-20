@@ -36,17 +36,21 @@ T RightShift(fetch::vm::VM * /*vm*/, T x, T s)
   return T(x >> s);
 }
 
+static auto const bitshifting_estimator = [](fetch::vm::VM *, auto const &, auto const &) {
+  return 1u;
+};
+
 inline void BindBitShift(vm::Module &module)
 {
-  module.CreateFreeFunction("leftShift", &LeftShift<int32_t>);
-  module.CreateFreeFunction("leftShift", &LeftShift<int64_t>);
-  module.CreateFreeFunction("leftShift", &LeftShift<uint32_t>);
-  module.CreateFreeFunction("leftShift", &LeftShift<uint64_t>);
+  module.CreateFreeFunction("leftShift", &LeftShift<int32_t>, bitshifting_estimator);
+  module.CreateFreeFunction("leftShift", &LeftShift<int64_t>, bitshifting_estimator);
+  module.CreateFreeFunction("leftShift", &LeftShift<uint32_t>, bitshifting_estimator);
+  module.CreateFreeFunction("leftShift", &LeftShift<uint64_t>, bitshifting_estimator);
 
-  module.CreateFreeFunction("rightShift", &RightShift<int32_t>);
-  module.CreateFreeFunction("rightShift", &RightShift<int64_t>);
-  module.CreateFreeFunction("rightShift", &RightShift<uint32_t>);
-  module.CreateFreeFunction("rightShift", &RightShift<uint64_t>);
+  module.CreateFreeFunction("rightShift", &RightShift<int32_t>, bitshifting_estimator);
+  module.CreateFreeFunction("rightShift", &RightShift<int64_t>, bitshifting_estimator);
+  module.CreateFreeFunction("rightShift", &RightShift<uint32_t>, bitshifting_estimator);
+  module.CreateFreeFunction("rightShift", &RightShift<uint64_t>, bitshifting_estimator);
 }
 
 }  // namespace vm_modules
