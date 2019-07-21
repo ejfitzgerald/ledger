@@ -21,15 +21,16 @@
 #include "core/byte_array/encoders.hpp"
 #include "core/json/document.hpp"
 #include "vm/module.hpp"
+#include "vm/module/estimate_charge.hpp"
 #include "vm_modules/core/structured_data.hpp"
 
 #include <sstream>
 
+using fetch::vm::ConstantEstimator;
+
 namespace fetch {
-
-using namespace vm;
-
 namespace vm_modules {
+
 namespace {
 
 using fetch::byte_array::ConstByteArray;

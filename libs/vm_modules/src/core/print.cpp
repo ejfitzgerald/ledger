@@ -19,15 +19,15 @@
 #include "meta/type_traits.hpp"
 #include "vectorise/fixed_point/fixed_point.hpp"
 #include "vm/module.hpp"
+#include "vm/module/estimate_charge.hpp"
 #include "vm/vm.hpp"
 #include "vm_modules/core/print.hpp"
 
 #include <ostream>
 
+using fetch::vm::ConstantEstimator;
+
 namespace fetch {
-
-using namespace vm;
-
 namespace vm_modules {
 
 namespace {

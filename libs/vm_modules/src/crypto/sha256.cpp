@@ -28,10 +28,10 @@
 
 #include <utility>
 
+using fetch::vm::ConstantEstimator;
+using fetch::vm::Ptr;
+
 namespace fetch {
-
-using namespace vm;
-
 namespace vm_modules {
 
 SHA256Wrapper::SHA256Wrapper(fetch::vm::VM *vm, fetch::vm::TypeId type_id)

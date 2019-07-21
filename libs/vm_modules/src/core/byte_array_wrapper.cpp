@@ -19,6 +19,7 @@
 #include "core/byte_array/byte_array.hpp"
 #include "vm/common.hpp"
 #include "vm/module.hpp"
+#include "vm/module/estimate_charge.hpp"
 #include "vm/object.hpp"
 #include "vm/vm.hpp"
 #include "vm_modules/core/byte_array_wrapper.hpp"
@@ -26,10 +27,9 @@
 #include <cstddef>
 #include <cstdint>
 
+using fetch::vm::ConstantEstimator;
+
 namespace fetch {
-
-using namespace vm;
-
 namespace vm_modules {
 
 ByteArrayWrapper::ByteArrayWrapper(fetch::vm::VM *vm, fetch::vm::TypeId type_id,

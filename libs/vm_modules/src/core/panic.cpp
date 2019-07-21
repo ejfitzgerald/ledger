@@ -17,12 +17,12 @@
 //------------------------------------------------------------------------------
 
 #include "vm/module.hpp"
+#include "vm/module/estimate_charge.hpp"
 #include "vm/vm.hpp"
 
+using fetch::vm::ConstantEstimator;
+
 namespace fetch {
-
-using namespace vm;
-
 namespace vm_modules {
 
 void Panic(fetch::vm::VM *vm, fetch::vm::Ptr<fetch::vm::String> const &s)

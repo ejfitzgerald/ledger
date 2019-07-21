@@ -32,6 +32,7 @@
 #include "variant/variant_utils.hpp"
 #include "vm/address.hpp"
 #include "vm/function_decorators.hpp"
+#include "vm/module/estimate_charge.hpp"
 #include "vm_modules/vm_factory.hpp"
 
 #include <algorithm>
@@ -40,6 +41,7 @@
 
 using fetch::byte_array::ConstByteArray;
 using fetch::vm_modules::VMFactory;
+using fetch::vm::ConstantEstimator;
 
 namespace fetch {
 namespace ledger {
@@ -111,7 +113,7 @@ SmartContract::SmartContract(std::string const &source)
 
   module_->CreateFreeFunction("getBlockNumber",
                               [this](vm::VM *) -> BlockIndex { return block_index_; },
-                              vm::ConstantEstimator<0>::Get());
+                              ConstantEstimator<0>::Get());
 
   // create and compile the executable
   auto errors = vm_modules::VMFactory::Compile(module_, source_, *executable_);

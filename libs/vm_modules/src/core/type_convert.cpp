@@ -27,11 +27,11 @@
 #include <sstream>
 #include <type_traits>
 
+using fetch::vm::ConstantEstimator;
+
 namespace fetch {
-
-using namespace vm;
-
 namespace vm_modules {
+
 namespace {
 
 /**

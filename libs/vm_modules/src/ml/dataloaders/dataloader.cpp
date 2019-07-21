@@ -21,6 +21,7 @@
 #include "ml/dataloaders/dataloader.hpp"
 #include "ml/dataloaders/mnist_loaders/mnist_loader.hpp"
 #include "vm/module.hpp"
+#include "vm/module/estimate_charge.hpp"
 #include "vm/object.hpp"
 #include "vm/vm.hpp"
 #include "vm_modules/math/tensor.hpp"
@@ -30,6 +31,8 @@
 #include <stdexcept>
 #include <utility>
 #include <vector>
+
+using fetch::vm::ConstantEstimator;
 
 namespace fetch {
 namespace vm_modules {
@@ -46,13 +49,13 @@ fetch::vm::Ptr<VMDataLoader> VMDataLoader::Constructor(fetch::vm::VM *vm, fetch:
 
 void VMDataLoader::Bind(fetch::vm::Module &module)
 {
-  auto const dataloader_ctor_estimator = vm::ConstantEstimator<0>::Get();
+  auto const dataloader_ctor_estimator = ConstantEstimator<0>::Get();
 
   module.CreateClassType<VMDataLoader>("DataLoader")
       .CreateConstuctor<decltype(dataloader_ctor_estimator)>(std::move(dataloader_ctor_estimator))
-      .CreateMemberFunction("addData", &VMDataLoader::AddData, vm::ConstantEstimator<3>::Get())
-      .CreateMemberFunction("getNext", &VMDataLoader::GetNext, vm::ConstantEstimator<0>::Get())
-      .CreateMemberFunction("isDone", &VMDataLoader::IsDone, vm::ConstantEstimator<0>::Get());
+      .CreateMemberFunction("addData", &VMDataLoader::AddData, ConstantEstimator<3>::Get())
+      .CreateMemberFunction("getNext", &VMDataLoader::GetNext, ConstantEstimator<0>::Get())
+      .CreateMemberFunction("isDone", &VMDataLoader::IsDone, ConstantEstimator<0>::Get());
 }
 
 void VMDataLoader::AddData(fetch::vm::Ptr<fetch::vm::String> const &mode,

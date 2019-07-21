@@ -17,15 +17,16 @@
 //------------------------------------------------------------------------------
 
 #include "vm/module.hpp"
+#include "vm/module/estimate_charge.hpp"
 #include "vm_modules/polyfill/bitwise_ops.hpp"
 
 #include <cstdint>
 
+using fetch::vm::ConstantEstimator;
+
 namespace fetch {
-
-using namespace vm;
-
 namespace vm_modules {
+
 namespace {
 
 template <typename T>
