@@ -151,6 +151,14 @@ public:
 
   void TooExpensive(uint8_t, uint16_t)
   {}
+
+  int32_t GetIndexedValue(int32_t)
+  {
+    return 0;
+  }
+
+  void SetIndexedValue(int32_t, int32_t)
+  {}
 };
 
 TEST_F(VmChargeTests, ctor_bind_with_charge_estimate_execution_fails_when_limit_exceeded)
@@ -258,6 +266,52 @@ TEST_F(VmChargeTests,
   static char const *TEXT = R"(
     function main()
       CustomType.affordable(3u8, 4u16);
+    endfunction
+  )";
+
+  ASSERT_TRUE(toolkit.Compile(TEXT));
+  ASSERT_TRUE(toolkit.Run(nullptr, high_charge_limit));
+}
+
+TEST_F(VmChargeTests, index_operator_bind_with_charge_estimate_execution_fails_when_limit_exceeded)
+{
+  auto const ctor_estimator   = fetch::vm::ConstantEstimator<0>::Get();
+  auto const getter_estimator = fetch::vm::ConstantEstimator<1>::Get(10000);
+  auto const setter_estimator = fetch::vm::ConstantEstimator<2>::Get(10000);
+
+  toolkit.module()
+      .CreateClassType<CustomType>("CustomType")
+      .CreateConstuctor<decltype(ctor_estimator)>(std::move(ctor_estimator))
+      .EnableIndexOperator<decltype(getter_estimator), decltype(setter_estimator), int32_t,
+                           int32_t>(std::move(getter_estimator), std::move(setter_estimator));
+
+  static char const *TEXT = R"(
+    function main()
+      var obj = CustomType();
+      obj[3];
+    endfunction
+  )";
+
+  ASSERT_TRUE(toolkit.Compile(TEXT));
+  ASSERT_FALSE(toolkit.Run(nullptr, high_charge_limit));
+}
+
+TEST_F(VmChargeTests, index_operator_bind_with_charge_estimate_execution_succeeds_when_limit_obeyed)
+{
+  auto const ctor_estimator   = fetch::vm::ConstantEstimator<0>::Get();
+  auto const getter_estimator = fetch::vm::ConstantEstimator<1>::Get();
+  auto const setter_estimator = fetch::vm::ConstantEstimator<2>::Get();
+
+  toolkit.module()
+      .CreateClassType<CustomType>("CustomType")
+      .CreateConstuctor<decltype(ctor_estimator)>(std::move(ctor_estimator))
+      .EnableIndexOperator<decltype(getter_estimator), decltype(setter_estimator), int32_t,
+                           int32_t>(std::move(getter_estimator), std::move(setter_estimator));
+
+  static char const *TEXT = R"(
+    function main()
+      var obj = CustomType();
+      obj[3];
     endfunction
   )";
 
