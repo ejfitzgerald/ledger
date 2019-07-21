@@ -42,8 +42,6 @@ std::shared_ptr<fetch::vm::Module> VMFactory::GetModule(uint64_t enabled)
   // math modules
   if (MOD_MATH & enabled)
   {
-    math::BindExp(*module);
-    math::BindSqrt(*module);
     math::BindMath(*module);
   }
 
