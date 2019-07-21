@@ -18,6 +18,11 @@
 
 #include "vm_modules/vm_factory.hpp"
 
+#include <cstdint>
+#include <memory>
+#include <string>
+#include <vector>
+
 namespace fetch {
 namespace vm_modules {
 

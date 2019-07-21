@@ -1,4 +1,3 @@
-#pragma once
 //------------------------------------------------------------------------------
 //
 //   Copyright 2018-2019 Fetch.AI Limited
@@ -17,17 +16,36 @@
 //
 //------------------------------------------------------------------------------
 
-namespace fetch {
+#include "vm/module.hpp"
+#include "vm_modules/math/abs.hpp"
+#include "vm_modules/math/exp.hpp"
+#include "vm_modules/math/log.hpp"
+#include "vm_modules/math/math.hpp"
+#include "vm_modules/math/pow.hpp"
+#include "vm_modules/math/random.hpp"
+#include "vm_modules/math/sqrt.hpp"
+#include "vm_modules/math/tensor.hpp"
+#include "vm_modules/math/trigonometry.hpp"
 
-namespace vm {
-class Module;
+namespace fetch {
+namespace vm_modules {
+namespace math {
+
+void BindMath(fetch::vm::Module &module)
+{
+  // bind math functions
+  BindAbs(module);
+  BindExp(module);
+  BindLog(module);
+  BindPow(module);
+  BindRand(module);
+  BindSqrt(module);
+  BindTrigonometry(module);
+
+  // bind math classes
+  VMTensor::Bind(module);
 }
 
-namespace vm_modules {
-namespace ml {
-
-void BindML(fetch::vm::Module &module);
-
-}  // namespace ml
+}  // namespace math
 }  // namespace vm_modules
 }  // namespace fetch

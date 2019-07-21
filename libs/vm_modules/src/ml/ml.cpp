@@ -1,4 +1,3 @@
-#pragma once
 //------------------------------------------------------------------------------
 //
 //   Copyright 2018-2019 Fetch.AI Limited
@@ -17,16 +16,35 @@
 //
 //------------------------------------------------------------------------------
 
+#include "vm/module.hpp"
+#include "vm_modules/math/tensor.hpp"
+#include "vm_modules/ml/dataloaders/dataloader.hpp"
+#include "vm_modules/ml/graph.hpp"
+#include "vm_modules/ml/ml.hpp"
+#include "vm_modules/ml/optimisation/adam_optimiser.hpp"
+#include "vm_modules/ml/state_dict.hpp"
+#include "vm_modules/ml/training_pair.hpp"
+
 namespace fetch {
-
-namespace vm {
-class Module;
-}
-
 namespace vm_modules {
 namespace ml {
 
-void BindML(fetch::vm::Module &module);
+void BindML(fetch::vm::Module &module)
+{
+  // Tensor - required by later functions
+  math::VMTensor::Bind(module);
+
+  // ml fundamentals
+  VMStateDict::Bind(module);
+  VMGraph::Bind(module);
+  VMTrainingPair::Bind(module);
+
+  // dataloader
+  VMDataLoader::Bind(module);
+
+  // optimisers
+  VMAdamOptimiser::Bind(module);
+}
 
 }  // namespace ml
 }  // namespace vm_modules
