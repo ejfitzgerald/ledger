@@ -18,12 +18,16 @@
 //------------------------------------------------------------------------------
 
 #include "crypto/sha256.hpp"
-#include "vm/module.hpp"
-#include "vm_modules/core/byte_array_wrapper.hpp"
-#include "vm_modules/math/bignumber.hpp"
+
+#include <cstdint>
 
 namespace fetch {
 namespace vm_modules {
+
+class ByteArrayWrapper;
+namespace math {
+class UInt256Wrapper;
+}
 
 class SHA256Wrapper : public fetch::vm::Object
 {
@@ -36,61 +40,17 @@ public:
 
   SHA256Wrapper()           = delete;
   ~SHA256Wrapper() override = default;
+  SHA256Wrapper(fetch::vm::VM *vm, fetch::vm::TypeId type_id);
 
-  static void Bind(vm::Module &module)
-  {
-    auto const sha256_ctor_estimator = vm::ConstantEstimator<0>::Get();
+  static fetch::vm::Ptr<SHA256Wrapper> Constructor(fetch::vm::VM *vm, fetch::vm::TypeId type_id);
 
-    module.CreateClassType<SHA256Wrapper>("SHA256")
-        .CreateConstuctor<decltype(sha256_ctor_estimator)>(std::move(sha256_ctor_estimator))
-        .CreateMemberFunction("update", &SHA256Wrapper::UpdateUInt256,
-                              vm::ConstantEstimator<1>::Get())
-        .CreateMemberFunction("update", &SHA256Wrapper::UpdateString,
-                              vm::ConstantEstimator<1>::Get())
-        .CreateMemberFunction("update", &SHA256Wrapper::UpdateBuffer,
-                              vm::ConstantEstimator<1>::Get())
-        .CreateMemberFunction("final", &SHA256Wrapper::Final, vm::ConstantEstimator<0>::Get())
-        .CreateMemberFunction("reset", &SHA256Wrapper::Reset, vm::ConstantEstimator<0>::Get());
-  }
+  static void Bind(vm::Module &module);
 
-  void UpdateUInt256(vm::Ptr<vm_modules::math::UInt256Wrapper> const &uint)
-  {
-    hasher_.Update(uint->number().pointer(), uint->number().size());
-  }
-
-  void UpdateString(vm::Ptr<vm::String> const &str)
-  {
-    hasher_.Update(str->str);
-  }
-
-  void UpdateBuffer(Ptr<ByteArrayWrapper> const &buffer)
-  {
-    hasher_.Update(buffer->byte_array());
-  }
-
-  void Reset()
-  {
-    hasher_.Reset();
-  }
-
-  Ptr<math::UInt256Wrapper> Final()
-  {
-    return vm_->CreateNewObject<math::UInt256Wrapper>(hasher_.Final());
-  }
-
-  Ptr<ByteArrayWrapper> FinalAsBuffer()
-  {
-    return vm_->CreateNewObject<ByteArrayWrapper>(hasher_.Final());
-  }
-
-  SHA256Wrapper(fetch::vm::VM *vm, fetch::vm::TypeId type_id)
-    : fetch::vm::Object(vm, type_id)
-  {}
-
-  static fetch::vm::Ptr<SHA256Wrapper> Constructor(fetch::vm::VM *vm, fetch::vm::TypeId type_id)
-  {
-    return new SHA256Wrapper(vm, type_id);
-  }
+  void                      UpdateUInt256(vm::Ptr<vm_modules::math::UInt256Wrapper> const &uint);
+  void                      UpdateString(vm::Ptr<vm::String> const &str);
+  void                      UpdateBuffer(Ptr<ByteArrayWrapper> const &buffer);
+  void                      Reset();
+  Ptr<math::UInt256Wrapper> Final();
 
 private:
   crypto::SHA256 hasher_;

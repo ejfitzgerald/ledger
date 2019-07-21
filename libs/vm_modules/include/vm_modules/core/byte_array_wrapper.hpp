@@ -17,9 +17,16 @@
 //
 //------------------------------------------------------------------------------
 
-#include "vm/module.hpp"
+#include "vm/object.hpp"
+
+#include <cstdint>
 
 namespace fetch {
+
+namespace vm {
+class Module;
+}
+
 namespace vm_modules {
 
 class ByteArrayWrapper : public fetch::vm::Object
@@ -28,54 +35,20 @@ public:
   ByteArrayWrapper()           = delete;
   ~ByteArrayWrapper() override = default;
 
-  static void Bind(vm::Module &module)
-  {
-    auto const byte_array_wrapper_ctor_estimator = vm::ConstantEstimator<1>::Get();
-    module.CreateClassType<ByteArrayWrapper>("Buffer")
-        .CreateConstuctor<decltype(byte_array_wrapper_ctor_estimator), int32_t>(
-            std::move(byte_array_wrapper_ctor_estimator))
-        .CreateMemberFunction("copy", &ByteArrayWrapper::Copy, vm::ConstantEstimator<0>::Get());
-  }
-
   ByteArrayWrapper(fetch::vm::VM *vm, fetch::vm::TypeId type_id,
-                   byte_array::ByteArray const &bytearray)
-    : fetch::vm::Object(vm, type_id)
-    , byte_array_(bytearray)
-  {}
+                   byte_array::ByteArray const &bytearray);
 
   static fetch::vm::Ptr<ByteArrayWrapper> Constructor(fetch::vm::VM *vm, fetch::vm::TypeId type_id,
-                                                      int32_t n)
-  {
-    return new ByteArrayWrapper(vm, type_id, byte_array::ByteArray(std::size_t(n)));
-  }
-
+                                                      int32_t n);
   static fetch::vm::Ptr<ByteArrayWrapper> Constructor(fetch::vm::VM *vm, fetch::vm::TypeId type_id,
-                                                      byte_array::ByteArray bytearray)
-  {
-    return new ByteArrayWrapper(vm, type_id, bytearray);
-  }
+                                                      byte_array::ByteArray bytearray);
 
-  fetch::vm::Ptr<ByteArrayWrapper> Copy()
-  {
-    return vm_->CreateNewObject<ByteArrayWrapper>(byte_array_.Copy());
-  }
+  static void Bind(vm::Module &module);
 
-  byte_array::ByteArray byte_array()
-  {
-    return byte_array_;
-  }
-
-  bool SerializeTo(vm::ByteArrayBuffer &buffer) override
-  {
-    buffer << byte_array_;
-    return true;
-  }
-
-  bool DeserializeFrom(vm::ByteArrayBuffer &buffer) override
-  {
-    buffer >> byte_array_;
-    return true;
-  }
+  fetch::vm::Ptr<ByteArrayWrapper> Copy() const;
+  byte_array::ByteArray            byte_array() const;
+  bool                             SerializeTo(vm::ByteArrayBuffer &buffer) override;
+  bool                             DeserializeFrom(vm::ByteArrayBuffer &buffer) override;
 
 private:
   byte_array::ByteArray byte_array_;

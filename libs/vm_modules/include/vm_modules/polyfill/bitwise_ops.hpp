@@ -17,37 +17,15 @@
 //
 //------------------------------------------------------------------------------
 
-#include "vm/module.hpp"
-
-#include <cstdint>
-
 namespace fetch {
+
+namespace vm {
+class Module;
+}
+
 namespace vm_modules {
 
-template <typename T>
-T And(fetch::vm::VM * /*vm*/, T x, T s)
-{
-  return T(x & s);
-}
-
-template <typename T>
-T Or(fetch::vm::VM * /*vm*/, T x, T s)
-{
-  return T(x | s);
-}
-
-inline void BindBitwiseOps(vm::Module &module)
-{
-  module.CreateFreeFunction("and", &And<int32_t>, vm::ConstantEstimator<2>::Get());
-  module.CreateFreeFunction("and", &And<int64_t>, vm::ConstantEstimator<2>::Get());
-  module.CreateFreeFunction("and", &And<uint32_t>, vm::ConstantEstimator<2>::Get());
-  module.CreateFreeFunction("and", &And<uint64_t>, vm::ConstantEstimator<2>::Get());
-
-  module.CreateFreeFunction("or", &Or<int32_t>, vm::ConstantEstimator<2>::Get());
-  module.CreateFreeFunction("or", &Or<int64_t>, vm::ConstantEstimator<2>::Get());
-  module.CreateFreeFunction("or", &Or<uint32_t>, vm::ConstantEstimator<2>::Get());
-  module.CreateFreeFunction("or", &Or<uint64_t>, vm::ConstantEstimator<2>::Get());
-}
+void BindBitwiseOps(vm::Module &module);
 
 }  // namespace vm_modules
 }  // namespace fetch
