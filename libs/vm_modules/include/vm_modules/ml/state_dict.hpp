@@ -17,11 +17,17 @@
 //
 //------------------------------------------------------------------------------
 
+#include "math/tensor.hpp"
 #include "ml/state_dict.hpp"
-#include "vm/module.hpp"
+#include "vm/object.hpp"
 #include "vm_modules/math/tensor.hpp"
 
 namespace fetch {
+
+namespace vm {
+class Module;
+}
+
 namespace vm_modules {
 namespace ml {
 
@@ -32,38 +38,17 @@ public:
   using MathTensorType = fetch::math::Tensor<DataType>;
   using VMTensorType   = fetch::vm_modules::math::VMTensor;
 
-  VMStateDict(fetch::vm::VM *vm, fetch::vm::TypeId type_id)
-    : fetch::vm::Object(vm, type_id)
-    , state_dict_()
-  {}
+  VMStateDict(fetch::vm::VM *vm, fetch::vm::TypeId type_id);
 
-  VMStateDict(fetch::vm::VM *vm, fetch::vm::TypeId type_id, fetch::ml::StateDict<MathTensorType> sd)
-    : fetch::vm::Object(vm, type_id)
-  {
-    state_dict_ = std::move(sd);
-  }
+  VMStateDict(fetch::vm::VM *vm, fetch::vm::TypeId type_id,
+              fetch::ml::StateDict<MathTensorType> sd);
 
-  static fetch::vm::Ptr<VMStateDict> Constructor(fetch::vm::VM *vm, fetch::vm::TypeId type_id)
-  {
-    return new VMStateDict(vm, type_id);
-  }
+  static fetch::vm::Ptr<VMStateDict> Constructor(fetch::vm::VM *vm, fetch::vm::TypeId type_id);
+
+  static void Bind(fetch::vm::Module &module);
 
   void SetWeights(fetch::vm::Ptr<fetch::vm::String> const &                nodename,
-                  fetch::vm::Ptr<fetch::vm_modules::math::VMTensor> const &weights)
-  {
-    auto weights_tensor = state_dict_.dict_[nodename->str].weights_;
-    *weights_tensor     = weights->GetTensor();
-  }
-
-  static void Bind(fetch::vm::Module &module)
-  {
-    auto const statedict_ctor_estimator = vm::ConstantEstimator<0>::Get();
-
-    module.CreateClassType<VMStateDict>("StateDict")
-        .CreateConstuctor<decltype(statedict_ctor_estimator)>(std::move(statedict_ctor_estimator))
-        .CreateMemberFunction("setWeights", &VMStateDict::SetWeights,
-                              vm::ConstantEstimator<2>::Get());
-  }
+                  fetch::vm::Ptr<fetch::vm_modules::math::VMTensor> const &weights);
 
   fetch::ml::StateDict<MathTensorType> state_dict_;
 };
