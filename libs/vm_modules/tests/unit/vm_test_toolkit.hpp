@@ -129,17 +129,17 @@ public:
     observer_->fake_.SetKeyValue(key, raw_value);
   }
 
-  Module &module()
+  Module &module() const
   {
     return *module_;
   }
 
-  MockIoObserver &observer()
+  MockIoObserver &observer() const
   {
     return *observer_;
   }
 
-  fetch::vm::VM &vm()
+  fetch::vm::VM &vm() const
   {
     return *vm_;
   }

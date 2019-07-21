@@ -30,12 +30,11 @@ public:
 
   static void Bind(vm::Module &module)
   {
-    auto const byte_array_wrapper_ctor_estimator = fetch::vm::ConstantEstimator<1>::Get();
+    auto const byte_array_wrapper_ctor_estimator = vm::ConstantEstimator<1>::Get();
     module.CreateClassType<ByteArrayWrapper>("Buffer")
         .CreateConstuctor<decltype(byte_array_wrapper_ctor_estimator), int32_t>(
             std::move(byte_array_wrapper_ctor_estimator))
-        .CreateMemberFunction("copy", &ByteArrayWrapper::Copy,
-                              fetch::vm::ConstantEstimator<0>::Get());
+        .CreateMemberFunction("copy", &ByteArrayWrapper::Copy, vm::ConstantEstimator<0>::Get());
   }
 
   ByteArrayWrapper(fetch::vm::VM *vm, fetch::vm::TypeId type_id,

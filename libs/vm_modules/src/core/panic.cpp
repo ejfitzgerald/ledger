@@ -20,6 +20,9 @@
 #include "vm/vm.hpp"
 
 namespace fetch {
+
+using namespace vm;
+
 namespace vm_modules {
 
 void Panic(fetch::vm::VM *vm, fetch::vm::Ptr<fetch::vm::String> const &s)
@@ -45,9 +48,9 @@ void AssertWithMsg(fetch::vm::VM *vm, bool condition, fetch::vm::Ptr<fetch::vm::
 
 void CreatePanic(vm::Module &module)
 {
-  module.CreateFreeFunction("panic", &Panic, fetch::vm::ConstantEstimator<1>::Get());
-  module.CreateFreeFunction("assert", &Assert, fetch::vm::ConstantEstimator<1>::Get());
-  module.CreateFreeFunction("assert", &AssertWithMsg, fetch::vm::ConstantEstimator<2>::Get());
+  module.CreateFreeFunction("panic", &Panic, ConstantEstimator<1>::Get());
+  module.CreateFreeFunction("assert", &Assert, ConstantEstimator<1>::Get());
+  module.CreateFreeFunction("assert", &AssertWithMsg, ConstantEstimator<2>::Get());
 }
 
 }  // namespace vm_modules

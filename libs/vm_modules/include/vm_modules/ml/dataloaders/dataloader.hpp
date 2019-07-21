@@ -42,16 +42,13 @@ public:
 
   static void Bind(fetch::vm::Module &module)
   {
-    auto const dataloader_ctor_estimator = fetch::vm::ConstantEstimator<0>::Get();
+    auto const dataloader_ctor_estimator = vm::ConstantEstimator<0>::Get();
 
     module.CreateClassType<VMDataLoader>("DataLoader")
         .CreateConstuctor<decltype(dataloader_ctor_estimator)>(std::move(dataloader_ctor_estimator))
-        .CreateMemberFunction("addData", &VMDataLoader::AddData,
-                              fetch::vm::ConstantEstimator<3>::Get())
-        .CreateMemberFunction("getNext", &VMDataLoader::GetNext,
-                              fetch::vm::ConstantEstimator<0>::Get())
-        .CreateMemberFunction("isDone", &VMDataLoader::IsDone,
-                              fetch::vm::ConstantEstimator<0>::Get());
+        .CreateMemberFunction("addData", &VMDataLoader::AddData, vm::ConstantEstimator<3>::Get())
+        .CreateMemberFunction("getNext", &VMDataLoader::GetNext, vm::ConstantEstimator<0>::Get())
+        .CreateMemberFunction("isDone", &VMDataLoader::IsDone, vm::ConstantEstimator<0>::Get());
   }
 
   void AddData(fetch::vm::Ptr<fetch::vm::String> const &mode,

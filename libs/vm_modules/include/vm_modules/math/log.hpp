@@ -53,31 +53,26 @@ fetch::math::meta::IfIsMath<T, T> Log10(fetch::vm::VM *, T const &a)
 
 inline void BindLog(fetch::vm::Module &module)
 {
-  module.CreateFreeFunction<float_t>("log", &Log<float_t>, fetch::vm::ConstantEstimator<1>::Get());
-  module.CreateFreeFunction<double_t>("log", &Log<double_t>,
-                                      fetch::vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction<float_t>("log", &Log<float_t>, vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction<double_t>("log", &Log<double_t>, vm::ConstantEstimator<1>::Get());
   module.CreateFreeFunction<fixed_point::fp32_t>("log", &Log<fixed_point::fp32_t>,
-                                                 fetch::vm::ConstantEstimator<1>::Get());
+                                                 vm::ConstantEstimator<1>::Get());
   module.CreateFreeFunction<fixed_point::fp64_t>("log", &Log<fixed_point::fp64_t>,
-                                                 fetch::vm::ConstantEstimator<1>::Get());
+                                                 vm::ConstantEstimator<1>::Get());
 
-  module.CreateFreeFunction<float_t>("log2", &Log2<float_t>,
-                                     fetch::vm::ConstantEstimator<1>::Get());
-  module.CreateFreeFunction<double_t>("log2", &Log2<double_t>,
-                                      fetch::vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction<float_t>("log2", &Log2<float_t>, vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction<double_t>("log2", &Log2<double_t>, vm::ConstantEstimator<1>::Get());
   module.CreateFreeFunction<fixed_point::fp32_t>("log2", &Log2<fixed_point::fp32_t>,
-                                                 fetch::vm::ConstantEstimator<1>::Get());
+                                                 vm::ConstantEstimator<1>::Get());
   module.CreateFreeFunction<fixed_point::fp64_t>("log2", &Log2<fixed_point::fp64_t>,
-                                                 fetch::vm::ConstantEstimator<1>::Get());
+                                                 vm::ConstantEstimator<1>::Get());
 
-  module.CreateFreeFunction<float_t>("log10", &Log10<float_t>,
-                                     fetch::vm::ConstantEstimator<1>::Get());
-  module.CreateFreeFunction<double_t>("log10", &Log10<double_t>,
-                                      fetch::vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction<float_t>("log10", &Log10<float_t>, vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction<double_t>("log10", &Log10<double_t>, vm::ConstantEstimator<1>::Get());
   module.CreateFreeFunction<fixed_point::fp32_t>("log10", &Log10<fixed_point::fp32_t>,
-                                                 fetch::vm::ConstantEstimator<1>::Get());
+                                                 vm::ConstantEstimator<1>::Get());
   module.CreateFreeFunction<fixed_point::fp64_t>("log10", &Log10<fixed_point::fp64_t>,
-                                                 fetch::vm::ConstantEstimator<1>::Get());
+                                                 vm::ConstantEstimator<1>::Get());
 }
 
 }  // namespace math

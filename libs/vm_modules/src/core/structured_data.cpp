@@ -26,6 +26,9 @@
 #include <sstream>
 
 namespace fetch {
+
+using namespace vm;
+
 namespace vm_modules {
 namespace {
 
@@ -49,37 +52,37 @@ void StructuredData::Bind(vm::Module &module)
 {
   auto interface = module.CreateClassType<StructuredData>("StructuredData");
 
-  auto const structured_data_ctor_estimator = fetch::vm::ConstantEstimator<0>::Get();
+  auto const structured_data_ctor_estimator = ConstantEstimator<0>::Get();
 
   interface.CreateConstuctor<decltype(structured_data_ctor_estimator )>(std::move(structured_data_ctor_estimator))
     // Getters
-      .CreateMemberFunction("getInt32", &StructuredData::GetPrimitive<int32_t>, fetch::vm::ConstantEstimator<1>::Get())
-      .CreateMemberFunction("getInt64", &StructuredData::GetPrimitive<int64_t>, fetch::vm::ConstantEstimator<1>::Get())
-      .CreateMemberFunction("getUInt32", &StructuredData::GetPrimitive<uint32_t>, fetch::vm::ConstantEstimator<1>::Get())
-      .CreateMemberFunction("getUInt64", &StructuredData::GetPrimitive<uint64_t>, fetch::vm::ConstantEstimator<1>::Get())
-      .CreateMemberFunction("getFloat32", &StructuredData::GetPrimitive<float>, fetch::vm::ConstantEstimator<1>::Get())
-      .CreateMemberFunction("getFloat64", &StructuredData::GetPrimitive<double>, fetch::vm::ConstantEstimator<1>::Get())
-      .CreateMemberFunction("getString", &StructuredData::GetString, fetch::vm::ConstantEstimator<1>::Get())
-      .CreateMemberFunction("getArrayInt32", &StructuredData::GetArray<int32_t>, fetch::vm::ConstantEstimator<1>::Get())
-      .CreateMemberFunction("getArrayInt64", &StructuredData::GetArray<int64_t>, fetch::vm::ConstantEstimator<1>::Get())
-      .CreateMemberFunction("getArrayUInt32", &StructuredData::GetArray<uint32_t>, fetch::vm::ConstantEstimator<1>::Get())
-      .CreateMemberFunction("getArrayUInt64", &StructuredData::GetArray<uint64_t>, fetch::vm::ConstantEstimator<1>::Get())
-      .CreateMemberFunction("getArrayFloat32", &StructuredData::GetArray<float>, fetch::vm::ConstantEstimator<1>::Get())
-      .CreateMemberFunction("getArrayFloat64", &StructuredData::GetArray<double>, fetch::vm::ConstantEstimator<1>::Get())
+      .CreateMemberFunction("getInt32", &StructuredData::GetPrimitive<int32_t>, ConstantEstimator<1>::Get())
+      .CreateMemberFunction("getInt64", &StructuredData::GetPrimitive<int64_t>, ConstantEstimator<1>::Get())
+      .CreateMemberFunction("getUInt32", &StructuredData::GetPrimitive<uint32_t>, ConstantEstimator<1>::Get())
+      .CreateMemberFunction("getUInt64", &StructuredData::GetPrimitive<uint64_t>, ConstantEstimator<1>::Get())
+      .CreateMemberFunction("getFloat32", &StructuredData::GetPrimitive<float>, ConstantEstimator<1>::Get())
+      .CreateMemberFunction("getFloat64", &StructuredData::GetPrimitive<double>, ConstantEstimator<1>::Get())
+      .CreateMemberFunction("getString", &StructuredData::GetString, ConstantEstimator<1>::Get())
+      .CreateMemberFunction("getArrayInt32", &StructuredData::GetArray<int32_t>, ConstantEstimator<1>::Get())
+      .CreateMemberFunction("getArrayInt64", &StructuredData::GetArray<int64_t>, ConstantEstimator<1>::Get())
+      .CreateMemberFunction("getArrayUInt32", &StructuredData::GetArray<uint32_t>, ConstantEstimator<1>::Get())
+      .CreateMemberFunction("getArrayUInt64", &StructuredData::GetArray<uint64_t>, ConstantEstimator<1>::Get())
+      .CreateMemberFunction("getArrayFloat32", &StructuredData::GetArray<float>, ConstantEstimator<1>::Get())
+      .CreateMemberFunction("getArrayFloat64", &StructuredData::GetArray<double>, ConstantEstimator<1>::Get())
     // Setters
-      .CreateMemberFunction("set", &StructuredData::SetArray<int32_t>, fetch::vm::ConstantEstimator<2>::Get())
-      .CreateMemberFunction("set", &StructuredData::SetArray<int64_t>, fetch::vm::ConstantEstimator<2>::Get())
-      .CreateMemberFunction("set", &StructuredData::SetArray<uint32_t>, fetch::vm::ConstantEstimator<2>::Get())
-      .CreateMemberFunction("set", &StructuredData::SetArray<uint64_t>, fetch::vm::ConstantEstimator<2>::Get())
-      .CreateMemberFunction("set", &StructuredData::SetArray<float>, fetch::vm::ConstantEstimator<2>::Get())
-      .CreateMemberFunction("set", &StructuredData::SetArray<double>, fetch::vm::ConstantEstimator<2>::Get())
-      .CreateMemberFunction("set", &StructuredData::SetString, fetch::vm::ConstantEstimator<2>::Get())
-      .CreateMemberFunction("set", &StructuredData::SetPrimitive<int32_t>, fetch::vm::ConstantEstimator<2>::Get())
-      .CreateMemberFunction("set", &StructuredData::SetPrimitive<int64_t>, fetch::vm::ConstantEstimator<2>::Get())
-      .CreateMemberFunction("set", &StructuredData::SetPrimitive<uint32_t>, fetch::vm::ConstantEstimator<2>::Get())
-      .CreateMemberFunction("set", &StructuredData::SetPrimitive<uint64_t>, fetch::vm::ConstantEstimator<2>::Get())
-      .CreateMemberFunction("set", &StructuredData::SetPrimitive<float>, fetch::vm::ConstantEstimator<2>::Get())
-      .CreateMemberFunction("set", &StructuredData::SetPrimitive<double>, fetch::vm::ConstantEstimator<2>::Get());
+      .CreateMemberFunction("set", &StructuredData::SetArray<int32_t>, ConstantEstimator<2>::Get())
+      .CreateMemberFunction("set", &StructuredData::SetArray<int64_t>, ConstantEstimator<2>::Get())
+      .CreateMemberFunction("set", &StructuredData::SetArray<uint32_t>, ConstantEstimator<2>::Get())
+      .CreateMemberFunction("set", &StructuredData::SetArray<uint64_t>, ConstantEstimator<2>::Get())
+      .CreateMemberFunction("set", &StructuredData::SetArray<float>, ConstantEstimator<2>::Get())
+      .CreateMemberFunction("set", &StructuredData::SetArray<double>, ConstantEstimator<2>::Get())
+      .CreateMemberFunction("set", &StructuredData::SetString, ConstantEstimator<2>::Get())
+      .CreateMemberFunction("set", &StructuredData::SetPrimitive<int32_t>, ConstantEstimator<2>::Get())
+      .CreateMemberFunction("set", &StructuredData::SetPrimitive<int64_t>, ConstantEstimator<2>::Get())
+      .CreateMemberFunction("set", &StructuredData::SetPrimitive<uint32_t>, ConstantEstimator<2>::Get())
+      .CreateMemberFunction("set", &StructuredData::SetPrimitive<uint64_t>, ConstantEstimator<2>::Get())
+      .CreateMemberFunction("set", &StructuredData::SetPrimitive<float>, ConstantEstimator<2>::Get())
+      .CreateMemberFunction("set", &StructuredData::SetPrimitive<double>, ConstantEstimator<2>::Get());
 
   // add array support?
   module.GetClassInterface<vm::IArray>()

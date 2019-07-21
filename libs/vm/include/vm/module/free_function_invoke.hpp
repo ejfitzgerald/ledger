@@ -19,6 +19,8 @@
 
 #include "estimate_charge.hpp"
 
+#include <utility>
+
 namespace fetch {
 namespace vm {
 
@@ -28,7 +30,7 @@ struct FreeFunctionInvokerHelper
   static void Invoke(VM *vm, int sp_offset, TypeId return_type_id, FreeFunction f, Estimator &&e,
                      Ts const &... parameters)
   {
-    if (EstimatedChargeIsWithinLimit(vm, std::forward<Estimator>(e), parameters...))
+    if (EstimateCharge(vm, std::forward<Estimator>(e), parameters...))
     {
       ReturnType result((*f)(vm, parameters...));
       StackSetter<ReturnType>::Set(vm, sp_offset, std::move(result), return_type_id);
@@ -43,7 +45,7 @@ struct FreeFunctionInvokerHelper<void, FreeFunction, Estimator, Ts...>
   static void Invoke(VM *vm, int sp_offset, TypeId /* return_type_id */, FreeFunction f,
                      Estimator &&e, Ts const &... parameters)
   {
-    if (EstimatedChargeIsWithinLimit(vm, std::forward<Estimator>(e), parameters...))
+    if (EstimateCharge(vm, std::forward<Estimator>(e), parameters...))
     {
       (*f)(vm, parameters...);
       vm->sp_ -= sp_offset;

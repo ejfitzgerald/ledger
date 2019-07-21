@@ -230,15 +230,13 @@ bool VM::Execute(std::string &error, Variant &output)
 
     assert(static_cast<bool>(info.handler));
 
-    ChargeAmount const charge_estimate = (info.estimator) ? info.estimator() : info.charge;
-
     // update the charge total
-    charge_total_ += charge_estimate;
+    charge_total_ += info.charge;
 
     // check for charge limit being reached
     if (charge_limit_ && (charge_total_ >= charge_limit_))
     {
-      RuntimeError("Insufficient charge, limit reached");
+      RuntimeError("Charge limit exceeded");
       break;
     }
 

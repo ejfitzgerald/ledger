@@ -57,12 +57,12 @@ public:
 
   static void Bind(fetch::vm::Module &module)
   {
-    auto const statedict_ctor_estimator = fetch::vm::ConstantEstimator<0>::Get();
+    auto const statedict_ctor_estimator = vm::ConstantEstimator<0>::Get();
 
     module.CreateClassType<VMStateDict>("StateDict")
         .CreateConstuctor<decltype(statedict_ctor_estimator)>(std::move(statedict_ctor_estimator))
         .CreateMemberFunction("setWeights", &VMStateDict::SetWeights,
-                              fetch::vm::ConstantEstimator<2>::Get());
+                              vm::ConstantEstimator<2>::Get());
   }
 
   fetch::ml::StateDict<MathTensorType> state_dict_;

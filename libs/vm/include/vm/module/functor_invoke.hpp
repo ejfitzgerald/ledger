@@ -30,7 +30,7 @@ struct FunctorInvokerHelper
   static void Invoke(VM *vm, int sp_offset, TypeId return_type_id, Functor &&functor, Estimator &&e,
                      Ts const &... parameters)
   {
-    if (EstimatedChargeIsWithinLimit(vm, std::forward<Estimator>(e), parameters...))
+    if (EstimateCharge(vm, std::forward<Estimator>(e), parameters...))
     {
       ReturnType result(functor(vm, parameters...));
       StackSetter<ReturnType>::Set(vm, sp_offset, std::move(result), return_type_id);
@@ -45,7 +45,7 @@ struct FunctorInvokerHelper<void, Functor, Estimator, Ts...>
   static void Invoke(VM *vm, int sp_offset, TypeId /* return_type_id */, Functor &&functor,
                      Estimator &&e, Ts const &... parameters)
   {
-    if (EstimatedChargeIsWithinLimit(vm, std::forward<Estimator>(e), parameters...))
+    if (EstimateCharge(vm, std::forward<Estimator>(e), parameters...))
     {
       functor(vm, parameters...);
       vm->sp_ -= sp_offset;

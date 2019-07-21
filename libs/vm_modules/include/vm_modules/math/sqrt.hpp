@@ -36,14 +36,12 @@ fetch::math::meta::IfIsMath<T, T> Sqrt(fetch::vm::VM *, T const &a)
 
 inline void BindSqrt(fetch::vm::Module &module)
 {
-  module.CreateFreeFunction<float_t>("sqrt", &Sqrt<float_t>,
-                                     fetch::vm::ConstantEstimator<1>::Get());
-  module.CreateFreeFunction<double_t>("sqrt", &Sqrt<double_t>,
-                                      fetch::vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction<float_t>("sqrt", &Sqrt<float_t>, vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction<double_t>("sqrt", &Sqrt<double_t>, vm::ConstantEstimator<1>::Get());
   module.CreateFreeFunction<fixed_point::fp32_t>("sqrt", &Sqrt<fixed_point::fp32_t>,
-                                                 fetch::vm::ConstantEstimator<1>::Get());
+                                                 vm::ConstantEstimator<1>::Get());
   module.CreateFreeFunction<fixed_point::fp64_t>("sqrt", &Sqrt<fixed_point::fp64_t>,
-                                                 fetch::vm::ConstantEstimator<1>::Get());
+                                                 vm::ConstantEstimator<1>::Get());
 }
 
 }  // namespace math

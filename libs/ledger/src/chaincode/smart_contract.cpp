@@ -111,7 +111,7 @@ SmartContract::SmartContract(std::string const &source)
 
   module_->CreateFreeFunction("getBlockNumber",
                               [this](vm::VM *) -> BlockIndex { return block_index_; },
-                              fetch::vm::ConstantEstimator<0>::Get());
+                              vm::ConstantEstimator<0>::Get());
 
   // create and compile the executable
   auto errors = vm_modules::VMFactory::Compile(module_, source_, *executable_);
@@ -168,7 +168,6 @@ SmartContract::SmartContract(std::string const &source)
       FETCH_LOG_DEBUG(LOGGING_NAME, "Invalid function decorator found");
       throw SmartContractException(SmartContractException::Category::COMPILATION,
                                    {"Invalid decorator found in contract"});
-      break;
     }
   }
 }

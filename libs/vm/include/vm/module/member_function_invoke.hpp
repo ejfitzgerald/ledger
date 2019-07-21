@@ -19,6 +19,8 @@
 
 #include "estimate_charge.hpp"
 
+#include <utility>
+
 namespace fetch {
 namespace vm {
 
@@ -29,7 +31,7 @@ struct MemberFunctionInvokerHelper
   static void Invoke(VM *vm, int sp_offset, TypeId return_type_id, MemberFunction f, Estimator &&e,
                      Ts const &... parameters)
   {
-    if (EstimatedChargeIsWithinLimit(vm, std::forward<Estimator>(e), parameters...))
+    if (EstimateCharge(vm, std::forward<Estimator>(e), parameters...))
     {
       Variant & v      = vm->stack_[vm->sp_ - sp_offset];
       Ptr<Type> object = v.object;
@@ -51,7 +53,7 @@ struct MemberFunctionInvokerHelper<Type, void, MemberFunction, Estimator, Ts...>
   static void Invoke(VM *vm, int sp_offset, TypeId /* return_type_id */, MemberFunction f,
                      Estimator &&e, Ts const &... parameters)
   {
-    if (EstimatedChargeIsWithinLimit(vm, std::forward<Estimator>(e), parameters...))
+    if (EstimateCharge(vm, std::forward<Estimator>(e), parameters...))
     {
       Variant & v      = vm->stack_[vm->sp_ - sp_offset];
       Ptr<Type> object = v.object;

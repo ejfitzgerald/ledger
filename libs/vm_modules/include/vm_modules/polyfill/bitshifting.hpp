@@ -38,23 +38,15 @@ T RightShift(fetch::vm::VM * /*vm*/, T x, T s)
 
 inline void BindBitShift(vm::Module &module)
 {
-  module.CreateFreeFunction("leftShift", &LeftShift<int32_t>,
-                            fetch::vm::ConstantEstimator<2>::Get());
-  module.CreateFreeFunction("leftShift", &LeftShift<int64_t>,
-                            fetch::vm::ConstantEstimator<2>::Get());
-  module.CreateFreeFunction("leftShift", &LeftShift<uint32_t>,
-                            fetch::vm::ConstantEstimator<2>::Get());
-  module.CreateFreeFunction("leftShift", &LeftShift<uint64_t>,
-                            fetch::vm::ConstantEstimator<2>::Get());
+  module.CreateFreeFunction("leftShift", &LeftShift<int32_t>, vm::ConstantEstimator<2>::Get());
+  module.CreateFreeFunction("leftShift", &LeftShift<int64_t>, vm::ConstantEstimator<2>::Get());
+  module.CreateFreeFunction("leftShift", &LeftShift<uint32_t>, vm::ConstantEstimator<2>::Get());
+  module.CreateFreeFunction("leftShift", &LeftShift<uint64_t>, vm::ConstantEstimator<2>::Get());
 
-  module.CreateFreeFunction("rightShift", &RightShift<int32_t>,
-                            fetch::vm::ConstantEstimator<2>::Get());
-  module.CreateFreeFunction("rightShift", &RightShift<int64_t>,
-                            fetch::vm::ConstantEstimator<2>::Get());
-  module.CreateFreeFunction("rightShift", &RightShift<uint32_t>,
-                            fetch::vm::ConstantEstimator<2>::Get());
-  module.CreateFreeFunction("rightShift", &RightShift<uint64_t>,
-                            fetch::vm::ConstantEstimator<2>::Get());
+  module.CreateFreeFunction("rightShift", &RightShift<int32_t>, vm::ConstantEstimator<2>::Get());
+  module.CreateFreeFunction("rightShift", &RightShift<int64_t>, vm::ConstantEstimator<2>::Get());
+  module.CreateFreeFunction("rightShift", &RightShift<uint32_t>, vm::ConstantEstimator<2>::Get());
+  module.CreateFreeFunction("rightShift", &RightShift<uint64_t>, vm::ConstantEstimator<2>::Get());
 }
 
 }  // namespace vm_modules

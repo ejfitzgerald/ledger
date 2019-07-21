@@ -25,6 +25,8 @@
 
 namespace {
 
+using namespace fetch::vm;
+
 class CustomBindingTests;
 
 CustomBindingTests *  fixture;
@@ -83,27 +85,27 @@ public:
   } call_counter;
 };
 
-auto const estimator_no_args  = fetch::vm::ConstantEstimator<0>::Get();
-auto const estimator_two_args = fetch::vm::ConstantEstimator<2>::Get();
+auto const estimator_no_args  = ConstantEstimator<0>::Get();
+auto const estimator_two_args = ConstantEstimator<2>::Get();
 
-void CustomBinding_void_no_args(fetch::vm::VM *)
+void CustomBinding_void_no_args(VM *)
 {
   fixture->call_counter.increment();
 }
 
-void CustomBinding_void_with_args(fetch::vm::VM *, uint32_t a, int64_t b)
+void CustomBinding_void_with_args(VM *, uint32_t a, int64_t b)
 {
   fixture->call_counter.increment_with_args(a, b);
 }
 
-int8_t CustomBinding_nonvoid_no_args(fetch::vm::VM *)
+int8_t CustomBinding_nonvoid_no_args(VM *)
 {
   fixture->call_counter.increment();
 
   return 42u;
 }
 
-uint16_t CustomBinding_nonvoid_with_args(fetch::vm::VM *, uint32_t a, int64_t b)
+uint16_t CustomBinding_nonvoid_with_args(VM *, uint32_t a, int64_t b)
 {
   fixture->call_counter.increment_with_args(a, b);
 
@@ -154,7 +156,7 @@ TEST_F(CustomBindingTests, test_binding_free_function_to_functor_void_no_argumen
 {
   EXPECT_CALL(call_counter, increment()).Times(DEFAULT_TIMES_TO_RUN);
 
-  auto CustomBinding_lambda = [this](fetch::vm::VM *) { call_counter.increment(); };
+  auto CustomBinding_lambda = [this](VM *) { call_counter.increment(); };
   toolkit.module().CreateFreeFunction("customBinding", std::move(CustomBinding_lambda),
                                       estimator_no_args);
 
@@ -165,7 +167,7 @@ TEST_F(CustomBindingTests, test_binding_free_function_to_functor_void_with_argum
 {
   EXPECT_CALL(call_counter, increment_with_args(1u, 2)).Times(DEFAULT_TIMES_TO_RUN);
 
-  auto CustomBinding_lambda = [this](fetch::vm::VM *, uint32_t a, int64_t b) {
+  auto CustomBinding_lambda = [this](VM *, uint32_t a, int64_t b) {
     call_counter.increment_with_args(a, b);
   };
   toolkit.module().CreateFreeFunction("customBinding", std::move(CustomBinding_lambda),
@@ -178,7 +180,7 @@ TEST_F(CustomBindingTests, test_binding_free_function_to_functor_nonvoid_no_argu
 {
   EXPECT_CALL(call_counter, increment()).Times(DEFAULT_TIMES_TO_RUN);
 
-  auto CustomBinding_lambda = [this](fetch::vm::VM *) -> int8_t {
+  auto CustomBinding_lambda = [this](VM *) -> int8_t {
     call_counter.increment();
 
     return 42;
@@ -193,7 +195,7 @@ TEST_F(CustomBindingTests, test_binding_free_function_to_functor_nonvoid_with_ar
 {
   EXPECT_CALL(call_counter, increment_with_args(1u, 2)).Times(DEFAULT_TIMES_TO_RUN);
 
-  auto CustomBinding_lambda = [this](fetch::vm::VM *, uint32_t a, int64_t b) -> uint16_t {
+  auto CustomBinding_lambda = [this](VM *, uint32_t a, int64_t b) -> uint16_t {
     call_counter.increment_with_args(a, b);
 
     return 42;
@@ -208,7 +210,7 @@ TEST_F(CustomBindingTests, test_binding_free_function_to_mutable_functor_void_no
 {
   EXPECT_CALL(call_counter, increment()).Times(DEFAULT_TIMES_TO_RUN);
 
-  auto CustomBinding_lambda = [](fetch::vm::VM *vm) mutable { CustomBinding_void_no_args(vm); };
+  auto CustomBinding_lambda = [](VM *vm) mutable { CustomBinding_void_no_args(vm); };
   toolkit.module().CreateFreeFunction("customBinding", std::move(CustomBinding_lambda),
                                       estimator_no_args);
 
@@ -219,7 +221,7 @@ TEST_F(CustomBindingTests, test_binding_free_function_to_mutable_functor_void_wi
 {
   EXPECT_CALL(call_counter, increment_with_args(1u, 2)).Times(DEFAULT_TIMES_TO_RUN);
 
-  auto CustomBinding_lambda = [](fetch::vm::VM *vm, uint32_t a, int64_t b) mutable {
+  auto CustomBinding_lambda = [](VM *vm, uint32_t a, int64_t b) mutable {
     CustomBinding_void_with_args(vm, a, b);
   };
   toolkit.module().CreateFreeFunction("customBinding", std::move(CustomBinding_lambda),
@@ -232,7 +234,7 @@ TEST_F(CustomBindingTests, test_binding_free_function_to_mutable_functor_nonvoid
 {
   EXPECT_CALL(call_counter, increment()).Times(DEFAULT_TIMES_TO_RUN);
 
-  auto CustomBinding_lambda = [](fetch::vm::VM *vm) mutable -> int8_t {
+  auto CustomBinding_lambda = [](VM *vm) mutable -> int8_t {
     return CustomBinding_nonvoid_no_args(vm);
   };
   toolkit.module().CreateFreeFunction("customBinding", std::move(CustomBinding_lambda),
@@ -245,7 +247,7 @@ TEST_F(CustomBindingTests, test_binding_free_function_to_mutable_functor_nonvoid
 {
   EXPECT_CALL(call_counter, increment_with_args(1u, 2)).Times(DEFAULT_TIMES_TO_RUN);
 
-  auto CustomBinding_lambda = [](fetch::vm::VM *vm, uint32_t a, int64_t b) mutable -> uint16_t {
+  auto CustomBinding_lambda = [](VM *vm, uint32_t a, int64_t b) mutable -> uint16_t {
     return CustomBinding_nonvoid_with_args(vm, a, b);
   };
   toolkit.module().CreateFreeFunction("customBinding", std::move(CustomBinding_lambda),

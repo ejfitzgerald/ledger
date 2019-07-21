@@ -19,6 +19,8 @@
 
 #include "vm/vm.hpp"
 
+#include <cstddef>
+
 namespace fetch {
 namespace vm {
 
@@ -28,67 +30,67 @@ struct ConstantEstimator;
 template <>
 struct ConstantEstimator<0>
 {
-  static decltype(auto) Get(fetch::vm::VM::ChargeAmount charge = 1u)
+  static decltype(auto) Get(VM::ChargeAmount const charge = 1u)
   {
-    return [charge](fetch::vm::VM *) { return charge; };
+    return [charge](VM *) { return charge; };
   }
 };
 
 template <>
 struct ConstantEstimator<1>
 {
-  static decltype(auto) Get(fetch::vm::VM::ChargeAmount charge = 1u)
+  static decltype(auto) Get(VM::ChargeAmount const charge = 1u)
   {
-    return [charge](fetch::vm::VM *, auto const &) { return charge; };
+    return [charge](VM *, auto const &) { return charge; };
   }
 };
 
 template <>
 struct ConstantEstimator<2>
 {
-  static decltype(auto) Get(fetch::vm::VM::ChargeAmount charge = 1u)
+  static decltype(auto) Get(VM::ChargeAmount const charge = 1u)
   {
-    return [charge](fetch::vm::VM *, auto const &, auto const &) { return charge; };
+    return [charge](VM *, auto const &, auto const &) { return charge; };
   }
 };
 
 template <>
 struct ConstantEstimator<3>
 {
-  static decltype(auto) Get(fetch::vm::VM::ChargeAmount charge = 1u)
+  static decltype(auto) Get(VM::ChargeAmount const charge = 1u)
   {
-    return [charge](fetch::vm::VM *, auto const &, auto const &, auto const &) { return charge; };
+    return [charge](VM *, auto const &, auto const &, auto const &) { return charge; };
   }
 };
 
 template <>
 struct ConstantEstimator<4>
 {
-  static decltype(auto) Get(fetch::vm::VM::ChargeAmount charge = 1u)
+  static decltype(auto) Get(VM::ChargeAmount const charge = 1u)
   {
-    return [charge](fetch::vm::VM *, auto const &, auto const &, auto const &, auto const &) {
-      return charge;
-    };
+    return
+        [charge](VM *, auto const &, auto const &, auto const &, auto const &) { return charge; };
   }
 };
 
 template <>
 struct ConstantEstimator<5>
 {
-  static decltype(auto) Get(fetch::vm::VM::ChargeAmount charge = 1u)
+  static decltype(auto) Get(VM::ChargeAmount const charge = 1u)
   {
-    return [charge](fetch::vm::VM *, auto const &, auto const &, auto const &, auto const &,
-                    auto const &) { return charge; };
+    return [charge](VM *, auto const &, auto const &, auto const &, auto const &, auto const &) {
+      return charge;
+    };
   }
 };
 
 template <>
 struct ConstantEstimator<6>
 {
-  static decltype(auto) Get(fetch::vm::VM::ChargeAmount charge = 1u)
+  static decltype(auto) Get(VM::ChargeAmount const charge = 1u)
   {
-    return [charge](fetch::vm::VM *, auto const &, auto const &, auto const &, auto const &,
-                    auto const &, auto const &) { return charge; };
+    return [charge](VM *, auto const &, auto const &, auto const &, auto const &, auto const &,
+                    auto const &) { return charge; };
   }
 };
 
@@ -102,11 +104,13 @@ struct ConstantEstimator<6>
  * @return false if executing the opcode would exceed the specified charge limit; true otherwise.
  */
 template <typename Estimator, typename... Ts>
-bool EstimatedChargeIsWithinLimit(VM *vm, Estimator &&e, Ts const &... parameters)
+bool EstimateCharge(VM *const vm, Estimator &&e, Ts const &... parameters)
 {
   auto const charge_estimate = e(vm, parameters...);
 
-  if (charge_estimate + vm->GetChargeTotal() > vm->GetChargeLimit())
+  vm->IncreaseChargeTotal(charge_estimate);
+
+  if (vm->GetChargeTotal() > vm->GetChargeLimit())
   {
     vm->RuntimeError("Charge limit exceeded");
 

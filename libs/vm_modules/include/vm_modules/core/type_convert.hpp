@@ -63,35 +63,31 @@ bool ToBool(fetch::vm::VM * /*vm*/, T const &a)
 
 inline void CreateToString(fetch::vm::Module &module)
 {
-  module.CreateFreeFunction("toString", &ToString<int8_t>, fetch::vm::ConstantEstimator<1>::Get());
-  module.CreateFreeFunction("toString", &ToString<uint8_t>, fetch::vm::ConstantEstimator<1>::Get());
-  module.CreateFreeFunction("toString", &ToString<int16_t>, fetch::vm::ConstantEstimator<1>::Get());
-  module.CreateFreeFunction("toString", &ToString<uint16_t>,
-                            fetch::vm::ConstantEstimator<1>::Get());
-  module.CreateFreeFunction("toString", &ToString<int32_t>, fetch::vm::ConstantEstimator<1>::Get());
-  module.CreateFreeFunction("toString", &ToString<uint32_t>,
-                            fetch::vm::ConstantEstimator<1>::Get());
-  module.CreateFreeFunction("toString", &ToString<int64_t>, fetch::vm::ConstantEstimator<1>::Get());
-  module.CreateFreeFunction("toString", &ToString<uint64_t>,
-                            fetch::vm::ConstantEstimator<1>::Get());
-  module.CreateFreeFunction("toString", &ToString<float_t>, fetch::vm::ConstantEstimator<1>::Get());
-  module.CreateFreeFunction("toString", &ToString<double_t>,
-                            fetch::vm::ConstantEstimator<1>::Get());
-  module.CreateFreeFunction("toString", &ToString<bool>, fetch::vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction("toString", &ToString<int8_t>, vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction("toString", &ToString<uint8_t>, vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction("toString", &ToString<int16_t>, vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction("toString", &ToString<uint16_t>, vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction("toString", &ToString<int32_t>, vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction("toString", &ToString<uint32_t>, vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction("toString", &ToString<int64_t>, vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction("toString", &ToString<uint64_t>, vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction("toString", &ToString<float_t>, vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction("toString", &ToString<double_t>, vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction("toString", &ToString<bool>, vm::ConstantEstimator<1>::Get());
   module.CreateFreeFunction("toString", &ToString<fixed_point::fp32_t>,
-                            fetch::vm::ConstantEstimator<1>::Get());
+                            vm::ConstantEstimator<1>::Get());
   module.CreateFreeFunction("toString", &ToString<fixed_point::fp64_t>,
-                            fetch::vm::ConstantEstimator<1>::Get());
+                            vm::ConstantEstimator<1>::Get());
 }
 
 inline void CreateToBool(fetch::vm::Module &module)
 {
-  module.CreateFreeFunction("toBool", &ToBool<int32_t>, fetch::vm::ConstantEstimator<1>::Get());
-  module.CreateFreeFunction("toBool", &ToBool<uint32_t>, fetch::vm::ConstantEstimator<1>::Get());
-  module.CreateFreeFunction("toBool", &ToBool<int64_t>, fetch::vm::ConstantEstimator<1>::Get());
-  module.CreateFreeFunction("toBool", &ToBool<uint64_t>, fetch::vm::ConstantEstimator<1>::Get());
-  module.CreateFreeFunction("toBool", &ToBool<float_t>, fetch::vm::ConstantEstimator<1>::Get());
-  module.CreateFreeFunction("toBool", &ToBool<double_t>, fetch::vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction("toBool", &ToBool<int32_t>, vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction("toBool", &ToBool<uint32_t>, vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction("toBool", &ToBool<int64_t>, vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction("toBool", &ToBool<uint64_t>, vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction("toBool", &ToBool<float_t>, vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction("toBool", &ToBool<double_t>, vm::ConstantEstimator<1>::Get());
 }
 
 }  // namespace vm_modules

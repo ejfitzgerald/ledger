@@ -38,15 +38,15 @@ T Or(fetch::vm::VM * /*vm*/, T x, T s)
 
 inline void BindBitwiseOps(vm::Module &module)
 {
-  module.CreateFreeFunction("and", &And<int32_t>, fetch::vm::ConstantEstimator<2>::Get());
-  module.CreateFreeFunction("and", &And<int64_t>, fetch::vm::ConstantEstimator<2>::Get());
-  module.CreateFreeFunction("and", &And<uint32_t>, fetch::vm::ConstantEstimator<2>::Get());
-  module.CreateFreeFunction("and", &And<uint64_t>, fetch::vm::ConstantEstimator<2>::Get());
+  module.CreateFreeFunction("and", &And<int32_t>, vm::ConstantEstimator<2>::Get());
+  module.CreateFreeFunction("and", &And<int64_t>, vm::ConstantEstimator<2>::Get());
+  module.CreateFreeFunction("and", &And<uint32_t>, vm::ConstantEstimator<2>::Get());
+  module.CreateFreeFunction("and", &And<uint64_t>, vm::ConstantEstimator<2>::Get());
 
-  module.CreateFreeFunction("or", &Or<int32_t>, fetch::vm::ConstantEstimator<2>::Get());
-  module.CreateFreeFunction("or", &Or<int64_t>, fetch::vm::ConstantEstimator<2>::Get());
-  module.CreateFreeFunction("or", &Or<uint32_t>, fetch::vm::ConstantEstimator<2>::Get());
-  module.CreateFreeFunction("or", &Or<uint64_t>, fetch::vm::ConstantEstimator<2>::Get());
+  module.CreateFreeFunction("or", &Or<int32_t>, vm::ConstantEstimator<2>::Get());
+  module.CreateFreeFunction("or", &Or<int64_t>, vm::ConstantEstimator<2>::Get());
+  module.CreateFreeFunction("or", &Or<uint32_t>, vm::ConstantEstimator<2>::Get());
+  module.CreateFreeFunction("or", &Or<uint64_t>, vm::ConstantEstimator<2>::Get());
 }
 
 }  // namespace vm_modules

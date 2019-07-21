@@ -70,33 +70,27 @@ meta::IfIsUnsignedInteger<T, T> IntegerAbs(fetch::vm::VM *, T const &value)
 
 static void BindAbs(fetch::vm::Module &module)
 {
-  module.CreateFreeFunction<int8_t>("abs", &IntegerAbs<int8_t>,
-                                    fetch::vm::ConstantEstimator<1>::Get());
-  module.CreateFreeFunction<int16_t>("abs", &IntegerAbs<int16_t>,
-                                     fetch::vm::ConstantEstimator<1>::Get());
-  module.CreateFreeFunction<int32_t>("abs", &IntegerAbs<int32_t>,
-                                     fetch::vm::ConstantEstimator<1>::Get());
-  module.CreateFreeFunction<int64_t>("abs", &IntegerAbs<int64_t>,
-                                     fetch::vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction<int8_t>("abs", &IntegerAbs<int8_t>, vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction<int16_t>("abs", &IntegerAbs<int16_t>, vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction<int32_t>("abs", &IntegerAbs<int32_t>, vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction<int64_t>("abs", &IntegerAbs<int64_t>, vm::ConstantEstimator<1>::Get());
 
   // included for completeness sake
-  module.CreateFreeFunction<uint8_t>("abs", &IntegerAbs<uint8_t>,
-                                     fetch::vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction<uint8_t>("abs", &IntegerAbs<uint8_t>, vm::ConstantEstimator<1>::Get());
   module.CreateFreeFunction<uint16_t>("abs", &IntegerAbs<uint16_t>,
-                                      fetch::vm::ConstantEstimator<1>::Get());
+                                      vm::ConstantEstimator<1>::Get());
   module.CreateFreeFunction<uint32_t>("abs", &IntegerAbs<uint32_t>,
-                                      fetch::vm::ConstantEstimator<1>::Get());
+                                      vm::ConstantEstimator<1>::Get());
   module.CreateFreeFunction<uint64_t>("abs", &IntegerAbs<uint64_t>,
-                                      fetch::vm::ConstantEstimator<1>::Get());
+                                      vm::ConstantEstimator<1>::Get());
 
-  module.CreateFreeFunction<float_t>("abs", &Abs<float_t>, fetch::vm::ConstantEstimator<1>::Get());
-  module.CreateFreeFunction<double_t>("abs", &Abs<double_t>,
-                                      fetch::vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction<float_t>("abs", &Abs<float_t>, vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction<double_t>("abs", &Abs<double_t>, vm::ConstantEstimator<1>::Get());
 
   module.CreateFreeFunction<fixed_point::fp32_t>("abs", &Abs<fixed_point::fp32_t>,
-                                                 fetch::vm::ConstantEstimator<1>::Get());
+                                                 vm::ConstantEstimator<1>::Get());
   module.CreateFreeFunction<fixed_point::fp64_t>("abs", &Abs<fixed_point::fp64_t>,
-                                                 fetch::vm::ConstantEstimator<1>::Get());
+                                                 vm::ConstantEstimator<1>::Get());
 }
 
 }  // namespace math

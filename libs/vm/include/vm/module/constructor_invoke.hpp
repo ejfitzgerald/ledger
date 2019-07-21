@@ -19,6 +19,8 @@
 
 #include "estimate_charge.hpp"
 
+#include <utility>
+
 namespace fetch {
 namespace vm {
 
@@ -28,7 +30,7 @@ struct ConstructorInvokerHelper
 {
   static void Invoke(VM *vm, int sp_offset, TypeId type_id, Estimator &&e, Ts const &... parameters)
   {
-    if (EstimatedChargeIsWithinLimit(vm, std::forward<Estimator>(e), parameters...))
+    if (EstimateCharge(vm, std::forward<Estimator>(e), parameters...))
     {
       ReturnType result(Type::Constructor(vm, type_id, parameters...));
       StackSetter<ReturnType>::Set(vm, sp_offset, std::move(result), type_id);

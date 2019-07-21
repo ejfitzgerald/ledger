@@ -39,20 +39,18 @@ public:
 
   static void Bind(vm::Module &module)
   {
-    auto const sha256_ctor_estimator = fetch::vm::ConstantEstimator<0>::Get();
+    auto const sha256_ctor_estimator = vm::ConstantEstimator<0>::Get();
 
     module.CreateClassType<SHA256Wrapper>("SHA256")
         .CreateConstuctor<decltype(sha256_ctor_estimator)>(std::move(sha256_ctor_estimator))
         .CreateMemberFunction("update", &SHA256Wrapper::UpdateUInt256,
-                              fetch::vm::ConstantEstimator<1>::Get())
+                              vm::ConstantEstimator<1>::Get())
         .CreateMemberFunction("update", &SHA256Wrapper::UpdateString,
-                              fetch::vm::ConstantEstimator<1>::Get())
+                              vm::ConstantEstimator<1>::Get())
         .CreateMemberFunction("update", &SHA256Wrapper::UpdateBuffer,
-                              fetch::vm::ConstantEstimator<1>::Get())
-        .CreateMemberFunction("final", &SHA256Wrapper::Final,
-                              fetch::vm::ConstantEstimator<0>::Get())
-        .CreateMemberFunction("reset", &SHA256Wrapper::Reset,
-                              fetch::vm::ConstantEstimator<0>::Get());
+                              vm::ConstantEstimator<1>::Get())
+        .CreateMemberFunction("final", &SHA256Wrapper::Final, vm::ConstantEstimator<0>::Get())
+        .CreateMemberFunction("reset", &SHA256Wrapper::Reset, vm::ConstantEstimator<0>::Get());
   }
 
   void UpdateUInt256(vm::Ptr<vm_modules::math::UInt256Wrapper> const &uint)

@@ -137,34 +137,28 @@ public:
 
   static void Bind(fetch::vm::Module &module)
   {
-    auto const graph_ctor_estimator = fetch::vm::ConstantEstimator<0>::Get();
+    auto const graph_ctor_estimator = vm::ConstantEstimator<0>::Get();
 
     module.CreateClassType<VMGraph>("Graph")
         .CreateConstuctor<decltype(graph_ctor_estimator)>(std::move(graph_ctor_estimator))
-        .CreateMemberFunction("setInput", &VMGraph::SetInput,
-                              fetch::vm::ConstantEstimator<2>::Get())
-        .CreateMemberFunction("evaluate", &VMGraph::Evaluate,
-                              fetch::vm::ConstantEstimator<1>::Get())
+        .CreateMemberFunction("setInput", &VMGraph::SetInput, vm::ConstantEstimator<2>::Get())
+        .CreateMemberFunction("evaluate", &VMGraph::Evaluate, vm::ConstantEstimator<1>::Get())
         .CreateMemberFunction("backPropagate", &VMGraph::BackPropagateError,
-                              fetch::vm::ConstantEstimator<1>::Get())
-        .CreateMemberFunction("step", &VMGraph::Step, fetch::vm::ConstantEstimator<1>::Get())
+                              vm::ConstantEstimator<1>::Get())
+        .CreateMemberFunction("step", &VMGraph::Step, vm::ConstantEstimator<1>::Get())
         .CreateMemberFunction("addPlaceholder", &VMGraph::AddPlaceholder,
-                              fetch::vm::ConstantEstimator<1>::Get())
+                              vm::ConstantEstimator<1>::Get())
         .CreateMemberFunction("addFullyConnected", &VMGraph::AddFullyConnected,
-                              fetch::vm::ConstantEstimator<4>::Get())
-        .CreateMemberFunction("addConv1D", &VMGraph::AddConv1D,
-                              fetch::vm::ConstantEstimator<6>::Get())
-        .CreateMemberFunction("addRelu", &VMGraph::AddRelu, fetch::vm::ConstantEstimator<2>::Get())
-        .CreateMemberFunction("addSoftmax", &VMGraph::AddSoftmax,
-                              fetch::vm::ConstantEstimator<2>::Get())
-        .CreateMemberFunction("addDropout", &VMGraph::AddDropout,
-                              fetch::vm::ConstantEstimator<3>::Get())
+                              vm::ConstantEstimator<4>::Get())
+        .CreateMemberFunction("addConv1D", &VMGraph::AddConv1D, vm::ConstantEstimator<6>::Get())
+        .CreateMemberFunction("addRelu", &VMGraph::AddRelu, vm::ConstantEstimator<2>::Get())
+        .CreateMemberFunction("addSoftmax", &VMGraph::AddSoftmax, vm::ConstantEstimator<2>::Get())
+        .CreateMemberFunction("addDropout", &VMGraph::AddDropout, vm::ConstantEstimator<3>::Get())
         .CreateMemberFunction("addCrossEntropyLoss", &VMGraph::AddCrossEntropyLoss,
-                              fetch::vm::ConstantEstimator<3>::Get())
+                              vm::ConstantEstimator<3>::Get())
         .CreateMemberFunction("loadStateDict", &VMGraph::LoadStateDict,
-                              fetch::vm::ConstantEstimator<1>::Get())
-        .CreateMemberFunction("stateDict", &VMGraph::StateDict,
-                              fetch::vm::ConstantEstimator<0>::Get());
+                              vm::ConstantEstimator<1>::Get())
+        .CreateMemberFunction("stateDict", &VMGraph::StateDict, vm::ConstantEstimator<0>::Get());
   }
 
   GraphType graph_;

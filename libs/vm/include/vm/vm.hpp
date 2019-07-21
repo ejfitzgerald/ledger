@@ -488,6 +488,11 @@ public:
     return charge_total_;
   }
 
+  void IncreaseChargeTotal(ChargeAmount const amount)
+  {
+    charge_total_ += amount;
+  }
+
   ChargeAmount GetChargeLimit() const
   {
     return charge_limit_;
@@ -506,8 +511,6 @@ private:
 
   struct OpcodeInfo
   {
-    using ChargeEstimator = std::function<ChargeAmount()>;
-
     OpcodeInfo() = default;
     OpcodeInfo(std::string name__, Handler handler__)
       : name(std::move(name__))
@@ -520,10 +523,9 @@ private:
       , charge{charge}
     {}
 
-    std::string     name;
-    Handler         handler;
-    ChargeAmount    charge{1};
-    ChargeEstimator estimator{};
+    std::string  name;
+    Handler      handler;
+    ChargeAmount charge{1};
   };
   using OpcodeInfoArray = std::vector<OpcodeInfo>;
   using OpcodeMap       = std::unordered_map<std::string, uint16_t>;
