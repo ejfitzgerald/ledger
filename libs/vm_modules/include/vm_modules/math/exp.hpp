@@ -35,16 +35,15 @@ fetch::math::meta::IfIsMath<T, T> Exp(fetch::vm::VM *, T const &a)
   return x;
 }
 
-static auto const exp_estimator = [](fetch::vm::VM *, auto const &) -> fetch::vm::VM::ChargeAmount {
-  return 1u;
-};
-
 inline void BindExp(fetch::vm::Module &module)
 {
-  module.CreateFreeFunction<float_t>("exp", &Exp<float_t>, exp_estimator);
-  module.CreateFreeFunction<double_t>("exp", &Exp<double_t>, exp_estimator);
-  module.CreateFreeFunction<fixed_point::fp32_t>("exp", &Exp<fixed_point::fp32_t>, exp_estimator);
-  module.CreateFreeFunction<fixed_point::fp64_t>("exp", &Exp<fixed_point::fp64_t>, exp_estimator);
+  module.CreateFreeFunction<float_t>("exp", &Exp<float_t>, fetch::vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction<double_t>("exp", &Exp<double_t>,
+                                      fetch::vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction<fixed_point::fp32_t>("exp", &Exp<fixed_point::fp32_t>,
+                                                 fetch::vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction<fixed_point::fp64_t>("exp", &Exp<fixed_point::fp64_t>,
+                                                 fetch::vm::ConstantEstimator<1>::Get());
 }
 
 }  // namespace math

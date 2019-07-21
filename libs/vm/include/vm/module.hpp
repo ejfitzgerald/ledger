@@ -288,7 +288,7 @@ public:
   {
     return double(float(i) + f);
   };
-  module.CreateFreeFunction("myfunc", handler, estimator);
+  module.CreateFreeFunction("myfunc", std::move(handler), std::move(estimator));
   */
   template <typename Functor, typename Estimator>
   void CreateFreeFunction(std::string const &name, Functor &&functor, Estimator &&estimator)

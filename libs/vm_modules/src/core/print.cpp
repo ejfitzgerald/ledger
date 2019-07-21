@@ -152,80 +152,106 @@ void PrintArray(fetch::vm::VM *vm, vm::Ptr<vm::Array<T>> const &arr)
 
 void CreatePrint(vm::Module &module)
 {
-  auto const print_estimator = [](fetch::vm::VM *, auto const &) -> fetch::vm::VM::ChargeAmount {
-    return 1u;
-  };
+  module.CreateFreeFunction("print", &PrintString<>, fetch::vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction("printLn", &PrintString<true>, fetch::vm::ConstantEstimator<1>::Get());
 
-  module.CreateFreeFunction("print", &PrintString<>, print_estimator);
-  module.CreateFreeFunction("printLn", &PrintString<true>, print_estimator);
+  module.CreateFreeFunction("print", &PrintBool<>, fetch::vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction("printLn", &PrintBool<true>, fetch::vm::ConstantEstimator<1>::Get());
 
-  module.CreateFreeFunction("print", &PrintBool<>, print_estimator);
-  module.CreateFreeFunction("printLn", &PrintBool<true>, print_estimator);
+  module.CreateFreeFunction("print", &PrintNumber<uint8_t>, fetch::vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction("printLn", &PrintNumber<uint8_t, true>,
+                            fetch::vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction("print", &PrintNumber<int8_t>, fetch::vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction("printLn", &PrintNumber<int8_t, true>,
+                            fetch::vm::ConstantEstimator<1>::Get());
 
-  module.CreateFreeFunction("print", &PrintNumber<uint8_t>, print_estimator);
-  module.CreateFreeFunction("printLn", &PrintNumber<uint8_t, true>, print_estimator);
-  module.CreateFreeFunction("print", &PrintNumber<int8_t>, print_estimator);
-  module.CreateFreeFunction("printLn", &PrintNumber<int8_t, true>, print_estimator);
+  module.CreateFreeFunction("print", &PrintNumber<uint16_t>,
+                            fetch::vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction("printLn", &PrintNumber<uint16_t, true>,
+                            fetch::vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction("print", &PrintNumber<int16_t>, fetch::vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction("printLn", &PrintNumber<int16_t, true>,
+                            fetch::vm::ConstantEstimator<1>::Get());
 
-  module.CreateFreeFunction("print", &PrintNumber<uint16_t>, print_estimator);
-  module.CreateFreeFunction("printLn", &PrintNumber<uint16_t, true>, print_estimator);
-  module.CreateFreeFunction("print", &PrintNumber<int16_t>, print_estimator);
-  module.CreateFreeFunction("printLn", &PrintNumber<int16_t, true>, print_estimator);
+  module.CreateFreeFunction("print", &PrintNumber<uint32_t>,
+                            fetch::vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction("printLn", &PrintNumber<uint32_t, true>,
+                            fetch::vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction("print", &PrintNumber<int32_t>, fetch::vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction("printLn", &PrintNumber<int32_t, true>,
+                            fetch::vm::ConstantEstimator<1>::Get());
 
-  module.CreateFreeFunction("print", &PrintNumber<uint32_t>, print_estimator);
-  module.CreateFreeFunction("printLn", &PrintNumber<uint32_t, true>, print_estimator);
-  module.CreateFreeFunction("print", &PrintNumber<int32_t>, print_estimator);
-  module.CreateFreeFunction("printLn", &PrintNumber<int32_t, true>, print_estimator);
+  module.CreateFreeFunction("print", &PrintNumber<uint64_t>,
+                            fetch::vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction("printLn", &PrintNumber<uint64_t, true>,
+                            fetch::vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction("print", &PrintNumber<int64_t>, fetch::vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction("printLn", &PrintNumber<int64_t, true>,
+                            fetch::vm::ConstantEstimator<1>::Get());
 
-  module.CreateFreeFunction("print", &PrintNumber<uint64_t>, print_estimator);
-  module.CreateFreeFunction("printLn", &PrintNumber<uint64_t, true>, print_estimator);
-  module.CreateFreeFunction("print", &PrintNumber<int64_t>, print_estimator);
-  module.CreateFreeFunction("printLn", &PrintNumber<int64_t, true>, print_estimator);
+  module.CreateFreeFunction("print", &PrintNumber<float>, fetch::vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction("printLn", &PrintNumber<float, true>,
+                            fetch::vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction("print", &PrintNumber<double>, fetch::vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction("printLn", &PrintNumber<double, true>,
+                            fetch::vm::ConstantEstimator<1>::Get());
 
-  module.CreateFreeFunction("print", &PrintNumber<float>, print_estimator);
-  module.CreateFreeFunction("printLn", &PrintNumber<float, true>, print_estimator);
-  module.CreateFreeFunction("print", &PrintNumber<double>, print_estimator);
-  module.CreateFreeFunction("printLn", &PrintNumber<double, true>, print_estimator);
+  module.CreateFreeFunction("print", &PrintNumber<fixed_point::fp32_t>,
+                            fetch::vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction("print", &PrintNumber<fixed_point::fp64_t>,
+                            fetch::vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction("printLn", &PrintNumber<fixed_point::fp32_t, true>,
+                            fetch::vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction("printLn", &PrintNumber<fixed_point::fp64_t, true>,
+                            fetch::vm::ConstantEstimator<1>::Get());
 
-  module.CreateFreeFunction("print", &PrintNumber<fixed_point::fp32_t>, print_estimator);
-  module.CreateFreeFunction("print", &PrintNumber<fixed_point::fp64_t>, print_estimator);
-  module.CreateFreeFunction("printLn", &PrintNumber<fixed_point::fp32_t, true>, print_estimator);
-  module.CreateFreeFunction("printLn", &PrintNumber<fixed_point::fp64_t, true>, print_estimator);
+  module.CreateFreeFunction("print", &PrintArray<bool>, fetch::vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction("printLn", &PrintArray<bool, true>,
+                            fetch::vm::ConstantEstimator<1>::Get());
 
-  module.CreateFreeFunction("print", &PrintArray<bool>, print_estimator);
-  module.CreateFreeFunction("printLn", &PrintArray<bool, true>, print_estimator);
+  module.CreateFreeFunction("print", &PrintArray<uint8_t>, fetch::vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction("printLn", &PrintArray<uint8_t, true>,
+                            fetch::vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction("print", &PrintArray<int8_t>, fetch::vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction("printLn", &PrintArray<int8_t, true>,
+                            fetch::vm::ConstantEstimator<1>::Get());
 
-  module.CreateFreeFunction("print", &PrintArray<uint8_t>, print_estimator);
-  module.CreateFreeFunction("printLn", &PrintArray<uint8_t, true>, print_estimator);
-  module.CreateFreeFunction("print", &PrintArray<int8_t>, print_estimator);
-  module.CreateFreeFunction("printLn", &PrintArray<int8_t, true>, print_estimator);
+  module.CreateFreeFunction("print", &PrintArray<uint16_t>, fetch::vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction("printLn", &PrintArray<uint16_t, true>,
+                            fetch::vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction("print", &PrintArray<int16_t>, fetch::vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction("printLn", &PrintArray<int16_t, true>,
+                            fetch::vm::ConstantEstimator<1>::Get());
 
-  module.CreateFreeFunction("print", &PrintArray<uint16_t>, print_estimator);
-  module.CreateFreeFunction("printLn", &PrintArray<uint16_t, true>, print_estimator);
-  module.CreateFreeFunction("print", &PrintArray<int16_t>, print_estimator);
-  module.CreateFreeFunction("printLn", &PrintArray<int16_t, true>, print_estimator);
+  module.CreateFreeFunction("print", &PrintArray<uint32_t>, fetch::vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction("printLn", &PrintArray<uint32_t, true>,
+                            fetch::vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction("print", &PrintArray<int32_t>, fetch::vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction("printLn", &PrintArray<int32_t, true>,
+                            fetch::vm::ConstantEstimator<1>::Get());
 
-  module.CreateFreeFunction("print", &PrintArray<uint32_t>, print_estimator);
-  module.CreateFreeFunction("printLn", &PrintArray<uint32_t, true>, print_estimator);
-  module.CreateFreeFunction("print", &PrintArray<int32_t>, print_estimator);
-  module.CreateFreeFunction("printLn", &PrintArray<int32_t, true>, print_estimator);
+  module.CreateFreeFunction("print", &PrintArray<uint64_t>, fetch::vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction("printLn", &PrintArray<uint64_t, true>,
+                            fetch::vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction("print", &PrintArray<int64_t>, fetch::vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction("printLn", &PrintArray<int64_t, true>,
+                            fetch::vm::ConstantEstimator<1>::Get());
 
-  module.CreateFreeFunction("print", &PrintArray<uint64_t>, print_estimator);
-  module.CreateFreeFunction("printLn", &PrintArray<uint64_t, true>, print_estimator);
-  module.CreateFreeFunction("print", &PrintArray<int64_t>, print_estimator);
-  module.CreateFreeFunction("printLn", &PrintArray<int64_t, true>, print_estimator);
+  module.CreateFreeFunction("print", &PrintArray<float>, fetch::vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction("printLn", &PrintArray<float, true>,
+                            fetch::vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction("print", &PrintArray<double>, fetch::vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction("printLn", &PrintArray<double, true>,
+                            fetch::vm::ConstantEstimator<1>::Get());
 
-  module.CreateFreeFunction("print", &PrintArray<float>, print_estimator);
-  module.CreateFreeFunction("printLn", &PrintArray<float, true>, print_estimator);
-  module.CreateFreeFunction("print", &PrintArray<double>, print_estimator);
-  module.CreateFreeFunction("printLn", &PrintArray<double, true>, print_estimator);
-
-  module.CreateFreeFunction("print", &PrintArray<fixed_point::FixedPoint<16, 16>>, print_estimator);
-  module.CreateFreeFunction("print", &PrintArray<fixed_point::FixedPoint<32, 32>>, print_estimator);
+  module.CreateFreeFunction("print", &PrintArray<fixed_point::FixedPoint<16, 16>>,
+                            fetch::vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction("print", &PrintArray<fixed_point::FixedPoint<32, 32>>,
+                            fetch::vm::ConstantEstimator<1>::Get());
   module.CreateFreeFunction("printLn", &PrintArray<fixed_point::FixedPoint<16, 16>, true>,
-                            print_estimator);
+                            fetch::vm::ConstantEstimator<1>::Get());
   module.CreateFreeFunction("printLn", &PrintArray<fixed_point::FixedPoint<32, 32>, true>,
-                            print_estimator);
+                            fetch::vm::ConstantEstimator<1>::Get());
 }
 
 }  // namespace vm_modules

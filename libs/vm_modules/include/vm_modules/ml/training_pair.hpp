@@ -37,19 +37,17 @@ public:
 
   static void Bind(vm::Module &module)
   {
-    auto const training_pair_ctor_estimator = [](fetch::vm::VM *, auto const &,
-                                                 auto const &) -> fetch::vm::VM::ChargeAmount {
-      return 1u;
-    };
+    auto const training_pair_ctor_estimator = fetch::vm::ConstantEstimator<2>::Get();
+
     module.CreateClassType<fetch::vm_modules::ml::VMTrainingPair>("TrainingPair")
         .CreateConstuctor<decltype(training_pair_ctor_estimator),
                           fetch::vm::Ptr<fetch::vm_modules::math::VMTensor>,
                           fetch::vm::Ptr<fetch::vm_modules::math::VMTensor>>(
             std::move(training_pair_ctor_estimator))
         .CreateMemberFunction("data", &fetch::vm_modules::ml::VMTrainingPair::data,
-                              [](fetch::vm::VM *) -> fetch::vm::VM::ChargeAmount { return 1u; })
+                              fetch::vm::ConstantEstimator<0>::Get())
         .CreateMemberFunction("label", &fetch::vm_modules::ml::VMTrainingPair::label,
-                              [](fetch::vm::VM *) -> fetch::vm::VM::ChargeAmount { return 1u; });
+                              fetch::vm::ConstantEstimator<0>::Get());
   }
 
   static fetch::vm::Ptr<VMTrainingPair> Constructor(

@@ -36,20 +36,17 @@ T Or(fetch::vm::VM * /*vm*/, T x, T s)
   return T(x | s);
 }
 
-static auto const bitwise_ops_estimator =
-    [](fetch::vm::VM *, auto const &, auto const &) -> fetch::vm::VM::ChargeAmount { return 1u; };
-
 inline void BindBitwiseOps(vm::Module &module)
 {
-  module.CreateFreeFunction("and", &And<int32_t>, bitwise_ops_estimator);
-  module.CreateFreeFunction("and", &And<int64_t>, bitwise_ops_estimator);
-  module.CreateFreeFunction("and", &And<uint32_t>, bitwise_ops_estimator);
-  module.CreateFreeFunction("and", &And<uint64_t>, bitwise_ops_estimator);
+  module.CreateFreeFunction("and", &And<int32_t>, fetch::vm::ConstantEstimator<2>::Get());
+  module.CreateFreeFunction("and", &And<int64_t>, fetch::vm::ConstantEstimator<2>::Get());
+  module.CreateFreeFunction("and", &And<uint32_t>, fetch::vm::ConstantEstimator<2>::Get());
+  module.CreateFreeFunction("and", &And<uint64_t>, fetch::vm::ConstantEstimator<2>::Get());
 
-  module.CreateFreeFunction("or", &Or<int32_t>, bitwise_ops_estimator);
-  module.CreateFreeFunction("or", &Or<int64_t>, bitwise_ops_estimator);
-  module.CreateFreeFunction("or", &Or<uint32_t>, bitwise_ops_estimator);
-  module.CreateFreeFunction("or", &Or<uint64_t>, bitwise_ops_estimator);
+  module.CreateFreeFunction("or", &Or<int32_t>, fetch::vm::ConstantEstimator<2>::Get());
+  module.CreateFreeFunction("or", &Or<int64_t>, fetch::vm::ConstantEstimator<2>::Get());
+  module.CreateFreeFunction("or", &Or<uint32_t>, fetch::vm::ConstantEstimator<2>::Get());
+  module.CreateFreeFunction("or", &Or<uint64_t>, fetch::vm::ConstantEstimator<2>::Get());
 }
 
 }  // namespace vm_modules

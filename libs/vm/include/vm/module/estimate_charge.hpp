@@ -22,6 +22,76 @@
 namespace fetch {
 namespace vm {
 
+template <std::size_t NUM_PARAMS>
+struct ConstantEstimator;
+
+template <>
+struct ConstantEstimator<0>
+{
+  static decltype(auto) Get(fetch::vm::VM::ChargeAmount charge = 1u)
+  {
+    return [charge](fetch::vm::VM *) { return charge; };
+  }
+};
+
+template <>
+struct ConstantEstimator<1>
+{
+  static decltype(auto) Get(fetch::vm::VM::ChargeAmount charge = 1u)
+  {
+    return [charge](fetch::vm::VM *, auto const &) { return charge; };
+  }
+};
+
+template <>
+struct ConstantEstimator<2>
+{
+  static decltype(auto) Get(fetch::vm::VM::ChargeAmount charge = 1u)
+  {
+    return [charge](fetch::vm::VM *, auto const &, auto const &) { return charge; };
+  }
+};
+
+template <>
+struct ConstantEstimator<3>
+{
+  static decltype(auto) Get(fetch::vm::VM::ChargeAmount charge = 1u)
+  {
+    return [charge](fetch::vm::VM *, auto const &, auto const &, auto const &) { return charge; };
+  }
+};
+
+template <>
+struct ConstantEstimator<4>
+{
+  static decltype(auto) Get(fetch::vm::VM::ChargeAmount charge = 1u)
+  {
+    return [charge](fetch::vm::VM *, auto const &, auto const &, auto const &, auto const &) {
+      return charge;
+    };
+  }
+};
+
+template <>
+struct ConstantEstimator<5>
+{
+  static decltype(auto) Get(fetch::vm::VM::ChargeAmount charge = 1u)
+  {
+    return [charge](fetch::vm::VM *, auto const &, auto const &, auto const &, auto const &,
+                    auto const &) { return charge; };
+  }
+};
+
+template <>
+struct ConstantEstimator<6>
+{
+  static decltype(auto) Get(fetch::vm::VM::ChargeAmount charge = 1u)
+  {
+    return [charge](fetch::vm::VM *, auto const &, auto const &, auto const &, auto const &,
+                    auto const &, auto const &) { return charge; };
+  }
+};
+
 /**
  * @tparam Estimator
  * @tparam Ts

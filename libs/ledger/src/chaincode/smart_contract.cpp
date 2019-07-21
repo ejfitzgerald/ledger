@@ -112,7 +112,7 @@ SmartContract::SmartContract(std::string const &source)
 
   module_->CreateFreeFunction("getBlockNumber",
                               [this](vm::VM *) -> BlockIndex { return block_index_; },
-                              [](vm::VM *) -> fetch::vm::VM::ChargeAmount { return 1; });
+                              fetch::vm::ConstantEstimator<0>::Get());
 
   // create and compile the executable
   auto errors = vm_modules::VMFactory::Compile(module_, source_, *executable_);

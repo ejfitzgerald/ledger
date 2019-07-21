@@ -68,28 +68,35 @@ meta::IfIsUnsignedInteger<T, T> IntegerAbs(fetch::vm::VM *, T const &value)
   return value;
 }
 
-static auto const abs_estimator = [](fetch::vm::VM *, auto const &) -> fetch::vm::VM::ChargeAmount {
-  return 1u;
-};
-
 static void BindAbs(fetch::vm::Module &module)
 {
-  module.CreateFreeFunction<int8_t>("abs", &IntegerAbs<int8_t>, abs_estimator);
-  module.CreateFreeFunction<int16_t>("abs", &IntegerAbs<int16_t>, abs_estimator);
-  module.CreateFreeFunction<int32_t>("abs", &IntegerAbs<int32_t>, abs_estimator);
-  module.CreateFreeFunction<int64_t>("abs", &IntegerAbs<int64_t>, abs_estimator);
+  module.CreateFreeFunction<int8_t>("abs", &IntegerAbs<int8_t>,
+                                    fetch::vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction<int16_t>("abs", &IntegerAbs<int16_t>,
+                                     fetch::vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction<int32_t>("abs", &IntegerAbs<int32_t>,
+                                     fetch::vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction<int64_t>("abs", &IntegerAbs<int64_t>,
+                                     fetch::vm::ConstantEstimator<1>::Get());
 
   // included for completeness sake
-  module.CreateFreeFunction<uint8_t>("abs", &IntegerAbs<uint8_t>, abs_estimator);
-  module.CreateFreeFunction<uint16_t>("abs", &IntegerAbs<uint16_t>, abs_estimator);
-  module.CreateFreeFunction<uint32_t>("abs", &IntegerAbs<uint32_t>, abs_estimator);
-  module.CreateFreeFunction<uint64_t>("abs", &IntegerAbs<uint64_t>, abs_estimator);
+  module.CreateFreeFunction<uint8_t>("abs", &IntegerAbs<uint8_t>,
+                                     fetch::vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction<uint16_t>("abs", &IntegerAbs<uint16_t>,
+                                      fetch::vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction<uint32_t>("abs", &IntegerAbs<uint32_t>,
+                                      fetch::vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction<uint64_t>("abs", &IntegerAbs<uint64_t>,
+                                      fetch::vm::ConstantEstimator<1>::Get());
 
-  module.CreateFreeFunction<float_t>("abs", &Abs<float_t>, abs_estimator);
-  module.CreateFreeFunction<double_t>("abs", &Abs<double_t>, abs_estimator);
+  module.CreateFreeFunction<float_t>("abs", &Abs<float_t>, fetch::vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction<double_t>("abs", &Abs<double_t>,
+                                      fetch::vm::ConstantEstimator<1>::Get());
 
-  module.CreateFreeFunction<fixed_point::fp32_t>("abs", &Abs<fixed_point::fp32_t>, abs_estimator);
-  module.CreateFreeFunction<fixed_point::fp64_t>("abs", &Abs<fixed_point::fp64_t>, abs_estimator);
+  module.CreateFreeFunction<fixed_point::fp32_t>("abs", &Abs<fixed_point::fp32_t>,
+                                                 fetch::vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction<fixed_point::fp64_t>("abs", &Abs<fixed_point::fp64_t>,
+                                                 fetch::vm::ConstantEstimator<1>::Get());
 }
 
 }  // namespace math

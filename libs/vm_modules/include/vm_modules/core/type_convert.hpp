@@ -61,34 +61,37 @@ bool ToBool(fetch::vm::VM * /*vm*/, T const &a)
   return static_cast<bool>(a);
 }
 
-static auto const type_convert_estimator =
-    [](fetch::vm::VM *, auto const &) -> fetch::vm::VM::ChargeAmount { return 1u; };
-
 inline void CreateToString(fetch::vm::Module &module)
 {
-  module.CreateFreeFunction("toString", &ToString<int8_t>, type_convert_estimator);
-  module.CreateFreeFunction("toString", &ToString<uint8_t>, type_convert_estimator);
-  module.CreateFreeFunction("toString", &ToString<int16_t>, type_convert_estimator);
-  module.CreateFreeFunction("toString", &ToString<uint16_t>, type_convert_estimator);
-  module.CreateFreeFunction("toString", &ToString<int32_t>, type_convert_estimator);
-  module.CreateFreeFunction("toString", &ToString<uint32_t>, type_convert_estimator);
-  module.CreateFreeFunction("toString", &ToString<int64_t>, type_convert_estimator);
-  module.CreateFreeFunction("toString", &ToString<uint64_t>, type_convert_estimator);
-  module.CreateFreeFunction("toString", &ToString<float_t>, type_convert_estimator);
-  module.CreateFreeFunction("toString", &ToString<double_t>, type_convert_estimator);
-  module.CreateFreeFunction("toString", &ToString<bool>, type_convert_estimator);
-  module.CreateFreeFunction("toString", &ToString<fixed_point::fp32_t>, type_convert_estimator);
-  module.CreateFreeFunction("toString", &ToString<fixed_point::fp64_t>, type_convert_estimator);
+  module.CreateFreeFunction("toString", &ToString<int8_t>, fetch::vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction("toString", &ToString<uint8_t>, fetch::vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction("toString", &ToString<int16_t>, fetch::vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction("toString", &ToString<uint16_t>,
+                            fetch::vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction("toString", &ToString<int32_t>, fetch::vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction("toString", &ToString<uint32_t>,
+                            fetch::vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction("toString", &ToString<int64_t>, fetch::vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction("toString", &ToString<uint64_t>,
+                            fetch::vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction("toString", &ToString<float_t>, fetch::vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction("toString", &ToString<double_t>,
+                            fetch::vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction("toString", &ToString<bool>, fetch::vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction("toString", &ToString<fixed_point::fp32_t>,
+                            fetch::vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction("toString", &ToString<fixed_point::fp64_t>,
+                            fetch::vm::ConstantEstimator<1>::Get());
 }
 
 inline void CreateToBool(fetch::vm::Module &module)
 {
-  module.CreateFreeFunction("toBool", &ToBool<int32_t>, type_convert_estimator);
-  module.CreateFreeFunction("toBool", &ToBool<uint32_t>, type_convert_estimator);
-  module.CreateFreeFunction("toBool", &ToBool<int64_t>, type_convert_estimator);
-  module.CreateFreeFunction("toBool", &ToBool<uint64_t>, type_convert_estimator);
-  module.CreateFreeFunction("toBool", &ToBool<float_t>, type_convert_estimator);
-  module.CreateFreeFunction("toBool", &ToBool<double_t>, type_convert_estimator);
+  module.CreateFreeFunction("toBool", &ToBool<int32_t>, fetch::vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction("toBool", &ToBool<uint32_t>, fetch::vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction("toBool", &ToBool<int64_t>, fetch::vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction("toBool", &ToBool<uint64_t>, fetch::vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction("toBool", &ToBool<float_t>, fetch::vm::ConstantEstimator<1>::Get());
+  module.CreateFreeFunction("toBool", &ToBool<double_t>, fetch::vm::ConstantEstimator<1>::Get());
 }
 
 }  // namespace vm_modules

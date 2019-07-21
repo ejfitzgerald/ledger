@@ -312,10 +312,8 @@ int main(int argc, char **argv)
 
   // additional module bindings
   module->CreateClassType<System>("System")
-      .CreateStaticMemberFunction("Argc", &Argc,
-                                  [](VM *) -> fetch::vm::VM::ChargeAmount { return 1u; })
-      .CreateStaticMemberFunction(
-          "Argv", &Argv, [](VM *, auto const &) -> fetch::vm::VM::ChargeAmount { return 1u; });
+      .CreateStaticMemberFunction("Argc", &Argc, fetch::vm::ConstantEstimator<0>::Get())
+      .CreateStaticMemberFunction("Argv", &Argv, fetch::vm::ConstantEstimator<1>::Get());
 
   // attempt to compile the program
   auto errors = VMFactory::Compile(module, source, *executable);
