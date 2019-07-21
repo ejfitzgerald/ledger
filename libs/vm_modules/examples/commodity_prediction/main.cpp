@@ -97,18 +97,22 @@ int main(int argc, char **argv)
   auto module = std::make_shared<fetch::vm::Module>();
 
   module->CreateClassType<System>("System")
-      .CreateStaticMemberFunction("Argc", &System::Argc, [](fetch::vm::VM *) { return 1u; })
-      .CreateStaticMemberFunction("Argv", &System::Argv,
-                                  [](fetch::vm::VM *, auto const &) { return 1u; });
+      .CreateStaticMemberFunction("Argc", &System::Argc,
+                                  [](fetch::vm::VM *) -> fetch::vm::VM::ChargeAmount { return 1u; })
+      .CreateStaticMemberFunction(
+          "Argv", &System::Argv,
+          [](fetch::vm::VM *, auto const &) -> fetch::vm::VM::ChargeAmount { return 1u; });
 
   fetch::vm_modules::ml::BindML(*module);
 
   fetch::vm_modules::CreatePrint(*module);
 
   module->CreateFreeFunction("read_csv", &read_csv,
-                             [](fetch::vm::VM *, auto const &, auto const &) { return 1u; });
-  module->CreateFreeFunction("read_csv", &read_csv_no_transpose,
-                             [](fetch::vm::VM *, auto const &) { return 1u; });
+                             [](fetch::vm::VM *, auto const &,
+                                auto const &) -> fetch::vm::VM::ChargeAmount { return 1u; });
+  module->CreateFreeFunction(
+      "read_csv", &read_csv_no_transpose,
+      [](fetch::vm::VM *, auto const &) -> fetch::vm::VM::ChargeAmount { return 1u; });
 
   // Setting compiler up
   auto                     compiler = std::make_unique<fetch::vm::Compiler>(module.get());

@@ -36,9 +36,8 @@ T Or(fetch::vm::VM * /*vm*/, T x, T s)
   return T(x | s);
 }
 
-static auto const bitwise_ops_estimator = [](fetch::vm::VM *, auto const &, auto const &) {
-  return 1u;
-};
+static auto const bitwise_ops_estimator =
+    [](fetch::vm::VM *, auto const &, auto const &) -> fetch::vm::VM::ChargeAmount { return 1u; };
 
 inline void BindBitwiseOps(vm::Module &module)
 {

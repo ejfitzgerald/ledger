@@ -83,8 +83,9 @@ public:
   } call_counter;
 };
 
-auto const estimator_no_args  = [](fetch::vm::VM *) { return 1u; };
-auto const estimator_two_args = [](fetch::vm::VM *, auto const &, auto const &) { return 1u; };
+auto const estimator_no_args  = [](fetch::vm::VM *) -> fetch::vm::VM::ChargeAmount { return 1u; };
+auto const estimator_two_args = [](fetch::vm::VM *, auto const &,
+                                   auto const &) -> fetch::vm::VM::ChargeAmount { return 1u; };
 
 void CustomBinding_void_no_args(fetch::vm::VM *)
 {

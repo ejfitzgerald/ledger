@@ -152,7 +152,9 @@ void PrintArray(fetch::vm::VM *vm, vm::Ptr<vm::Array<T>> const &arr)
 
 void CreatePrint(vm::Module &module)
 {
-  auto const print_estimator = [](fetch::vm::VM *, auto const &) { return 1u; };
+  auto const print_estimator = [](fetch::vm::VM *, auto const &) -> fetch::vm::VM::ChargeAmount {
+    return 1u;
+  };
 
   module.CreateFreeFunction("print", &PrintString<>, print_estimator);
   module.CreateFreeFunction("printLn", &PrintString<true>, print_estimator);

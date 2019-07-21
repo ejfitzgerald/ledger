@@ -61,7 +61,8 @@ bool ToBool(fetch::vm::VM * /*vm*/, T const &a)
   return static_cast<bool>(a);
 }
 
-static auto const type_convert_estimator = [](fetch::vm::VM *, auto const &) { return 1u; };
+static auto const type_convert_estimator =
+    [](fetch::vm::VM *, auto const &) -> fetch::vm::VM::ChargeAmount { return 1u; };
 
 inline void CreateToString(fetch::vm::Module &module)
 {
@@ -82,7 +83,6 @@ inline void CreateToString(fetch::vm::Module &module)
 
 inline void CreateToBool(fetch::vm::Module &module)
 {
-
   module.CreateFreeFunction("toBool", &ToBool<int32_t>, type_convert_estimator);
   module.CreateFreeFunction("toBool", &ToBool<uint32_t>, type_convert_estimator);
   module.CreateFreeFunction("toBool", &ToBool<int64_t>, type_convert_estimator);

@@ -50,14 +50,15 @@ public:
 
   static void Bind(vm::Module &module)
   {
-    auto const adamoptimiser_ctor_estimator = [](fetch::vm::VM *, auto const &, auto const &,
-                                                 auto const &, auto const &) { return 1u; };
+    auto const adam_optimiser_ctor_estimator =
+        [](fetch::vm::VM *, auto const &, auto const &, auto const &,
+           auto const &) -> fetch::vm::VM::ChargeAmount { return 1u; };
     module.CreateClassType<fetch::vm_modules::ml::VMAdamOptimiser>("AdamOptimiser")
-        .CreateConstuctor<decltype(std::move(adamoptimiser_ctor_estimator)),
+        .CreateConstuctor<decltype(std::move(adam_optimiser_ctor_estimator)),
                           fetch::vm::Ptr<fetch::vm_modules::ml::VMGraph>,
                           fetch::vm::Ptr<fetch::vm::String>, fetch::vm::Ptr<fetch::vm::String>,
                           fetch::vm::Ptr<fetch::vm::String>>(
-            std::move(adamoptimiser_ctor_estimator))
+            std::move(adam_optimiser_ctor_estimator))
         .CreateMemberFunction(
             "run", &fetch::vm_modules::ml::VMAdamOptimiser::RunData,
             [](fetch::vm::VM *, auto const &, auto const &, auto const &) { return 1u; })

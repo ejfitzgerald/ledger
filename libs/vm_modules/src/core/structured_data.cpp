@@ -49,36 +49,39 @@ void StructuredData::Bind(vm::Module &module)
 {
   auto interface = module.CreateClassType<StructuredData>("StructuredData");
 
-  auto const structured_data_ctor_estimator = [](fetch::vm::VM *) { return 1u; };
+  auto const structured_data_ctor_estimator = [](fetch::vm::VM *) -> fetch::vm::VM::ChargeAmount {
+    return 1u;
+  };
+
   interface.CreateConstuctor<decltype(structured_data_ctor_estimator )>(std::move(structured_data_ctor_estimator))
     // Getters
-      .CreateMemberFunction("getInt32", &StructuredData::GetPrimitive<int32_t>, [](fetch::vm::VM*, auto const&){return 1u;})
-      .CreateMemberFunction("getInt64", &StructuredData::GetPrimitive<int64_t>, [](fetch::vm::VM*, auto const&){return 1u;})
-      .CreateMemberFunction("getUInt32", &StructuredData::GetPrimitive<uint32_t>, [](fetch::vm::VM*, auto const&){return 1u;})
-      .CreateMemberFunction("getUInt64", &StructuredData::GetPrimitive<uint64_t>, [](fetch::vm::VM*, auto const&){return 1u;})
-      .CreateMemberFunction("getFloat32", &StructuredData::GetPrimitive<float>, [](fetch::vm::VM*, auto const&){return 1u;})
-      .CreateMemberFunction("getFloat64", &StructuredData::GetPrimitive<double>, [](fetch::vm::VM*, auto const&){return 1u;})
-      .CreateMemberFunction("getString", &StructuredData::GetString, [](fetch::vm::VM*, auto const&){return 1u;})
-      .CreateMemberFunction("getArrayInt32", &StructuredData::GetArray<int32_t>, [](fetch::vm::VM*, auto const&){return 1u;})
-      .CreateMemberFunction("getArrayInt64", &StructuredData::GetArray<int64_t>, [](fetch::vm::VM*, auto const&){return 1u;})
-      .CreateMemberFunction("getArrayUInt32", &StructuredData::GetArray<uint32_t>, [](fetch::vm::VM*, auto const&){return 1u;})
-      .CreateMemberFunction("getArrayUInt64", &StructuredData::GetArray<uint64_t>, [](fetch::vm::VM*, auto const&){return 1u;})
-      .CreateMemberFunction("getArrayFloat32", &StructuredData::GetArray<float>, [](fetch::vm::VM*, auto const&){return 1u;})
-      .CreateMemberFunction("getArrayFloat64", &StructuredData::GetArray<double>, [](fetch::vm::VM*, auto const&){return 1u;})
+      .CreateMemberFunction("getInt32", &StructuredData::GetPrimitive<int32_t>, [](fetch::vm::VM*, auto const&)->fetch::vm::VM::ChargeAmount{return 1u;})
+      .CreateMemberFunction("getInt64", &StructuredData::GetPrimitive<int64_t>, [](fetch::vm::VM*, auto const&)->fetch::vm::VM::ChargeAmount{return 1u;})
+      .CreateMemberFunction("getUInt32", &StructuredData::GetPrimitive<uint32_t>, [](fetch::vm::VM*, auto const&)->fetch::vm::VM::ChargeAmount{return 1u;})
+      .CreateMemberFunction("getUInt64", &StructuredData::GetPrimitive<uint64_t>, [](fetch::vm::VM*, auto const&)->fetch::vm::VM::ChargeAmount{return 1u;})
+      .CreateMemberFunction("getFloat32", &StructuredData::GetPrimitive<float>, [](fetch::vm::VM*, auto const&)->fetch::vm::VM::ChargeAmount{return 1u;})
+      .CreateMemberFunction("getFloat64", &StructuredData::GetPrimitive<double>, [](fetch::vm::VM*, auto const&)->fetch::vm::VM::ChargeAmount{return 1u;})
+      .CreateMemberFunction("getString", &StructuredData::GetString, [](fetch::vm::VM*, auto const&)->fetch::vm::VM::ChargeAmount{return 1u;})
+      .CreateMemberFunction("getArrayInt32", &StructuredData::GetArray<int32_t>, [](fetch::vm::VM*, auto const&)->fetch::vm::VM::ChargeAmount{return 1u;})
+      .CreateMemberFunction("getArrayInt64", &StructuredData::GetArray<int64_t>, [](fetch::vm::VM*, auto const&)->fetch::vm::VM::ChargeAmount{return 1u;})
+      .CreateMemberFunction("getArrayUInt32", &StructuredData::GetArray<uint32_t>, [](fetch::vm::VM*, auto const&)->fetch::vm::VM::ChargeAmount{return 1u;})
+      .CreateMemberFunction("getArrayUInt64", &StructuredData::GetArray<uint64_t>, [](fetch::vm::VM*, auto const&)->fetch::vm::VM::ChargeAmount{return 1u;})
+      .CreateMemberFunction("getArrayFloat32", &StructuredData::GetArray<float>, [](fetch::vm::VM*, auto const&)->fetch::vm::VM::ChargeAmount{return 1u;})
+      .CreateMemberFunction("getArrayFloat64", &StructuredData::GetArray<double>, [](fetch::vm::VM*, auto const&)->fetch::vm::VM::ChargeAmount{return 1u;})
     // Setters
-      .CreateMemberFunction("set", &StructuredData::SetArray<int32_t>, [](fetch::vm::VM*, auto const&, auto const&){return 1u;})
-      .CreateMemberFunction("set", &StructuredData::SetArray<int64_t>, [](fetch::vm::VM*, auto const&, auto const&){return 1u;})
-      .CreateMemberFunction("set", &StructuredData::SetArray<uint32_t>, [](fetch::vm::VM*, auto const&, auto const&){return 1u;})
-      .CreateMemberFunction("set", &StructuredData::SetArray<uint64_t>, [](fetch::vm::VM*, auto const&, auto const&){return 1u;})
-      .CreateMemberFunction("set", &StructuredData::SetArray<float>, [](fetch::vm::VM*, auto const&, auto const&){return 1u;})
-      .CreateMemberFunction("set", &StructuredData::SetArray<double>, [](fetch::vm::VM*, auto const&, auto const&){return 1u;})
-      .CreateMemberFunction("set", &StructuredData::SetString, [](fetch::vm::VM*, auto const&, auto const&){return 1u;})
-      .CreateMemberFunction("set", &StructuredData::SetPrimitive<int32_t>, [](fetch::vm::VM*, auto const&, auto const&){return 1u;})
-      .CreateMemberFunction("set", &StructuredData::SetPrimitive<int64_t>, [](fetch::vm::VM*, auto const&, auto const&){return 1u;})
-      .CreateMemberFunction("set", &StructuredData::SetPrimitive<uint32_t>, [](fetch::vm::VM*, auto const&, auto const&){return 1u;})
-      .CreateMemberFunction("set", &StructuredData::SetPrimitive<uint64_t>, [](fetch::vm::VM*, auto const&, auto const&){return 1u;})
-      .CreateMemberFunction("set", &StructuredData::SetPrimitive<float>, [](fetch::vm::VM*, auto const&, auto const&){return 1u;})
-      .CreateMemberFunction("set", &StructuredData::SetPrimitive<double>, [](fetch::vm::VM*, auto const&, auto const&){return 1u;});
+      .CreateMemberFunction("set", &StructuredData::SetArray<int32_t>, [](fetch::vm::VM*, auto const&, auto const&)->fetch::vm::VM::ChargeAmount{return 1u;})
+      .CreateMemberFunction("set", &StructuredData::SetArray<int64_t>, [](fetch::vm::VM*, auto const&, auto const&)->fetch::vm::VM::ChargeAmount{return 1u;})
+      .CreateMemberFunction("set", &StructuredData::SetArray<uint32_t>, [](fetch::vm::VM*, auto const&, auto const&)->fetch::vm::VM::ChargeAmount{return 1u;})
+      .CreateMemberFunction("set", &StructuredData::SetArray<uint64_t>, [](fetch::vm::VM*, auto const&, auto const&)->fetch::vm::VM::ChargeAmount{return 1u;})
+      .CreateMemberFunction("set", &StructuredData::SetArray<float>, [](fetch::vm::VM*, auto const&, auto const&)->fetch::vm::VM::ChargeAmount{return 1u;})
+      .CreateMemberFunction("set", &StructuredData::SetArray<double>, [](fetch::vm::VM*, auto const&, auto const&)->fetch::vm::VM::ChargeAmount{return 1u;})
+      .CreateMemberFunction("set", &StructuredData::SetString, [](fetch::vm::VM*, auto const&, auto const&)->fetch::vm::VM::ChargeAmount{return 1u;})
+      .CreateMemberFunction("set", &StructuredData::SetPrimitive<int32_t>, [](fetch::vm::VM*, auto const&, auto const&)->fetch::vm::VM::ChargeAmount{return 1u;})
+      .CreateMemberFunction("set", &StructuredData::SetPrimitive<int64_t>, [](fetch::vm::VM*, auto const&, auto const&)->fetch::vm::VM::ChargeAmount{return 1u;})
+      .CreateMemberFunction("set", &StructuredData::SetPrimitive<uint32_t>, [](fetch::vm::VM*, auto const&, auto const&)->fetch::vm::VM::ChargeAmount{return 1u;})
+      .CreateMemberFunction("set", &StructuredData::SetPrimitive<uint64_t>, [](fetch::vm::VM*, auto const&, auto const&)->fetch::vm::VM::ChargeAmount{return 1u;})
+      .CreateMemberFunction("set", &StructuredData::SetPrimitive<float>, [](fetch::vm::VM*, auto const&, auto const&)->fetch::vm::VM::ChargeAmount{return 1u;})
+      .CreateMemberFunction("set", &StructuredData::SetPrimitive<double>, [](fetch::vm::VM*, auto const&, auto const&)->fetch::vm::VM::ChargeAmount{return 1u;});
 
   // add array support?
   module.GetClassInterface<vm::IArray>()

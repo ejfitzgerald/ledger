@@ -51,7 +51,9 @@ fetch::math::meta::IfIsMath<T, T> Log10(fetch::vm::VM *, T const &a)
   return x;
 }
 
-static auto const log_estimator = [](fetch::vm::VM *, auto const &) { return 1u; };
+static auto const log_estimator = [](fetch::vm::VM *, auto const &) -> fetch::vm::VM::ChargeAmount {
+  return 1u;
+};
 
 inline void BindLog(fetch::vm::Module &module)
 {

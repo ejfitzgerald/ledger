@@ -110,8 +110,9 @@ SmartContract::SmartContract(std::string const &source)
 
   FETCH_LOG_DEBUG(LOGGING_NAME, "Constructing contract: 0x", contract_digest().ToHex());
 
-  module_->CreateFreeFunction("getBlockNumber", [this](vm::VM *) { return block_index_; },
-                              [](vm::VM *) { return 1; });
+  module_->CreateFreeFunction("getBlockNumber",
+                              [this](vm::VM *) -> BlockIndex { return block_index_; },
+                              [](vm::VM *) -> fetch::vm::VM::ChargeAmount { return 1; });
 
   // create and compile the executable
   auto errors = vm_modules::VMFactory::Compile(module_, source_, *executable_);
@@ -435,7 +436,10 @@ Contract::Status SmartContract::InvokeAction(std::string const &name, Transactio
 
   // Get clean VM instance
   auto vm = std::make_unique<vm::VM>(module_.get());
+
+  // TODO(WK) inject charge limit
   vm->SetChargeLimit(std::numeric_limits<vm::VM::ChargeAmount>::max());
+
   vm->SetIOObserver(state());
 
   // lookup the function / entry point which will be executed
@@ -498,7 +502,10 @@ Contract::Status SmartContract::InvokeInit(Address const &owner)
 {
   // Get clean VM instance
   auto vm = std::make_unique<vm::VM>(module_.get());
+
+  // TODO(WK) inject charge limit
   vm->SetChargeLimit(std::numeric_limits<vm::VM::ChargeAmount>::max());
+
   vm->SetIOObserver(state());
 
   FETCH_LOG_DEBUG(LOGGING_NAME, "Running SC init function: ", init_fn_name_);
@@ -550,7 +557,10 @@ SmartContract::Status SmartContract::InvokeQuery(std::string const &name, Query 
 {
   // get clean VM instance
   auto vm = std::make_unique<vm::VM>(module_.get());
+
+  // TODO(WK) inject charge limit
   vm->SetChargeLimit(std::numeric_limits<vm::VM::ChargeAmount>::max());
+
   vm->SetIOObserver(state());
 
   // lookup the executable

@@ -68,7 +68,9 @@ meta::IfIsUnsignedInteger<T, T> IntegerAbs(fetch::vm::VM *, T const &value)
   return value;
 }
 
-static auto const abs_estimator = [](fetch::vm::VM *, auto const &) { return 1u; };
+static auto const abs_estimator = [](fetch::vm::VM *, auto const &) -> fetch::vm::VM::ChargeAmount {
+  return 1u;
+};
 
 static void BindAbs(fetch::vm::Module &module)
 {

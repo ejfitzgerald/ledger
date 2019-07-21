@@ -29,9 +29,8 @@ using fetch::vm::VM;
 class VmChargeTests : public ::testing::Test
 {
 public:
-  //  std::stringstream stdout;
-  VmTestToolkit toolkit;
-  //  VmTestToolkit     toolkit{&stdout};
+  std::stringstream stdout;
+  VmTestToolkit     toolkit{&stdout};
 };
 
 TEST_F(VmChargeTests, execution_succeeds_when_charge_limit_obeyed)
@@ -51,10 +50,10 @@ TEST_F(VmChargeTests, execution_succeeds_when_charge_limit_obeyed)
     endfunction
   )";
 
+  auto const charge_limit = 1000;
+
   ASSERT_TRUE(toolkit.Compile(TEXT));
-  toolkit.vm().SetChargeLimit(1000);
-  ASSERT_EQ(1000, toolkit.vm().GetChargeLimit());
-  ASSERT_TRUE(toolkit.Run());
+  ASSERT_TRUE(toolkit.Run(nullptr, charge_limit));
 }
 
 TEST_F(VmChargeTests, execution_fails_when_charge_limit_exceeded)
@@ -74,10 +73,10 @@ TEST_F(VmChargeTests, execution_fails_when_charge_limit_exceeded)
     endfunction
   )";
 
+  auto const charge_limit = 10;
+
   ASSERT_TRUE(toolkit.Compile(TEXT));
-  toolkit.vm().SetChargeLimit(10);
-  ASSERT_EQ(10, toolkit.vm().GetChargeLimit());
-  ASSERT_FALSE(toolkit.Run());
+  ASSERT_FALSE(toolkit.Run(nullptr, charge_limit));
 }
 
 TEST_F(VmChargeTests, bind_with_charge_estimate_execution_fails_when_limit_exceeded)
@@ -97,9 +96,10 @@ TEST_F(VmChargeTests, bind_with_charge_estimate_execution_fails_when_limit_excee
     endfunction
   )";
 
+  auto const charge_limit = 1000;
+
   ASSERT_TRUE(toolkit.Compile(TEXT));
-  toolkit.vm().SetChargeLimit(1000);
-  ASSERT_FALSE(toolkit.Run());
+  ASSERT_FALSE(toolkit.Run(nullptr, charge_limit));
 }
 
 TEST_F(VmChargeTests, bind_with_charge_estimate_execution_succeeds_when_limit_obeyed)
@@ -119,9 +119,10 @@ TEST_F(VmChargeTests, bind_with_charge_estimate_execution_succeeds_when_limit_ob
     endfunction
   )";
 
+  auto const charge_limit = 1000;
+
   ASSERT_TRUE(toolkit.Compile(TEXT));
-  toolkit.vm().SetChargeLimit(1000);
-  ASSERT_TRUE(toolkit.Run());
+  ASSERT_TRUE(toolkit.Run(nullptr, charge_limit));
 }
 
 }  // namespace

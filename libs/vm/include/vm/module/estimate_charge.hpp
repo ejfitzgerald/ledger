@@ -34,7 +34,7 @@ namespace vm {
 template <typename Estimator, typename... Ts>
 bool EstimatedChargeIsWithinLimit(VM *vm, Estimator &&e, Ts const &... parameters)
 {
-  auto const charge_estimate = static_cast<VM::ChargeAmount>(e(vm, parameters...));
+  auto const charge_estimate = e(vm, parameters...);
 
   if (charge_estimate + vm->GetChargeTotal() > vm->GetChargeLimit())
   {

@@ -34,7 +34,8 @@ fetch::math::meta::IfIsMath<T, T> Sqrt(fetch::vm::VM *, T const &a)
   return x;
 }
 
-static auto const sqrt_estimator = [](fetch::vm::VM *, auto const &) { return 1u; };
+static auto const sqrt_estimator = [](fetch::vm::VM *,
+                                      auto const &) -> fetch::vm::VM::ChargeAmount { return 1u; };
 
 inline void BindSqrt(fetch::vm::Module &module)
 {

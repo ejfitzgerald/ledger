@@ -167,11 +167,11 @@ fetch::math::meta::IfIsMath<T, T> ATanH(fetch::vm::VM *, T const &a)
   return x;
 }
 
-static auto const trig_estimator = [](fetch::vm::VM *, auto const &) { return 1u; };
+static auto const trig_estimator = [](fetch::vm::VM *,
+                                      auto const &) -> fetch::vm::VM::ChargeAmount { return 1u; };
 
-static auto const trig_atan2_estimator = [](fetch::vm::VM *, auto const &, auto const &) {
-  return 1u;
-};
+static auto const trig_atan2_estimator =
+    [](fetch::vm::VM *, auto const &, auto const &) -> fetch::vm::VM::ChargeAmount { return 1u; };
 
 inline void BindTrigonometry(fetch::vm::Module &module)
 {

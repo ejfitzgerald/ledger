@@ -73,9 +73,12 @@ public:
 
   static void Bind(vm::Module &module)
   {
-    auto const bignumber_ctor_estimator1 = [](fetch::vm::VM *, auto const &) { return 1u; };
-    auto const bignumber_ctor_estimator2 = [](fetch::vm::VM *, auto const &) { return 1u; };
-    auto const bignumber_ctor_estimator3 = [](fetch::vm::VM *, auto const &) { return 1u; };
+    auto const bignumber_ctor_estimator1 =
+        [](fetch::vm::VM *, auto const &) -> fetch::vm::VM::ChargeAmount { return 1u; };
+    auto const bignumber_ctor_estimator2 =
+        [](fetch::vm::VM *, auto const &) -> fetch::vm::VM::ChargeAmount { return 1u; };
+    auto const bignumber_ctor_estimator3 =
+        [](fetch::vm::VM *, auto const &) -> fetch::vm::VM::ChargeAmount { return 1u; };
     module.CreateClassType<UInt256Wrapper>("UInt256")
         .CreateSerializeDefaultConstuctor<uint64_t>(static_cast<uint64_t>(0))
         .CreateConstuctor<decltype(bignumber_ctor_estimator1), uint64_t>(
@@ -92,27 +95,31 @@ public:
         //        .EnableOperator(vm::Operator::GreaterThanOrEqual)
         //        .CreateMemberFunction("toBuffer", &UInt256Wrapper::ToBuffer)
         .CreateMemberFunction("increase", &UInt256Wrapper::Increase,
-                              [](fetch::vm::VM *) { return 1u; })
+                              [](fetch::vm::VM *) -> fetch::vm::VM::ChargeAmount { return 1u; })
         //        .CreateMemberFunction("lessThan", &UInt256Wrapper::LessThan)
         .CreateMemberFunction("logValue", &UInt256Wrapper::LogValue,
-                              [](fetch::vm::VM *) { return 1u; })
+                              [](fetch::vm::VM *) -> fetch::vm::VM::ChargeAmount { return 1u; })
         .CreateMemberFunction("toFloat64", &UInt256Wrapper::ToFloat64,
-                              [](fetch::vm::VM *) { return 1u; })
+                              [](fetch::vm::VM *) -> fetch::vm::VM::ChargeAmount { return 1u; })
         .CreateMemberFunction("toInt32", &UInt256Wrapper::ToInt32,
-                              [](fetch::vm::VM *) { return 1u; })
+                              [](fetch::vm::VM *) -> fetch::vm::VM::ChargeAmount { return 1u; })
         .CreateMemberFunction("size", &UInt256Wrapper::size, [](fetch::vm::VM *) { return 1u; });
 
-    auto const bignumber_estimator = [](fetch::vm::VM *, auto const &) { return 1u; };
-
-    module.CreateFreeFunction("toString", &UInt256Wrapper::ToString, bignumber_estimator);
-    module.CreateFreeFunction("toUInt64", &UInt256Wrapper::ToPrimitive<uint64_t>,
-                              bignumber_estimator);
-    module.CreateFreeFunction("toInt64", &UInt256Wrapper::ToPrimitive<int64_t>,
-                              bignumber_estimator);
-    module.CreateFreeFunction("toUInt32", &UInt256Wrapper::ToPrimitive<uint32_t>,
-                              bignumber_estimator);
-    module.CreateFreeFunction("toInt32", &UInt256Wrapper::ToPrimitive<int32_t>,
-                              bignumber_estimator);
+    module.CreateFreeFunction(
+        "toString", &UInt256Wrapper::ToString,
+        [](fetch::vm::VM *, auto const &) -> fetch::vm::VM::ChargeAmount { return 1u; });
+    module.CreateFreeFunction(
+        "toUInt64", &UInt256Wrapper::ToPrimitive<uint64_t>,
+        [](fetch::vm::VM *, auto const &) -> fetch::vm::VM::ChargeAmount { return 1u; });
+    module.CreateFreeFunction(
+        "toInt64", &UInt256Wrapper::ToPrimitive<int64_t>,
+        [](fetch::vm::VM *, auto const &) -> fetch::vm::VM::ChargeAmount { return 1u; });
+    module.CreateFreeFunction(
+        "toUInt32", &UInt256Wrapper::ToPrimitive<uint32_t>,
+        [](fetch::vm::VM *, auto const &) -> fetch::vm::VM::ChargeAmount { return 1u; });
+    module.CreateFreeFunction(
+        "toInt32", &UInt256Wrapper::ToPrimitive<int32_t>,
+        [](fetch::vm::VM *, auto const &) -> fetch::vm::VM::ChargeAmount { return 1u; });
   }
 
   UInt256Wrapper(fetch::vm::VM *vm, fetch::vm::TypeId type_id, UInt256 data)

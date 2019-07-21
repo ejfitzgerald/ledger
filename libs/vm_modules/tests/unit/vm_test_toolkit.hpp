@@ -81,7 +81,7 @@ public:
     vm_         = std::make_unique<VM>(module_.get());
     vm_->SetIOObserver(*observer_);
     vm_->AttachOutputDevice(fetch::vm::VM::STDOUT, *stdout_);
-    vm_->SetChargeLimit(std::numeric_limits<VM::ChargeAmount>::max());
+
     if (!vm_->GenerateExecutable(*ir_, "default_ir", *executable_, errors))
     {
       PrintErrors(errors);
@@ -91,8 +91,10 @@ public:
     return true;
   }
 
-  bool Run(Variant *output = nullptr)
+  bool Run(Variant *        output       = nullptr,
+           VM::ChargeAmount charge_limit = std::numeric_limits<VM::ChargeAmount>::max())
   {
+    vm_->SetChargeLimit(charge_limit);
     std::string error{};
 
     Variant dummy_output{};

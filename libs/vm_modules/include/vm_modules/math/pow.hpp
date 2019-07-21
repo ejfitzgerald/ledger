@@ -35,7 +35,8 @@ fetch::math::meta::IfIsMath<T, T> Pow(fetch::vm::VM *, T const &a, T const &b)
   return x;
 }
 
-static auto const pow_estimator = [](fetch::vm::VM *, auto const &, auto const &) { return 1u; };
+static auto const pow_estimator = [](fetch::vm::VM *, auto const &,
+                                     auto const &) -> fetch::vm::VM::ChargeAmount { return 1u; };
 
 inline void BindPow(fetch::vm::Module &module)
 {

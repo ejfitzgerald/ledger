@@ -35,7 +35,9 @@ fetch::math::meta::IfIsMath<T, T> Exp(fetch::vm::VM *, T const &a)
   return x;
 }
 
-static auto const exp_estimator = [](fetch::vm::VM *, auto const &) { return 1u; };
+static auto const exp_estimator = [](fetch::vm::VM *, auto const &) -> fetch::vm::VM::ChargeAmount {
+  return 1u;
+};
 
 inline void BindExp(fetch::vm::Module &module)
 {

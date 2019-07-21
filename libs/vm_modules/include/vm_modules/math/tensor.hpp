@@ -61,26 +61,34 @@ public:
 
   static void Bind(fetch::vm::Module &module)
   {
-    auto const tensor_ctor_estimator = [](fetch::vm::VM *, auto const &) { return 1u; };
+    auto const tensor_ctor_estimator =
+        [](fetch::vm::VM *, auto const &) -> fetch::vm::VM::ChargeAmount { return 1u; };
+
     module.CreateClassType<VMTensor>("Tensor")
         .CreateConstuctor<decltype(tensor_ctor_estimator),
                           fetch::vm::Ptr<fetch::vm::Array<VMTensor::SizeType>>>(
             std::move(tensor_ctor_estimator))
         .CreateSerializeDefaultConstuctor<>()
-        .CreateMemberFunction("at", &VMTensor::AtOne,
-                              [](fetch::vm::VM *, auto const &) { return 1u; })
-        .CreateMemberFunction("at", &VMTensor::AtTwo,
-                              [](fetch::vm::VM *, auto const &, auto const &) { return 1u; })
         .CreateMemberFunction(
-            "at", &VMTensor::AtThree,
-            [](fetch::vm::VM *, auto const &, auto const &, auto const &) { return 1u; })
+            "at", &VMTensor::AtOne,
+            [](fetch::vm::VM *, auto const &) -> fetch::vm::VM::ChargeAmount { return 1u; })
+        .CreateMemberFunction("at", &VMTensor::AtTwo,
+                              [](fetch::vm::VM *, auto const &,
+                                 auto const &) -> fetch::vm::VM::ChargeAmount { return 1u; })
+        .CreateMemberFunction("at", &VMTensor::AtThree,
+                              [](fetch::vm::VM *, auto const &, auto const &,
+                                 auto const &) -> fetch::vm::VM::ChargeAmount { return 1u; })
         .CreateMemberFunction("setAt", &VMTensor::SetAt,
-                              [](fetch::vm::VM *, auto const &, auto const &) { return 1u; })
-        .CreateMemberFunction("fill", &VMTensor::Fill,
-                              [](fetch::vm::VM *, auto const &) { return 1u; })
-        .CreateMemberFunction("reshape", &VMTensor::Reshape,
-                              [](fetch::vm::VM *, auto const &) { return 1u; })
-        .CreateMemberFunction("toString", &VMTensor::ToString, [](fetch::vm::VM *) { return 1u; });
+                              [](fetch::vm::VM *, auto const &,
+                                 auto const &) -> fetch::vm::VM::ChargeAmount { return 1u; })
+        .CreateMemberFunction(
+            "fill", &VMTensor::Fill,
+            [](fetch::vm::VM *, auto const &) -> fetch::vm::VM::ChargeAmount { return 1u; })
+        .CreateMemberFunction(
+            "reshape", &VMTensor::Reshape,
+            [](fetch::vm::VM *, auto const &) -> fetch::vm::VM::ChargeAmount { return 1u; })
+        .CreateMemberFunction("toString", &VMTensor::ToString,
+                              [](fetch::vm::VM *) -> fetch::vm::VM::ChargeAmount { return 1u; });
   }
 
   SizeVector shape()

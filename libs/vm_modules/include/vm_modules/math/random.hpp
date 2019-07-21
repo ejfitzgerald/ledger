@@ -56,7 +56,8 @@ fetch::meta::IfIsFloat<T, T> Rand(fetch::vm::VM *vm, T const &a = T{.0}, T const
   return std::uniform_real_distribution<T>{a, b}(mt);
 }
 
-static auto const rand_estimator = [](fetch::vm::VM *, auto const &, auto const &) { return 1u; };
+static auto const rand_estimator = [](fetch::vm::VM *, auto const &,
+                                      auto const &) -> fetch::vm::VM::ChargeAmount { return 1u; };
 
 inline void BindRand(fetch::vm::Module &module)
 {

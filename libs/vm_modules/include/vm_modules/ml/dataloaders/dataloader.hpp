@@ -42,14 +42,18 @@ public:
 
   static void Bind(fetch::vm::Module &module)
   {
-    auto const dataloader_ctor_estimator = [](fetch::vm::VM *) { return 1u; };
+    auto const dataloader_ctor_estimator = [](fetch::vm::VM *) -> fetch::vm::VM::ChargeAmount {
+      return 1u;
+    };
     module.CreateClassType<VMDataLoader>("DataLoader")
         .CreateConstuctor<decltype(dataloader_ctor_estimator)>(std::move(dataloader_ctor_estimator))
-        .CreateMemberFunction(
-            "addData", &VMDataLoader::AddData,
-            [](fetch::vm::VM *, auto const &, auto const &, auto const &) { return 1u; })
-        .CreateMemberFunction("getNext", &VMDataLoader::GetNext, [](fetch::vm::VM *) { return 1u; })
-        .CreateMemberFunction("isDone", &VMDataLoader::IsDone, [](fetch::vm::VM *) { return 1u; });
+        .CreateMemberFunction("addData", &VMDataLoader::AddData,
+                              [](fetch::vm::VM *, auto const &, auto const &,
+                                 auto const &) -> fetch::vm::VM::ChargeAmount { return 1u; })
+        .CreateMemberFunction("getNext", &VMDataLoader::GetNext,
+                              [](fetch::vm::VM *) -> fetch::vm::VM::ChargeAmount { return 1u; })
+        .CreateMemberFunction("isDone", &VMDataLoader::IsDone,
+                              [](fetch::vm::VM *) -> fetch::vm::VM::ChargeAmount { return 1u; });
   }
 
   void AddData(fetch::vm::Ptr<fetch::vm::String> const &mode,

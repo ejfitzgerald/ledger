@@ -45,17 +45,15 @@ void AssertWithMsg(fetch::vm::VM *vm, bool condition, fetch::vm::Ptr<fetch::vm::
 
 void CreatePanic(vm::Module &module)
 {
-  auto const panic_estimator = [](fetch::vm::VM *, auto const &) { return 1u; };
-
-  auto const assert_estimator = [](fetch::vm::VM *, auto const &) { return 1u; };
-
-  auto const assert_with_msg_estimator = [](fetch::vm::VM *, auto const &, auto const &) {
-    return 1u;
-  };
-
-  module.CreateFreeFunction("panic", &Panic, panic_estimator);
-  module.CreateFreeFunction("assert", &Assert, assert_estimator);
-  module.CreateFreeFunction("assert", &AssertWithMsg, assert_with_msg_estimator);
+  module.CreateFreeFunction(
+      "panic", &Panic,
+      [](fetch::vm::VM *, auto const &) -> fetch::vm::VM::ChargeAmount { return 1u; });
+  module.CreateFreeFunction(
+      "assert", &Assert,
+      [](fetch::vm::VM *, auto const &) -> fetch::vm::VM::ChargeAmount { return 1u; });
+  module.CreateFreeFunction("assert", &AssertWithMsg,
+                            [](fetch::vm::VM *, auto const &,
+                               auto const &) -> fetch::vm::VM::ChargeAmount { return 1u; });
 }
 
 }  // namespace vm_modules
