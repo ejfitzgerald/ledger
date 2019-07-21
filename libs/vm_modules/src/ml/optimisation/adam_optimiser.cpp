@@ -18,6 +18,7 @@
 
 #include "ml/graph.hpp"
 #include "ml/optimisation/adam_optimiser.hpp"
+#include "vm/module.hpp"
 #include "vm/module/estimate_charge.hpp"
 #include "vm_modules/math/tensor.hpp"
 #include "vm_modules/ml/dataloaders/dataloader.hpp"

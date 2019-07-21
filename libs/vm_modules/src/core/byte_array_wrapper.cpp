@@ -26,6 +26,7 @@
 
 #include <cstddef>
 #include <cstdint>
+#include <utility>
 
 using fetch::vm::ConstantEstimator;
 
@@ -33,9 +34,9 @@ namespace fetch {
 namespace vm_modules {
 
 ByteArrayWrapper::ByteArrayWrapper(fetch::vm::VM *vm, fetch::vm::TypeId type_id,
-                                   byte_array::ByteArray const &bytearray)
+                                   byte_array::ByteArray bytearray)
   : fetch::vm::Object(vm, type_id)
-  , byte_array_(bytearray)
+  , byte_array_(std::move(bytearray))
 {}
 
 fetch::vm::Ptr<ByteArrayWrapper> ByteArrayWrapper::Constructor(fetch::vm::VM *   vm,
@@ -44,9 +45,8 @@ fetch::vm::Ptr<ByteArrayWrapper> ByteArrayWrapper::Constructor(fetch::vm::VM *  
   return new ByteArrayWrapper(vm, type_id, byte_array::ByteArray(std::size_t(n)));
 }
 
-fetch::vm::Ptr<ByteArrayWrapper> ByteArrayWrapper::Constructor(fetch::vm::VM *       vm,
-                                                               fetch::vm::TypeId     type_id,
-                                                               byte_array::ByteArray bytearray)
+fetch::vm::Ptr<ByteArrayWrapper> ByteArrayWrapper::Constructor(
+    fetch::vm::VM *vm, fetch::vm::TypeId type_id, byte_array::ByteArray const &bytearray)
 {
   return new ByteArrayWrapper(vm, type_id, bytearray);
 }

@@ -16,6 +16,8 @@
 //
 //------------------------------------------------------------------------------
 
+#include "vm/compiler.hpp"
+#include "vm/module.hpp"
 #include "vm_modules/vm_factory.hpp"
 
 #include <cstdint>

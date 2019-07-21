@@ -18,9 +18,18 @@
 //------------------------------------------------------------------------------
 
 #include "math/tensor.hpp"
-#include "vm/module.hpp"
+#include "vm/array.hpp"
+#include "vm/object.hpp"
+
+#include <cstdint>
+#include <vector>
 
 namespace fetch {
+
+namespace vm {
+class Module;
+}
+
 namespace vm_modules {
 namespace math {
 
@@ -33,119 +42,45 @@ public:
   using SizeType   = ArrayType::SizeType;
   using SizeVector = ArrayType::SizeVector;
 
-  VMTensor(fetch::vm::VM *vm, fetch::vm::TypeId type_id, std::vector<std::uint64_t> const &shape)
-    : fetch::vm::Object(vm, type_id)
-    , tensor_(shape)
-  {}
-
-  VMTensor(fetch::vm::VM *vm, fetch::vm::TypeId type_id, ArrayType tensor)
-    : fetch::vm::Object(vm, type_id)
-    , tensor_(std::move(tensor))
-  {}
-
-  VMTensor(fetch::vm::VM *vm, fetch::vm::TypeId type_id)
-    : fetch::vm::Object(vm, type_id)
-    , tensor_{}
-  {}
+  VMTensor(fetch::vm::VM *vm, fetch::vm::TypeId type_id, std::vector<std::uint64_t> const &shape);
+  VMTensor(fetch::vm::VM *vm, fetch::vm::TypeId type_id, ArrayType tensor);
+  VMTensor(fetch::vm::VM *vm, fetch::vm::TypeId type_id);
 
   static fetch::vm::Ptr<VMTensor> Constructor(fetch::vm::VM *vm, fetch::vm::TypeId type_id,
-                                              fetch::vm::Ptr<fetch::vm::Array<SizeType>> shape)
-  {
-    return {new VMTensor(vm, type_id, shape->elements)};
-  }
+                                              fetch::vm::Ptr<fetch::vm::Array<SizeType>> shape);
 
-  static fetch::vm::Ptr<VMTensor> Constructor(fetch::vm::VM *vm, fetch::vm::TypeId type_id)
-  {
-    return {new VMTensor(vm, type_id)};
-  }
+  static fetch::vm::Ptr<VMTensor> Constructor(fetch::vm::VM *vm, fetch::vm::TypeId type_id);
 
-  static void Bind(fetch::vm::Module &module)
-  {
-    auto const tensor_ctor_estimator = vm::ConstantEstimator<1>::Get();
+  static void Bind(fetch::vm::Module &module);
 
-    module.CreateClassType<VMTensor>("Tensor")
-        .CreateConstuctor<decltype(tensor_ctor_estimator),
-                          fetch::vm::Ptr<fetch::vm::Array<VMTensor::SizeType>>>(
-            std::move(tensor_ctor_estimator))
-        .CreateSerializeDefaultConstuctor<>()
-        .CreateMemberFunction("at", &VMTensor::AtOne, vm::ConstantEstimator<1>::Get())
-        .CreateMemberFunction("at", &VMTensor::AtTwo, vm::ConstantEstimator<2>::Get())
-        .CreateMemberFunction("at", &VMTensor::AtThree, vm::ConstantEstimator<3>::Get())
-        .CreateMemberFunction("setAt", &VMTensor::SetAt, vm::ConstantEstimator<2>::Get())
-        .CreateMemberFunction("fill", &VMTensor::Fill, vm::ConstantEstimator<1>::Get())
-        .CreateMemberFunction("reshape", &VMTensor::Reshape, vm::ConstantEstimator<1>::Get())
-        .CreateMemberFunction("toString", &VMTensor::ToString, vm::ConstantEstimator<0>::Get());
-  }
-
-  SizeVector shape()
-  {
-    return tensor_.shape();
-  }
+  SizeVector shape();
 
   ////////////////////////////////////
   /// ACCESSING AND SETTING VALUES ///
   ////////////////////////////////////
 
-  DataType AtOne(uint64_t idx1)
-  {
-    return tensor_.At(idx1);
-  }
+  DataType AtOne(uint64_t idx1);
+  DataType AtTwo(uint64_t idx1, uint64_t idx2);
+  DataType AtThree(uint64_t idx1, uint64_t idx2, uint64_t idx3);
 
-  DataType AtTwo(uint64_t idx1, uint64_t idx2)
-  {
-    return tensor_.At(idx1, idx2);
-  }
+  void SetAt(uint64_t index, DataType value);
 
-  DataType AtThree(uint64_t idx1, uint64_t idx2, uint64_t idx3)
-  {
-    return tensor_.At(idx1, idx2, idx3);
-  }
+  void Copy(ArrayType const &other);
 
-  void SetAt(uint64_t index, DataType value)
-  {
-    tensor_.At(index) = value;
-  }
+  void Fill(DataType const &value);
 
-  void Copy(ArrayType const &other)
-  {
-    tensor_.Copy(other);
-  }
-
-  void Fill(DataType const &value)
-  {
-    tensor_.Fill(value);
-  }
-
-  bool Reshape(fetch::vm::Ptr<fetch::vm::Array<SizeType>> const &new_shape)
-  {
-    return tensor_.Reshape(new_shape->elements);
-  }
+  bool Reshape(fetch::vm::Ptr<fetch::vm::Array<SizeType>> const &new_shape);
 
   //////////////////////////////
   /// PRINTING AND EXPORTING ///
   //////////////////////////////
 
-  fetch::vm::Ptr<fetch::vm::String> ToString()
-  {
-    return new fetch::vm::String(vm_, tensor_.ToString());
-  }
+  fetch::vm::Ptr<fetch::vm::String> ToString();
 
-  ArrayType &GetTensor()
-  {
-    return tensor_;
-  }
+  ArrayType &GetTensor();
 
-  bool SerializeTo(serializers::ByteArrayBuffer &buffer) override
-  {
-    buffer << tensor_;
-    return true;
-  }
-
-  bool DeserializeFrom(serializers::ByteArrayBuffer &buffer) override
-  {
-    buffer >> tensor_;
-    return true;
-  }
+  bool SerializeTo(serializers::ByteArrayBuffer &buffer) override;
+  bool DeserializeFrom(serializers::ByteArrayBuffer &buffer) override;
 
 private:
   ArrayType tensor_;

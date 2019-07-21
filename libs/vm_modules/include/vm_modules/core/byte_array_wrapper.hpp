@@ -35,13 +35,12 @@ public:
   ByteArrayWrapper()           = delete;
   ~ByteArrayWrapper() override = default;
 
-  ByteArrayWrapper(fetch::vm::VM *vm, fetch::vm::TypeId type_id,
-                   byte_array::ByteArray const &bytearray);
+  ByteArrayWrapper(fetch::vm::VM *vm, fetch::vm::TypeId type_id, byte_array::ByteArray bytearray);
 
   static fetch::vm::Ptr<ByteArrayWrapper> Constructor(fetch::vm::VM *vm, fetch::vm::TypeId type_id,
                                                       int32_t n);
   static fetch::vm::Ptr<ByteArrayWrapper> Constructor(fetch::vm::VM *vm, fetch::vm::TypeId type_id,
-                                                      byte_array::ByteArray bytearray);
+                                                      byte_array::ByteArray const &bytearray);
 
   static void Bind(vm::Module &module);
 
