@@ -76,7 +76,7 @@ void VMTensor::Bind(fetch::vm::Module &module)
       .CreateMemberFunction("toString", &VMTensor::ToString, ConstantEstimator<0>::Get());
 }
 
-VMTensor::SizeVector VMTensor::shape()
+VMTensor::SizeVector VMTensor::shape() const
 {
   return tensor_.shape();
 }
@@ -85,17 +85,17 @@ VMTensor::SizeVector VMTensor::shape()
 /// ACCESSING AND SETTING VALUES ///
 ////////////////////////////////////
 
-VMTensor::DataType VMTensor::AtOne(uint64_t idx1)
+VMTensor::DataType VMTensor::AtOne(uint64_t idx1) const
 {
   return tensor_.At(idx1);
 }
 
-VMTensor::DataType VMTensor::AtTwo(uint64_t idx1, uint64_t idx2)
+VMTensor::DataType VMTensor::AtTwo(uint64_t idx1, uint64_t idx2) const
 {
   return tensor_.At(idx1, idx2);
 }
 
-VMTensor::DataType VMTensor::AtThree(uint64_t idx1, uint64_t idx2, uint64_t idx3)
+VMTensor::DataType VMTensor::AtThree(uint64_t idx1, uint64_t idx2, uint64_t idx3) const
 {
   return tensor_.At(idx1, idx2, idx3);
 }
@@ -124,7 +124,7 @@ bool VMTensor::Reshape(fetch::vm::Ptr<fetch::vm::Array<SizeType>> const &new_sha
 /// PRINTING AND EXPORTING ///
 //////////////////////////////
 
-fetch::vm::Ptr<fetch::vm::String> VMTensor::ToString()
+fetch::vm::Ptr<fetch::vm::String> VMTensor::ToString() const
 {
   return new fetch::vm::String(vm_, tensor_.ToString());
 }

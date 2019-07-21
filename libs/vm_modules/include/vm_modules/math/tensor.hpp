@@ -53,15 +53,15 @@ public:
 
   static void Bind(fetch::vm::Module &module);
 
-  SizeVector shape();
+  SizeVector shape() const;
 
   ////////////////////////////////////
   /// ACCESSING AND SETTING VALUES ///
   ////////////////////////////////////
 
-  DataType AtOne(uint64_t idx1);
-  DataType AtTwo(uint64_t idx1, uint64_t idx2);
-  DataType AtThree(uint64_t idx1, uint64_t idx2, uint64_t idx3);
+  DataType AtOne(uint64_t idx1) const;
+  DataType AtTwo(uint64_t idx1, uint64_t idx2) const;
+  DataType AtThree(uint64_t idx1, uint64_t idx2, uint64_t idx3) const;
 
   void SetAt(uint64_t index, DataType value);
 
@@ -75,7 +75,7 @@ public:
   /// PRINTING AND EXPORTING ///
   //////////////////////////////
 
-  fetch::vm::Ptr<fetch::vm::String> ToString();
+  fetch::vm::Ptr<fetch::vm::String> ToString() const;
 
   ArrayType &GetTensor();
 
