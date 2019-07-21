@@ -30,6 +30,7 @@
 #include <cstdint>
 #include <functional>
 #include <iostream>
+#include <limits>
 #include <sstream>
 #include <stdexcept>
 #include <string>
@@ -601,7 +602,7 @@ private:
 
   /// @name Charges
   /// @{
-  ChargeAmount charge_limit_{0};
+  ChargeAmount charge_limit_{std::numeric_limits<VM::ChargeAmount>::max()};
   ChargeAmount charge_total_{0};
   /// @}
 
