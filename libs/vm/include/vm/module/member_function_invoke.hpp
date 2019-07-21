@@ -17,6 +17,8 @@
 //
 //------------------------------------------------------------------------------
 
+#include "estimate_charge.hpp"
+
 namespace fetch {
 namespace vm {
 
@@ -27,24 +29,20 @@ struct MemberFunctionInvokerHelper
   static void Invoke(VM *vm, int sp_offset, TypeId return_type_id, MemberFunction f, Estimator &&e,
                      Ts const &... parameters)
   {
-    auto const charge = VM::ChargeAmount(e(vm, parameters...));
-    if (charge + vm->GetChargeTotal() > vm->GetChargeLimit())
+    if (EstimatedChargeIsWithinLimit(vm, std::forward<Estimator>(e), parameters...))
     {
-      vm->RuntimeError("Charge limit exceeded");
-      return;
+      Variant & v      = vm->stack_[vm->sp_ - sp_offset];
+      Ptr<Type> object = v.object;
+      if (object)
+      {
+        ReturnType result((*object.*f)(parameters...));
+        StackSetter<ReturnType>::Set(vm, sp_offset, std::move(result), return_type_id);
+        vm->sp_ -= sp_offset;
+        return;
+      }
+      vm->RuntimeError("null reference");
     }
-
-    Variant & v      = vm->stack_[vm->sp_ - sp_offset];
-    Ptr<Type> object = v.object;
-    if (object)
-    {
-      ReturnType result((*object.*f)(parameters...));
-      StackSetter<ReturnType>::Set(vm, sp_offset, std::move(result), return_type_id);
-      vm->sp_ -= sp_offset;
-      return;
-    }
-    vm->RuntimeError("null reference");
-  };
+  }
 };
 
 template <typename Type, typename MemberFunction, typename Estimator, typename... Ts>
@@ -53,23 +51,19 @@ struct MemberFunctionInvokerHelper<Type, void, MemberFunction, Estimator, Ts...>
   static void Invoke(VM *vm, int sp_offset, TypeId /* return_type_id */, MemberFunction f,
                      Estimator &&e, Ts const &... parameters)
   {
-    auto const charge = VM::ChargeAmount(e(vm, parameters...));
-    if (charge + vm->GetChargeTotal() > vm->GetChargeLimit())
+    if (EstimatedChargeIsWithinLimit(vm, std::forward<Estimator>(e), parameters...))
     {
-      vm->RuntimeError("Charge limit exceeded");
-      return;
+      Variant & v      = vm->stack_[vm->sp_ - sp_offset];
+      Ptr<Type> object = v.object;
+      if (object)
+      {
+        (*object.*f)(parameters...);
+        v.Reset();
+        vm->sp_ -= sp_offset + 1;
+        return;
+      }
+      vm->RuntimeError("null reference");
     }
-
-    Variant & v      = vm->stack_[vm->sp_ - sp_offset];
-    Ptr<Type> object = v.object;
-    if (object)
-    {
-      (*object.*f)(parameters...);
-      v.Reset();
-      vm->sp_ -= sp_offset + 1;
-      return;
-    }
-    vm->RuntimeError("null reference");
   }
 };
 

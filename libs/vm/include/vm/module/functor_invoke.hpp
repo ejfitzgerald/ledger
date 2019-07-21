@@ -17,6 +17,8 @@
 //
 //------------------------------------------------------------------------------
 
+#include "estimate_charge.hpp"
+
 #include <utility>
 
 namespace fetch {
@@ -28,17 +30,13 @@ struct FunctorInvokerHelper
   static void Invoke(VM *vm, int sp_offset, TypeId return_type_id, Functor &&functor, Estimator &&e,
                      Ts const &... parameters)
   {
-    auto const charge = VM::ChargeAmount(e(vm, parameters...));
-    if (charge + vm->GetChargeTotal() > vm->GetChargeLimit())
+    if (EstimatedChargeIsWithinLimit(vm, std::forward<Estimator>(e), parameters...))
     {
-      vm->RuntimeError("Charge limit exceeded");
-      return;
+      ReturnType result(functor(vm, parameters...));
+      StackSetter<ReturnType>::Set(vm, sp_offset, std::move(result), return_type_id);
+      vm->sp_ -= sp_offset;
     }
-
-    ReturnType result(functor(vm, parameters...));
-    StackSetter<ReturnType>::Set(vm, sp_offset, std::move(result), return_type_id);
-    vm->sp_ -= sp_offset;
-  };
+  }
 };
 
 template <typename Functor, typename Estimator, typename... Ts>
@@ -47,16 +45,12 @@ struct FunctorInvokerHelper<void, Functor, Estimator, Ts...>
   static void Invoke(VM *vm, int sp_offset, TypeId /* return_type_id */, Functor &&functor,
                      Estimator &&e, Ts const &... parameters)
   {
-    auto const charge = VM::ChargeAmount(e(vm, parameters...));
-    if (charge + vm->GetChargeTotal() > vm->GetChargeLimit())
+    if (EstimatedChargeIsWithinLimit(vm, std::forward<Estimator>(e), parameters...))
     {
-      vm->RuntimeError("Charge limit exceeded");
-      return;
+      functor(vm, parameters...);
+      vm->sp_ -= sp_offset;
     }
-
-    functor(vm, parameters...);
-    vm->sp_ -= sp_offset;
-  };
+  }
 };
 
 template <typename ReturnType, typename Functor, typename Estimator, typename... Used>

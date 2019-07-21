@@ -17,6 +17,8 @@
 //
 //------------------------------------------------------------------------------
 
+#include "estimate_charge.hpp"
+
 namespace fetch {
 namespace vm {
 
@@ -26,17 +28,13 @@ struct ConstructorInvokerHelper
 {
   static void Invoke(VM *vm, int sp_offset, TypeId type_id, Estimator &&e, Ts const &... parameters)
   {
-    auto const charge = VM::ChargeAmount(e(vm, parameters...));
-    if (charge + vm->GetChargeTotal() > vm->GetChargeLimit())
+    if (EstimatedChargeIsWithinLimit(vm, std::forward<Estimator>(e), parameters...))
     {
-      vm->RuntimeError("Charge limit exceeded");
-      return;
+      ReturnType result(Type::Constructor(vm, type_id, parameters...));
+      StackSetter<ReturnType>::Set(vm, sp_offset, std::move(result), type_id);
+      vm->sp_ -= sp_offset;
     }
-
-    ReturnType result(Type::Constructor(vm, type_id, parameters...));
-    StackSetter<ReturnType>::Set(vm, sp_offset, std::move(result), type_id);
-    vm->sp_ -= sp_offset;
-  };
+  }
 };
 
 template <typename Type, typename ReturnType, typename Constructor, typename Estimator,
