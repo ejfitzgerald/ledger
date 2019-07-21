@@ -26,18 +26,18 @@
 
 namespace {
 
+using fetch::vm::TypeId;
 using fetch::vm::VM;
+using fetch::vm::ConstantEstimator;
 
 VM::ChargeAmount const low_charge_limit  = 10;
 VM::ChargeAmount const high_charge_limit = 1000;
 
 auto const affordable_estimator = [](VM *, uint8_t x, uint16_t y) -> VM::ChargeAmount {
-  auto const base = static_cast<VM::ChargeAmount>(x * y);
-  return static_cast<VM::ChargeAmount>(low_charge_limit + base * base);
+  return static_cast<VM::ChargeAmount>(low_charge_limit + x * y);
 };
 auto const expensive_estimator = [](VM *, uint8_t x, uint16_t y) -> VM::ChargeAmount {
-  auto const base = static_cast<VM::ChargeAmount>(x * y);
-  return static_cast<VM::ChargeAmount>(high_charge_limit + base * base);
+  return static_cast<VM::ChargeAmount>(high_charge_limit + x * y);
 };
 
 auto const handler = [](VM *, uint8_t, uint16_t) -> bool { return true; };
@@ -103,7 +103,7 @@ TEST_F(VmChargeTests, functor_bind_with_charge_estimate_execution_fails_when_lim
   )";
 
   ASSERT_TRUE(toolkit.Compile(TEXT));
-  ASSERT_FALSE(toolkit.Run(nullptr, high_charge_limit));
+  ASSERT_FALSE(toolkit.Run(nullptr, low_charge_limit));
 }
 
 TEST_F(VmChargeTests, functor_bind_with_charge_estimate_execution_succeeds_when_limit_obeyed)
@@ -124,26 +124,25 @@ TEST_F(VmChargeTests, functor_bind_with_charge_estimate_execution_succeeds_when_
 class CustomType : public fetch::vm::Object
 {
 public:
-  CustomType(fetch::vm::VM *vm, fetch::vm::TypeId type_id, uint8_t, uint16_t)
+  CustomType(VM *vm, TypeId type_id, uint8_t, uint16_t)
     : fetch::vm::Object{vm, type_id}
   {}
   ~CustomType() override = default;
 
-  static fetch::vm::Ptr<CustomType> Constructor(fetch::vm::VM *vm, fetch::vm::TypeId type_id)
+  static fetch::vm::Ptr<CustomType> Constructor(VM *vm, TypeId type_id)
   {
     return new CustomType{vm, type_id, 0, 0};
   }
 
-  static fetch::vm::Ptr<CustomType> Constructor(fetch::vm::VM *vm, fetch::vm::TypeId type_id,
-                                                uint8_t x, uint16_t y)
+  static fetch::vm::Ptr<CustomType> Constructor(VM *vm, TypeId type_id, uint8_t x, uint16_t y)
   {
     return new CustomType{vm, type_id, x, y};
   }
 
-  static void AffordableStatic(fetch::vm::VM *, fetch::vm::TypeId, uint8_t, uint16_t)
+  static void AffordableStatic(VM *, TypeId, uint8_t, uint16_t)
   {}
 
-  static void TooExpensiveStatic(fetch::vm::VM *, fetch::vm::TypeId, uint8_t, uint16_t)
+  static void TooExpensiveStatic(VM *, TypeId, uint8_t, uint16_t)
   {}
 
   void Affordable(uint8_t, uint16_t)
@@ -175,7 +174,7 @@ TEST_F(VmChargeTests, ctor_bind_with_charge_estimate_execution_fails_when_limit_
   )";
 
   ASSERT_TRUE(toolkit.Compile(TEXT));
-  ASSERT_FALSE(toolkit.Run(nullptr, high_charge_limit));
+  ASSERT_FALSE(toolkit.Run(nullptr, low_charge_limit));
 }
 
 TEST_F(VmChargeTests, ctor_bind_with_charge_estimate_execution_succeeds_when_limit_obeyed)
@@ -197,7 +196,7 @@ TEST_F(VmChargeTests, ctor_bind_with_charge_estimate_execution_succeeds_when_lim
 
 TEST_F(VmChargeTests, member_function_bind_with_charge_estimate_execution_fails_when_limit_exceeded)
 {
-  auto const ctor_estimator = fetch::vm::ConstantEstimator<0>::Get();
+  auto const ctor_estimator = ConstantEstimator<0>::Get();
 
   toolkit.module()
       .CreateClassType<CustomType>("CustomType")
@@ -213,13 +212,13 @@ TEST_F(VmChargeTests, member_function_bind_with_charge_estimate_execution_fails_
   )";
 
   ASSERT_TRUE(toolkit.Compile(TEXT));
-  ASSERT_FALSE(toolkit.Run(nullptr, high_charge_limit));
+  ASSERT_FALSE(toolkit.Run(nullptr, low_charge_limit));
 }
 
 TEST_F(VmChargeTests,
        member_function_bind_with_charge_estimate_execution_succeeds_when_limit_obeyed)
 {
-  auto const ctor_estimator = fetch::vm::ConstantEstimator<0>::Get();
+  auto const ctor_estimator = ConstantEstimator<0>::Get();
 
   toolkit.module()
       .CreateClassType<CustomType>("CustomType")
@@ -252,7 +251,7 @@ TEST_F(VmChargeTests,
   )";
 
   ASSERT_TRUE(toolkit.Compile(TEXT));
-  ASSERT_FALSE(toolkit.Run(nullptr, high_charge_limit));
+  ASSERT_FALSE(toolkit.Run(nullptr, low_charge_limit));
 }
 
 TEST_F(VmChargeTests,
@@ -275,9 +274,9 @@ TEST_F(VmChargeTests,
 
 TEST_F(VmChargeTests, index_operator_bind_with_charge_estimate_execution_fails_when_limit_exceeded)
 {
-  auto const ctor_estimator   = fetch::vm::ConstantEstimator<0>::Get();
-  auto const getter_estimator = fetch::vm::ConstantEstimator<1>::Get(10000);
-  auto const setter_estimator = fetch::vm::ConstantEstimator<2>::Get(10000);
+  auto const ctor_estimator   = ConstantEstimator<0>::Get();
+  auto const getter_estimator = ConstantEstimator<1>::Get(10000);
+  auto const setter_estimator = ConstantEstimator<2>::Get(10000);
 
   toolkit.module()
       .CreateClassType<CustomType>("CustomType")
@@ -293,14 +292,14 @@ TEST_F(VmChargeTests, index_operator_bind_with_charge_estimate_execution_fails_w
   )";
 
   ASSERT_TRUE(toolkit.Compile(TEXT));
-  ASSERT_FALSE(toolkit.Run(nullptr, high_charge_limit));
+  ASSERT_FALSE(toolkit.Run(nullptr, low_charge_limit));
 }
 
 TEST_F(VmChargeTests, index_operator_bind_with_charge_estimate_execution_succeeds_when_limit_obeyed)
 {
-  auto const ctor_estimator   = fetch::vm::ConstantEstimator<0>::Get();
-  auto const getter_estimator = fetch::vm::ConstantEstimator<1>::Get();
-  auto const setter_estimator = fetch::vm::ConstantEstimator<2>::Get();
+  auto const ctor_estimator   = ConstantEstimator<0>::Get();
+  auto const getter_estimator = ConstantEstimator<1>::Get();
+  auto const setter_estimator = ConstantEstimator<2>::Get();
 
   toolkit.module()
       .CreateClassType<CustomType>("CustomType")
