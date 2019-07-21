@@ -29,11 +29,12 @@ using fetch::vm::VM;
 class VmChargeTests : public ::testing::Test
 {
 public:
-  std::stringstream stdout;
-  VmTestToolkit     toolkit{&stdout};
+  //  std::stringstream stdout;
+  VmTestToolkit toolkit;
+  //  VmTestToolkit     toolkit{&stdout};
 };
 
-TEST_F(VmChargeTests, no_charge_limit)
+TEST_F(VmChargeTests, execution_succeeds_when_charge_limit_obeyed)
 {
   static char const *TEXT = R"(
     function main()
@@ -51,13 +52,12 @@ TEST_F(VmChargeTests, no_charge_limit)
   )";
 
   ASSERT_TRUE(toolkit.Compile(TEXT));
-  //  ASSERT_EQ(0, toolkit.vm().GetChargeLimit());
+  toolkit.vm().SetChargeLimit(1000);
+  ASSERT_EQ(1000, toolkit.vm().GetChargeLimit());
   ASSERT_TRUE(toolkit.Run());
-
-  EXPECT_EQ(18, toolkit.vm().GetChargeTotal());
 }
 
-TEST_F(VmChargeTests, execution_fails_when_limit_reached)
+TEST_F(VmChargeTests, execution_fails_when_charge_limit_exceeded)
 {
   static char const *TEXT = R"(
     function main()
@@ -80,27 +80,48 @@ TEST_F(VmChargeTests, execution_fails_when_limit_reached)
   ASSERT_FALSE(toolkit.Run());
 }
 
-TEST_F(VmChargeTests, bind_with_charge_estimate)
+TEST_F(VmChargeTests, bind_with_charge_estimate_execution_fails_when_limit_exceeded)
 {
-  auto handler   = [](VM *, uint32_t, uint32_t) -> bool { return true; };
-  auto estimator = [](VM *, uint32_t x, uint32_t y) -> VM::ChargeAmount {
+  auto handler   = [](VM *, int32_t, int32_t) -> bool { return true; };
+  auto estimator = [](VM *, int32_t x, int32_t y) -> VM::ChargeAmount {
     auto const base = x * y;
-    return base * base;
+    return static_cast<VM::ChargeAmount>(1000 + base * base);
   };
 
-  toolkit.module().CreateFreeFunction("expensive", std::move(handler), std::move(estimator));
+  toolkit.module().CreateFreeFunction("tooExpensive", std::move(handler), std::move(estimator));
 
   static char const *TEXT = R"(
     function main()
-      var check1 = expensive(3, 4);
-      var check2 = expensive(1, 1);
-      assert(check1 == true);
-      assert(check2 == true);
+      var check = tooExpensive(3, 4);
+      assert(check == true);
     endfunction
   )";
 
   ASSERT_TRUE(toolkit.Compile(TEXT));
+  toolkit.vm().SetChargeLimit(1000);
   ASSERT_FALSE(toolkit.Run());
+}
+
+TEST_F(VmChargeTests, bind_with_charge_estimate_execution_succeeds_when_limit_obeyed)
+{
+  auto handler   = [](VM *, int32_t, int32_t) -> bool { return true; };
+  auto estimator = [](VM *, int32_t x, int32_t y) -> VM::ChargeAmount {
+    auto const base = x * y;
+    return static_cast<VM::ChargeAmount>(1 + base * base);
+  };
+
+  toolkit.module().CreateFreeFunction("affordable", std::move(handler), std::move(estimator));
+
+  static char const *TEXT = R"(
+    function main()
+      var check = affordable(3, 4);
+      assert(check == true);
+    endfunction
+  )";
+
+  ASSERT_TRUE(toolkit.Compile(TEXT));
+  toolkit.vm().SetChargeLimit(1000);
+  ASSERT_TRUE(toolkit.Run());
 }
 
 }  // namespace
