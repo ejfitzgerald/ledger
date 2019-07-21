@@ -32,7 +32,7 @@ struct ConstantEstimator<0>
 {
   static decltype(auto) Get(VM::ChargeAmount const charge = 1u)
   {
-    return [charge](VM *) { return charge; };
+    return [charge](VM *) -> VM::ChargeAmount { return charge; };
   }
 };
 
@@ -41,7 +41,7 @@ struct ConstantEstimator<1>
 {
   static decltype(auto) Get(VM::ChargeAmount const charge = 1u)
   {
-    return [charge](VM *, auto const &) { return charge; };
+    return [charge](VM *, auto const &) -> VM::ChargeAmount { return charge; };
   }
 };
 
@@ -50,7 +50,7 @@ struct ConstantEstimator<2>
 {
   static decltype(auto) Get(VM::ChargeAmount const charge = 1u)
   {
-    return [charge](VM *, auto const &, auto const &) { return charge; };
+    return [charge](VM *, auto const &, auto const &) -> VM::ChargeAmount { return charge; };
   }
 };
 
@@ -59,7 +59,9 @@ struct ConstantEstimator<3>
 {
   static decltype(auto) Get(VM::ChargeAmount const charge = 1u)
   {
-    return [charge](VM *, auto const &, auto const &, auto const &) { return charge; };
+    return [charge](VM *, auto const &, auto const &, auto const &) -> VM::ChargeAmount {
+      return charge;
+    };
   }
 };
 
@@ -68,8 +70,8 @@ struct ConstantEstimator<4>
 {
   static decltype(auto) Get(VM::ChargeAmount const charge = 1u)
   {
-    return
-        [charge](VM *, auto const &, auto const &, auto const &, auto const &) { return charge; };
+    return [charge](VM *, auto const &, auto const &, auto const &,
+                    auto const &) -> VM::ChargeAmount { return charge; };
   }
 };
 
@@ -78,9 +80,8 @@ struct ConstantEstimator<5>
 {
   static decltype(auto) Get(VM::ChargeAmount const charge = 1u)
   {
-    return [charge](VM *, auto const &, auto const &, auto const &, auto const &, auto const &) {
-      return charge;
-    };
+    return [charge](VM *, auto const &, auto const &, auto const &, auto const &,
+                    auto const &) -> VM::ChargeAmount { return charge; };
   }
 };
 
@@ -90,7 +91,7 @@ struct ConstantEstimator<6>
   static decltype(auto) Get(VM::ChargeAmount const charge = 1u)
   {
     return [charge](VM *, auto const &, auto const &, auto const &, auto const &, auto const &,
-                    auto const &) { return charge; };
+                    auto const &) -> VM::ChargeAmount { return charge; };
   }
 };
 
