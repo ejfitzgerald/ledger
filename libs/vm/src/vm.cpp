@@ -19,6 +19,7 @@
 #include "vm/module.hpp"
 #include "vm/vm.hpp"
 
+#include <algorithm>
 #include <cstddef>
 #include <cstdint>
 
@@ -219,19 +220,20 @@ bool VM::Execute(std::string &error, Variant &output)
     instruction_pc_ = pc_;
     instruction_    = &function_->instructions[pc_++];
 
-    OpcodeInfo &info = opcode_info_array_[instruction_->opcode];
+    current_op_ = &opcode_info_array_[instruction_->opcode];
+
     assert(instruction_->opcode < opcode_info_array_.size());
 
-    if (!info.handler)
+    if (!current_op_->handler)
     {
       RuntimeError("unknown opcode");
       break;
     }
 
-    assert(static_cast<bool>(info.handler));
+    assert(static_cast<bool>(current_op_->handler));
 
     // update the charge total
-    charge_total_ += info.charge;
+    charge_total_ += current_op_->charge;
 
     // check for charge limit being reached
     if (charge_limit_ && (charge_total_ >= charge_limit_))
@@ -241,7 +243,7 @@ bool VM::Execute(std::string &error, Variant &output)
     }
 
     // execute the handler for the op code
-    info.handler(this);
+    current_op_->handler(this);
 
   } while (!stop_);
 
@@ -300,6 +302,23 @@ void VM::Destruct(uint16_t scope_number)
     Variant &variable = GetVariable(info.variable_index);
     variable.Reset();
     --live_object_sp_;
+  }
+}
+
+void VM::UpdateCharges(std::unordered_map<std::string, ChargeAmount> const &opcode_charges)
+{
+  for (auto const &entry : opcode_charges)
+  {
+    auto const &unique_id = entry.first;
+
+    auto opcode_to_update =
+        std::find_if(opcode_info_array_.begin(), opcode_info_array_.end(),
+                     [&unique_id](OpcodeInfo &info) { return info.name == unique_id; });
+
+    if (opcode_to_update != opcode_info_array_.end())
+    {
+      opcode_to_update->charge = entry.second;
+    }
   }
 }
 

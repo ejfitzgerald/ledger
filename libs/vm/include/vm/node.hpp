@@ -20,6 +20,9 @@
 #include "vm/common.hpp"
 #include "vm/token.hpp"
 
+#include <memory>
+#include <vector>
+
 namespace fetch {
 namespace vm {
 

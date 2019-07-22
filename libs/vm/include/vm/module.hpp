@@ -176,6 +176,18 @@ public:
           name, f, std::forward<Estimator>(e));
     }
 
+    template <typename ReturnType, typename... Ts>
+    ClassInterface &CreateMemberFunction(std::string const &name,
+                                         ReturnType (Type::*f)(Ts...) const,
+                                         VM::ChargeAmount const charge)
+    {
+      auto e = ConstantEstimator<sizeof...(Ts)>::Get(charge);
+
+      using MemberFunction = ReturnType (Type::*)(Ts...) const;
+      return InternalCreateMemberFunction<decltype(e), ReturnType, MemberFunction, Ts...>(
+          name, f, std::move(e));
+    }
+
     ClassInterface &EnableOperator(Operator op)
     {
       TypeIndex const type_index__            = type_index_;

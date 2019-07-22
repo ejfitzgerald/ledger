@@ -438,7 +438,8 @@ Contract::Status SmartContract::InvokeAction(std::string const &name, Transactio
   auto vm = std::make_unique<vm::VM>(module_.get());
 
   // TODO(WK) inject charge limit
-  // vm->SetChargeLimit(???);
+  // vm->SetChargeLimit(123);
+  // vm->UpdateCharges({});
 
   vm->SetIOObserver(state());
 
@@ -504,7 +505,8 @@ Contract::Status SmartContract::InvokeInit(Address const &owner)
   auto vm = std::make_unique<vm::VM>(module_.get());
 
   // TODO(WK) inject charge limit
-  // vm->SetChargeLimit(???);
+  // vm->SetChargeLimit(123);
+  // vm->UpdateCharges({});
 
   vm->SetIOObserver(state());
 
@@ -557,9 +559,6 @@ SmartContract::Status SmartContract::InvokeQuery(std::string const &name, Query 
 {
   // get clean VM instance
   auto vm = std::make_unique<vm::VM>(module_.get());
-
-  // TODO(WK) inject charge limit
-  // vm->SetChargeLimit(???);
 
   vm->SetIOObserver(state());
 

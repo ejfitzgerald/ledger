@@ -503,12 +503,6 @@ public:
     charge_limit_ = limit;
   }
 
-private:
-  static const int FRAME_STACK_SIZE = 50;
-  static const int STACK_SIZE       = 5000;
-  static const int MAX_LIVE_OBJECTS = 200;
-  static const int MAX_RANGE_LOOPS  = 50;
-
   struct OpcodeInfo
   {
     OpcodeInfo() = default;
@@ -527,6 +521,21 @@ private:
     Handler      handler;
     ChargeAmount charge{1};
   };
+
+  OpcodeInfo const &GetCurrentOp() const
+  {
+    assert(current_op_ != nullptr);
+    return *current_op_;
+  }
+
+  void UpdateCharges(std::unordered_map<std::string, ChargeAmount> const &);
+
+private:
+  static const int FRAME_STACK_SIZE = 50;
+  static const int STACK_SIZE       = 5000;
+  static const int MAX_LIVE_OBJECTS = 200;
+  static const int MAX_RANGE_LOOPS  = 50;
+
   using OpcodeInfoArray = std::vector<OpcodeInfo>;
   using OpcodeMap       = std::unordered_map<std::string, uint16_t>;
 
@@ -601,6 +610,7 @@ private:
   OutputDeviceMap                output_devices_;
   InputDeviceMap                 input_devices_;
   DeserializeConstructorMap      deserialization_constructors_;
+  OpcodeInfo *                   current_op_{nullptr};
 
   /// @name Charges
   /// @{
