@@ -23,8 +23,6 @@
 #include "vm/module/estimate_charge.hpp"
 #include "vm_modules/math/trigonometry.hpp"
 
-using fetch::vm::ConstantEstimator;
-
 namespace fetch {
 namespace vm_modules {
 namespace math {
@@ -178,87 +176,61 @@ fetch::math::meta::IfIsMath<T, T> ATanH(fetch::vm::VM *, T const &a)
 
 void BindTrigonometry(fetch::vm::Module &module)
 {
-  module.CreateFreeFunction<float_t>("sin", &Sin<float_t>, ConstantEstimator<1>::Get());
-  module.CreateFreeFunction<float_t>("cos", &Cos<float_t>, ConstantEstimator<1>::Get());
-  module.CreateFreeFunction<float_t>("tan", &Tan<float_t>, ConstantEstimator<1>::Get());
-  module.CreateFreeFunction<float_t>("asin", &ASin<float_t>, ConstantEstimator<1>::Get());
-  module.CreateFreeFunction<float_t>("acos", &ACos<float_t>, ConstantEstimator<1>::Get());
-  module.CreateFreeFunction<float_t>("atan", &ATan<float_t>, ConstantEstimator<1>::Get());
-  module.CreateFreeFunction<float_t>("atan2", &ATan2<float_t>, ConstantEstimator<2>::Get());
-  module.CreateFreeFunction<float_t>("sinh", &SinH<float_t>, ConstantEstimator<1>::Get());
-  module.CreateFreeFunction<float_t>("cosh", &CosH<float_t>, ConstantEstimator<1>::Get());
-  module.CreateFreeFunction<float_t>("tanh", &TanH<float_t>, ConstantEstimator<1>::Get());
-  module.CreateFreeFunction<float_t>("asinh", &ASinH<float_t>, ConstantEstimator<1>::Get());
-  module.CreateFreeFunction<float_t>("acosh", &ACosH<float_t>, ConstantEstimator<1>::Get());
-  module.CreateFreeFunction<float_t>("atanh", &ATanH<float_t>, ConstantEstimator<1>::Get());
+  module.CreateFreeFunction<float_t>("sin", &Sin<float_t>, 1);
+  module.CreateFreeFunction<float_t>("cos", &Cos<float_t>, 1);
+  module.CreateFreeFunction<float_t>("tan", &Tan<float_t>, 1);
+  module.CreateFreeFunction<float_t>("asin", &ASin<float_t>, 1);
+  module.CreateFreeFunction<float_t>("acos", &ACos<float_t>, 1);
+  module.CreateFreeFunction<float_t>("atan", &ATan<float_t>, 1);
+  module.CreateFreeFunction<float_t>("atan2", &ATan2<float_t>, 1);
+  module.CreateFreeFunction<float_t>("sinh", &SinH<float_t>, 1);
+  module.CreateFreeFunction<float_t>("cosh", &CosH<float_t>, 1);
+  module.CreateFreeFunction<float_t>("tanh", &TanH<float_t>, 1);
+  module.CreateFreeFunction<float_t>("asinh", &ASinH<float_t>, 1);
+  module.CreateFreeFunction<float_t>("acosh", &ACosH<float_t>, 1);
+  module.CreateFreeFunction<float_t>("atanh", &ATanH<float_t>, 1);
 
-  module.CreateFreeFunction<double_t>("sin", &Sin<double_t>, ConstantEstimator<1>::Get());
-  module.CreateFreeFunction<double_t>("cos", &Cos<double_t>, ConstantEstimator<1>::Get());
-  module.CreateFreeFunction<double_t>("tan", &Tan<double_t>, ConstantEstimator<1>::Get());
-  module.CreateFreeFunction<double_t>("asin", &ASin<double_t>, ConstantEstimator<1>::Get());
-  module.CreateFreeFunction<double_t>("acos", &ACos<double_t>, ConstantEstimator<1>::Get());
-  module.CreateFreeFunction<double_t>("atan", &ATan<double_t>, ConstantEstimator<1>::Get());
-  module.CreateFreeFunction<double_t>("atan2", &ATan2<double_t>, ConstantEstimator<2>::Get());
-  module.CreateFreeFunction<double_t>("sinh", &SinH<double_t>, ConstantEstimator<1>::Get());
-  module.CreateFreeFunction<double_t>("cosh", &CosH<double_t>, ConstantEstimator<1>::Get());
-  module.CreateFreeFunction<double_t>("tanh", &TanH<double_t>, ConstantEstimator<1>::Get());
-  module.CreateFreeFunction<double_t>("asinh", &ASinH<double_t>, ConstantEstimator<1>::Get());
-  module.CreateFreeFunction<double_t>("acosh", &ACosH<double_t>, ConstantEstimator<1>::Get());
-  module.CreateFreeFunction<double_t>("atanh", &ATanH<double_t>, ConstantEstimator<1>::Get());
+  module.CreateFreeFunction<double_t>("sin", &Sin<double_t>, 1);
+  module.CreateFreeFunction<double_t>("cos", &Cos<double_t>, 1);
+  module.CreateFreeFunction<double_t>("tan", &Tan<double_t>, 1);
+  module.CreateFreeFunction<double_t>("asin", &ASin<double_t>, 1);
+  module.CreateFreeFunction<double_t>("acos", &ACos<double_t>, 1);
+  module.CreateFreeFunction<double_t>("atan", &ATan<double_t>, 1);
+  module.CreateFreeFunction<double_t>("atan2", &ATan2<double_t>, 1);
+  module.CreateFreeFunction<double_t>("sinh", &SinH<double_t>, 1);
+  module.CreateFreeFunction<double_t>("cosh", &CosH<double_t>, 1);
+  module.CreateFreeFunction<double_t>("tanh", &TanH<double_t>, 1);
+  module.CreateFreeFunction<double_t>("asinh", &ASinH<double_t>, 1);
+  module.CreateFreeFunction<double_t>("acosh", &ACosH<double_t>, 1);
+  module.CreateFreeFunction<double_t>("atanh", &ATanH<double_t>, 1);
 
-  module.CreateFreeFunction<fixed_point::fp32_t>("sin", &Sin<fixed_point::fp32_t>,
-                                                 ConstantEstimator<1>::Get());
-  module.CreateFreeFunction<fixed_point::fp32_t>("cos", &Cos<fixed_point::fp32_t>,
-                                                 ConstantEstimator<1>::Get());
-  module.CreateFreeFunction<fixed_point::fp32_t>("tan", &Tan<fixed_point::fp32_t>,
-                                                 ConstantEstimator<1>::Get());
-  module.CreateFreeFunction<fixed_point::fp32_t>("asin", &ASin<fixed_point::fp32_t>,
-                                                 ConstantEstimator<1>::Get());
-  module.CreateFreeFunction<fixed_point::fp32_t>("acos", &ACos<fixed_point::fp32_t>,
-                                                 ConstantEstimator<1>::Get());
-  module.CreateFreeFunction<fixed_point::fp32_t>("atan", &ATan<fixed_point::fp32_t>,
-                                                 ConstantEstimator<1>::Get());
-  module.CreateFreeFunction<fixed_point::fp32_t>("atan2", &ATan2<fixed_point::fp32_t>,
-                                                 ConstantEstimator<2>::Get());
-  module.CreateFreeFunction<fixed_point::fp32_t>("sinh", &SinH<fixed_point::fp32_t>,
-                                                 ConstantEstimator<1>::Get());
-  module.CreateFreeFunction<fixed_point::fp32_t>("cosh", &CosH<fixed_point::fp32_t>,
-                                                 ConstantEstimator<1>::Get());
-  module.CreateFreeFunction<fixed_point::fp32_t>("tanh", &TanH<fixed_point::fp32_t>,
-                                                 ConstantEstimator<1>::Get());
-  module.CreateFreeFunction<fixed_point::fp32_t>("asinh", &ASinH<fixed_point::fp32_t>,
-                                                 ConstantEstimator<1>::Get());
-  module.CreateFreeFunction<fixed_point::fp32_t>("acosh", &ACosH<fixed_point::fp32_t>,
-                                                 ConstantEstimator<1>::Get());
-  module.CreateFreeFunction<fixed_point::fp32_t>("atanh", &ATanH<fixed_point::fp32_t>,
-                                                 ConstantEstimator<1>::Get());
+  module.CreateFreeFunction<fixed_point::fp32_t>("sin", &Sin<fixed_point::fp32_t>, 1);
+  module.CreateFreeFunction<fixed_point::fp32_t>("cos", &Cos<fixed_point::fp32_t>, 1);
+  module.CreateFreeFunction<fixed_point::fp32_t>("tan", &Tan<fixed_point::fp32_t>, 1);
+  module.CreateFreeFunction<fixed_point::fp32_t>("asin", &ASin<fixed_point::fp32_t>, 1);
+  module.CreateFreeFunction<fixed_point::fp32_t>("acos", &ACos<fixed_point::fp32_t>, 1);
+  module.CreateFreeFunction<fixed_point::fp32_t>("atan", &ATan<fixed_point::fp32_t>, 1);
+  module.CreateFreeFunction<fixed_point::fp32_t>("atan2", &ATan2<fixed_point::fp32_t>, 1);
+  module.CreateFreeFunction<fixed_point::fp32_t>("sinh", &SinH<fixed_point::fp32_t>, 1);
+  module.CreateFreeFunction<fixed_point::fp32_t>("cosh", &CosH<fixed_point::fp32_t>, 1);
+  module.CreateFreeFunction<fixed_point::fp32_t>("tanh", &TanH<fixed_point::fp32_t>, 1);
+  module.CreateFreeFunction<fixed_point::fp32_t>("asinh", &ASinH<fixed_point::fp32_t>, 1);
+  module.CreateFreeFunction<fixed_point::fp32_t>("acosh", &ACosH<fixed_point::fp32_t>, 1);
+  module.CreateFreeFunction<fixed_point::fp32_t>("atanh", &ATanH<fixed_point::fp32_t>, 1);
 
-  module.CreateFreeFunction<fixed_point::fp64_t>("sin", &Sin<fixed_point::fp64_t>,
-                                                 ConstantEstimator<1>::Get());
-  module.CreateFreeFunction<fixed_point::fp64_t>("cos", &Cos<fixed_point::fp64_t>,
-                                                 ConstantEstimator<1>::Get());
-  module.CreateFreeFunction<fixed_point::fp64_t>("tan", &Tan<fixed_point::fp64_t>,
-                                                 ConstantEstimator<1>::Get());
-  module.CreateFreeFunction<fixed_point::fp64_t>("asin", &ASin<fixed_point::fp64_t>,
-                                                 ConstantEstimator<1>::Get());
-  module.CreateFreeFunction<fixed_point::fp64_t>("acos", &ACos<fixed_point::fp64_t>,
-                                                 ConstantEstimator<1>::Get());
-  module.CreateFreeFunction<fixed_point::fp64_t>("atan", &ATan<fixed_point::fp64_t>,
-                                                 ConstantEstimator<1>::Get());
-  module.CreateFreeFunction<fixed_point::fp64_t>("atan2", &ATan2<fixed_point::fp64_t>,
-                                                 ConstantEstimator<2>::Get());
-  module.CreateFreeFunction<fixed_point::fp64_t>("sinh", &SinH<fixed_point::fp64_t>,
-                                                 ConstantEstimator<1>::Get());
-  module.CreateFreeFunction<fixed_point::fp64_t>("cosh", &CosH<fixed_point::fp64_t>,
-                                                 ConstantEstimator<1>::Get());
-  module.CreateFreeFunction<fixed_point::fp64_t>("tanh", &TanH<fixed_point::fp64_t>,
-                                                 ConstantEstimator<1>::Get());
-  module.CreateFreeFunction<fixed_point::fp64_t>("asinh", &ASinH<fixed_point::fp64_t>,
-                                                 ConstantEstimator<1>::Get());
-  module.CreateFreeFunction<fixed_point::fp64_t>("acosh", &ACosH<fixed_point::fp64_t>,
-                                                 ConstantEstimator<1>::Get());
-  module.CreateFreeFunction<fixed_point::fp64_t>("atanh", &ATanH<fixed_point::fp64_t>,
-                                                 ConstantEstimator<1>::Get());
+  module.CreateFreeFunction<fixed_point::fp64_t>("sin", &Sin<fixed_point::fp64_t>, 1);
+  module.CreateFreeFunction<fixed_point::fp64_t>("cos", &Cos<fixed_point::fp64_t>, 1);
+  module.CreateFreeFunction<fixed_point::fp64_t>("tan", &Tan<fixed_point::fp64_t>, 1);
+  module.CreateFreeFunction<fixed_point::fp64_t>("asin", &ASin<fixed_point::fp64_t>, 1);
+  module.CreateFreeFunction<fixed_point::fp64_t>("acos", &ACos<fixed_point::fp64_t>, 1);
+  module.CreateFreeFunction<fixed_point::fp64_t>("atan", &ATan<fixed_point::fp64_t>, 1);
+  module.CreateFreeFunction<fixed_point::fp64_t>("atan2", &ATan2<fixed_point::fp64_t>, 1);
+  module.CreateFreeFunction<fixed_point::fp64_t>("sinh", &SinH<fixed_point::fp64_t>, 1);
+  module.CreateFreeFunction<fixed_point::fp64_t>("cosh", &CosH<fixed_point::fp64_t>, 1);
+  module.CreateFreeFunction<fixed_point::fp64_t>("tanh", &TanH<fixed_point::fp64_t>, 1);
+  module.CreateFreeFunction<fixed_point::fp64_t>("asinh", &ASinH<fixed_point::fp64_t>, 1);
+  module.CreateFreeFunction<fixed_point::fp64_t>("acosh", &ACosH<fixed_point::fp64_t>, 1);
+  module.CreateFreeFunction<fixed_point::fp64_t>("atanh", &ATanH<fixed_point::fp64_t>, 1);
 }
 
 }  // namespace math

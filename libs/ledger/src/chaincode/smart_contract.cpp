@@ -41,7 +41,6 @@
 
 using fetch::byte_array::ConstByteArray;
 using fetch::vm_modules::VMFactory;
-using fetch::vm::ConstantEstimator;
 
 namespace fetch {
 namespace ledger {
@@ -111,9 +110,8 @@ SmartContract::SmartContract(std::string const &source)
 
   FETCH_LOG_DEBUG(LOGGING_NAME, "Constructing contract: 0x", contract_digest().ToHex());
 
-  module_->CreateFreeFunction("getBlockNumber",
-                              [this](vm::VM *) -> BlockIndex { return block_index_; },
-                              ConstantEstimator<0>::Get());
+  //  module_->CreateFreeFunctor("getBlockNumber",
+  //                             [this](vm::VM *) -> BlockIndex { return block_index_; }, 1);
 
   // create and compile the executable
   auto errors = vm_modules::VMFactory::Compile(module_, source_, *executable_);

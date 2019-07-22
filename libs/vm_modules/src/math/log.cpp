@@ -24,8 +24,6 @@
 
 #include <cmath>
 
-using fetch::vm::ConstantEstimator;
-
 namespace fetch {
 namespace vm_modules {
 namespace math {
@@ -60,26 +58,20 @@ fetch::math::meta::IfIsMath<T, T> Log10(fetch::vm::VM *, T const &a)
 
 void BindLog(fetch::vm::Module &module)
 {
-  module.CreateFreeFunction<float_t>("log", &Log<float_t>, ConstantEstimator<1>::Get());
-  module.CreateFreeFunction<double_t>("log", &Log<double_t>, ConstantEstimator<1>::Get());
-  module.CreateFreeFunction<fixed_point::fp32_t>("log", &Log<fixed_point::fp32_t>,
-                                                 ConstantEstimator<1>::Get());
-  module.CreateFreeFunction<fixed_point::fp64_t>("log", &Log<fixed_point::fp64_t>,
-                                                 ConstantEstimator<1>::Get());
+  module.CreateFreeFunction<float_t>("log", &Log<float_t>, 1);
+  module.CreateFreeFunction<double_t>("log", &Log<double_t>, 1);
+  module.CreateFreeFunction<fixed_point::fp32_t>("log", &Log<fixed_point::fp32_t>, 1);
+  module.CreateFreeFunction<fixed_point::fp64_t>("log", &Log<fixed_point::fp64_t>, 1);
 
-  module.CreateFreeFunction<float_t>("log2", &Log2<float_t>, ConstantEstimator<1>::Get());
-  module.CreateFreeFunction<double_t>("log2", &Log2<double_t>, ConstantEstimator<1>::Get());
-  module.CreateFreeFunction<fixed_point::fp32_t>("log2", &Log2<fixed_point::fp32_t>,
-                                                 ConstantEstimator<1>::Get());
-  module.CreateFreeFunction<fixed_point::fp64_t>("log2", &Log2<fixed_point::fp64_t>,
-                                                 ConstantEstimator<1>::Get());
+  module.CreateFreeFunction<float_t>("log2", &Log2<float_t>, 1);
+  module.CreateFreeFunction<double_t>("log2", &Log2<double_t>, 1);
+  module.CreateFreeFunction<fixed_point::fp32_t>("log2", &Log2<fixed_point::fp32_t>, 1);
+  module.CreateFreeFunction<fixed_point::fp64_t>("log2", &Log2<fixed_point::fp64_t>, 1);
 
-  module.CreateFreeFunction<float_t>("log10", &Log10<float_t>, ConstantEstimator<1>::Get());
-  module.CreateFreeFunction<double_t>("log10", &Log10<double_t>, ConstantEstimator<1>::Get());
-  module.CreateFreeFunction<fixed_point::fp32_t>("log10", &Log10<fixed_point::fp32_t>,
-                                                 ConstantEstimator<1>::Get());
-  module.CreateFreeFunction<fixed_point::fp64_t>("log10", &Log10<fixed_point::fp64_t>,
-                                                 ConstantEstimator<1>::Get());
+  module.CreateFreeFunction<float_t>("log10", &Log10<float_t>, 1);
+  module.CreateFreeFunction<double_t>("log10", &Log10<double_t>, 1);
+  module.CreateFreeFunction<fixed_point::fp32_t>("log10", &Log10<fixed_point::fp32_t>, 1);
+  module.CreateFreeFunction<fixed_point::fp64_t>("log10", &Log10<fixed_point::fp64_t>, 1);
 }
 
 }  // namespace math

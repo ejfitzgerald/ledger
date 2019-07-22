@@ -184,6 +184,13 @@ enum class FunctionKind : uint8_t
   UserDefinedFreeFunction = 5
 };
 
+using ChargeAmount = uint64_t;
+
+class VM;
+
+template <typename... Args>
+using ChargeEstimator = std::function<ChargeAmount(VM *, Args...)>;
+
 struct TypeInfo
 {
   TypeInfo()
@@ -207,7 +214,6 @@ struct TypeInfo
 using TypeInfoArray = std::vector<TypeInfo>;
 using TypeInfoMap   = std::unordered_map<std::string, TypeId>;
 
-class VM;
 template <typename T>
 class Ptr;
 class Object;
@@ -218,19 +224,21 @@ using DefaultConstructorHandler = std::function<Ptr<Object>(VM *, TypeId)>;
 struct FunctionInfo
 {
   FunctionInfo()
-  {
-    function_kind = FunctionKind::Unknown;
-  }
+    : function_kind{FunctionKind::Unknown}
+  {}
+
   FunctionInfo(FunctionKind function_kind__, std::string const &unique_id__,
-               Handler const &handler__)
-  {
-    function_kind = function_kind__;
-    unique_id     = unique_id__;
-    handler       = handler__;
-  }
+               Handler const &handler__, ChargeAmount charge)
+    : function_kind{function_kind__}
+    , unique_id{unique_id__}
+    , handler{handler__}
+    , static_charge{charge}
+  {}
+
   FunctionKind function_kind;
   std::string  unique_id;
   Handler      handler;
+  ChargeAmount static_charge;
 };
 using FunctionInfoArray = std::vector<FunctionInfo>;
 

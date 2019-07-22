@@ -91,8 +91,8 @@ public:
     return true;
   }
 
-  bool Run(Variant *        output       = nullptr,
-           VM::ChargeAmount charge_limit = std::numeric_limits<VM::ChargeAmount>::max())
+  bool Run(Variant *    output       = nullptr,
+           ChargeAmount charge_limit = std::numeric_limits<ChargeAmount>::max())
   {
     vm_->SetChargeLimit(charge_limit);
     std::string error{};

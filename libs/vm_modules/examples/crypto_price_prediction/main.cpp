@@ -109,18 +109,16 @@ int main(int argc, char **argv)
   auto module = std::make_shared<fetch::vm::Module>();
 
   module->CreateClassType<System>("System")
-      .CreateStaticMemberFunction("Argc", &System::Argc, fetch::vm::ConstantEstimator<0>::Get())
-      .CreateStaticMemberFunction("Argv", &System::Argv, fetch::vm::ConstantEstimator<1>::Get());
+      .CreateStaticMemberFunction("Argc", &System::Argc, fetch::vm::1)
+      .CreateStaticMemberFunction("Argv", &System::Argv, fetch::vm::1);
 
   fetch::vm_modules::ml::BindML(*module);
 
   fetch::vm_modules::CreatePrint(*module);
 
-  module->CreateFreeFunction("read_csv", &read_csv, fetch::vm::ConstantEstimator<2>::Get());
-  module->CreateFreeFunction("read_csv", &read_csv_no_transpose,
-                             fetch::vm::ConstantEstimator<1>::Get());
-  module->CreateFreeFunction("remove_leading_dimension", &remove_leading_dimension,
-                             fetch::vm::ConstantEstimator<1>::Get());
+  module->CreateFreeFunction("read_csv", &read_csv, fetch::vm::1);
+  module->CreateFreeFunction("read_csv", &read_csv_no_transpose, fetch::vm::1);
+  module->CreateFreeFunction("remove_leading_dimension", &remove_leading_dimension, fetch::vm::1);
 
   // Setting compiler up
   auto                     compiler = std::make_unique<fetch::vm::Compiler>(module.get());

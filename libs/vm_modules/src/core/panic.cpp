@@ -20,8 +20,6 @@
 #include "vm/module/estimate_charge.hpp"
 #include "vm/vm.hpp"
 
-using fetch::vm::ConstantEstimator;
-
 namespace fetch {
 namespace vm_modules {
 
@@ -48,9 +46,9 @@ void AssertWithMsg(fetch::vm::VM *vm, bool condition, fetch::vm::Ptr<fetch::vm::
 
 void CreatePanic(vm::Module &module)
 {
-  module.CreateFreeFunction("panic", &Panic, ConstantEstimator<1>::Get());
-  module.CreateFreeFunction("assert", &Assert, ConstantEstimator<1>::Get());
-  module.CreateFreeFunction("assert", &AssertWithMsg, ConstantEstimator<2>::Get());
+  module.CreateFreeFunction("panic", &Panic, 1);
+  module.CreateFreeFunction("assert", &Assert, 1);
+  module.CreateFreeFunction("assert", &AssertWithMsg, 1);
 }
 
 }  // namespace vm_modules

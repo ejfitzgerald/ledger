@@ -25,8 +25,6 @@
 
 #include <utility>
 
-using fetch::vm::ConstantEstimator;
-
 namespace fetch {
 namespace vm_modules {
 namespace ml {
@@ -50,11 +48,11 @@ fetch::vm::Ptr<VMStateDict> VMStateDict::Constructor(fetch::vm::VM *vm, fetch::v
 
 void VMStateDict::Bind(fetch::vm::Module &module)
 {
-  auto const statedict_ctor_estimator = ConstantEstimator<0>::Get();
+  auto const statedict_ctor_estimator = 1;
 
   module.CreateClassType<VMStateDict>("StateDict")
-      .CreateConstuctor<decltype(statedict_ctor_estimator)>(std::move(statedict_ctor_estimator))
-      .CreateMemberFunction("setWeights", &VMStateDict::SetWeights, ConstantEstimator<2>::Get());
+      .CreateConstuctor<>(std::move(statedict_ctor_estimator))
+      .CreateMemberFunction("setWeights", &VMStateDict::SetWeights, 1);
 }
 
 void VMStateDict::SetWeights(fetch::vm::Ptr<fetch::vm::String> const &                nodename,

@@ -28,8 +28,6 @@
 #include <cstdint>
 #include <utility>
 
-using fetch::vm::ConstantEstimator;
-
 namespace fetch {
 namespace vm_modules {
 
@@ -53,11 +51,9 @@ fetch::vm::Ptr<ByteArrayWrapper> ByteArrayWrapper::Constructor(
 
 void ByteArrayWrapper::Bind(vm::Module &module)
 {
-  auto const byte_array_wrapper_ctor_estimator = ConstantEstimator<1>::Get();
   module.CreateClassType<ByteArrayWrapper>("Buffer")
-      .CreateConstuctor<decltype(byte_array_wrapper_ctor_estimator), int32_t>(
-          std::move(byte_array_wrapper_ctor_estimator))
-      .CreateMemberFunction("copy", &ByteArrayWrapper::Copy, ConstantEstimator<0>::Get());
+      .CreateConstuctor<int32_t>(1)
+      .CreateMemberFunction("copy", &ByteArrayWrapper::Copy, 1);
 }
 
 fetch::vm::Ptr<ByteArrayWrapper> ByteArrayWrapper::Copy() const

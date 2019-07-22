@@ -24,8 +24,6 @@
 #include <cstdint>
 #include <random>
 
-using fetch::vm::ConstantEstimator;
-
 namespace fetch {
 namespace vm_modules {
 namespace math {
@@ -66,14 +64,14 @@ fetch::meta::IfIsFloat<T, T> Rand(fetch::vm::VM *vm, T const &a = T{.0}, T const
 
 void BindRand(fetch::vm::Module &module)
 {
-  module.CreateFreeFunction<int16_t>("rand", &Rand<int16_t>, ConstantEstimator<2>::Get());
-  module.CreateFreeFunction<int32_t>("rand", &Rand<int32_t>, ConstantEstimator<2>::Get());
-  module.CreateFreeFunction<int64_t>("rand", &Rand<int64_t>, ConstantEstimator<2>::Get());
-  module.CreateFreeFunction<uint16_t>("rand", &Rand<uint16_t>, ConstantEstimator<2>::Get());
-  module.CreateFreeFunction<uint32_t>("rand", &Rand<uint32_t>, ConstantEstimator<2>::Get());
-  module.CreateFreeFunction<uint64_t>("rand", &Rand<uint64_t>, ConstantEstimator<2>::Get());
-  module.CreateFreeFunction<float_t>("rand", &Rand<float_t>, ConstantEstimator<2>::Get());
-  module.CreateFreeFunction<double_t>("rand", &Rand<double_t>, ConstantEstimator<2>::Get());
+  module.CreateFreeFunction<int16_t>("rand", &Rand<int16_t>, 1);
+  module.CreateFreeFunction<int32_t>("rand", &Rand<int32_t>, 1);
+  module.CreateFreeFunction<int64_t>("rand", &Rand<int64_t>, 1);
+  module.CreateFreeFunction<uint16_t>("rand", &Rand<uint16_t>, 1);
+  module.CreateFreeFunction<uint32_t>("rand", &Rand<uint32_t>, 1);
+  module.CreateFreeFunction<uint64_t>("rand", &Rand<uint64_t>, 1);
+  module.CreateFreeFunction<float_t>("rand", &Rand<float_t>, 1);
+  module.CreateFreeFunction<double_t>("rand", &Rand<double_t>, 1);
 }
 
 }  // namespace math

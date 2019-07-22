@@ -24,13 +24,13 @@
 namespace fetch {
 namespace vm {
 
-template <typename Estimator, typename ReturnType, typename StaticMemberFunction, typename... Ts>
+template <typename ReturnType, typename StaticMemberFunction, typename... Ts>
 struct StaticMemberFunctionInvokerHelper
 {
   static void Invoke(VM *vm, int sp_offset, TypeId type_id, TypeId return_type_id,
-                     StaticMemberFunction f, Estimator &&e, Ts const &... parameters)
+                     StaticMemberFunction f, ChargeEstimator<Ts...> const &e, Ts &&... parameters)
   {
-    if (EstimateCharge(vm, std::forward<Estimator>(e), parameters...))
+    if (EstimateCharge(vm, e, parameters...))
     {
       ReturnType result((*f)(vm, type_id, parameters...));
       StackSetter<ReturnType>::Set(vm, sp_offset, std::move(result), return_type_id);
@@ -39,13 +39,13 @@ struct StaticMemberFunctionInvokerHelper
   }
 };
 
-template <typename Estimator, typename StaticMemberFunction, typename... Ts>
-struct StaticMemberFunctionInvokerHelper<Estimator, void, StaticMemberFunction, Ts...>
+template <typename StaticMemberFunction, typename... Ts>
+struct StaticMemberFunctionInvokerHelper<void, StaticMemberFunction, Ts...>
 {
   static void Invoke(VM *vm, int sp_offset, TypeId type_id, TypeId /* return_type_id */,
-                     StaticMemberFunction f, Estimator &&e, Ts const &... parameters)
+                     StaticMemberFunction f, ChargeEstimator<Ts...> const &e, Ts &&... parameters)
   {
-    if (EstimateCharge(vm, std::forward<Estimator>(e), parameters...))
+    if (EstimateCharge(vm, e, parameters...))
     {
       (*f)(vm, type_id, parameters...);
       vm->sp_ -= sp_offset;
@@ -63,7 +63,7 @@ struct StaticMemberFunctionInvoker
   {
     // Invoked on non-final parameter
     static void Invoke(VM *vm, int sp_offset, TypeId type_id, TypeId return_type_id,
-                       StaticMemberFunction f, Estimator &&e, Used const &... used)
+                       StaticMemberFunction f, Estimator &&e, Used &&... used)
     {
       using P = std::decay_t<T>;
       P parameter(StackGetter<P>::Get(vm, PARAMETER_OFFSET));
@@ -71,7 +71,7 @@ struct StaticMemberFunctionInvoker
           typename StaticMemberFunctionInvoker<Estimator, ReturnType, StaticMemberFunction, Used...,
                                                T>::template Invoker<PARAMETER_OFFSET - 1, Ts...>;
       InvokerType::Invoke(vm, sp_offset, type_id, return_type_id, f, std::forward<Estimator>(e),
-                          used..., parameter);
+                          std::forward<Used...>(used)..., parameter);
     }
   };
   template <int PARAMETER_OFFSET, typename T>
@@ -79,14 +79,14 @@ struct StaticMemberFunctionInvoker
   {
     // Invoked on final parameter
     static void Invoke(VM *vm, int sp_offset, TypeId type_id, TypeId return_type_id,
-                       StaticMemberFunction f, Estimator &&e, Used const &... used)
+                       StaticMemberFunction f, Estimator &&e, Used &&... used)
     {
       using P = std::decay_t<T>;
       P parameter(StackGetter<P>::Get(vm, PARAMETER_OFFSET));
       using InvokerType = StaticMemberFunctionInvokerHelper<Estimator, ReturnType,
                                                             StaticMemberFunction, Used..., T>;
       InvokerType::Invoke(vm, sp_offset, type_id, return_type_id, f, std::forward<Estimator>(e),
-                          used..., parameter);
+                          std::forward<Used...>(used)..., parameter);
     }
   };
   template <int PARAMETER_OFFSET>
@@ -103,18 +103,19 @@ struct StaticMemberFunctionInvoker
   };
 };
 
-template <typename Estimator, typename ReturnType, typename... Ts>
+template <typename ReturnType, typename... Ts>
 void InvokeStaticMemberFunction(VM *vm, TypeId type_id, TypeId return_type_id,
-                                ReturnType (*f)(VM *, TypeId, Ts...), Estimator &&e)
+                                ReturnType (*f)(VM *, TypeId, Ts...),
+                                ChargeEstimator<Ts...> const &e)
 {
   constexpr int num_parameters         = int(sizeof...(Ts));
   constexpr int first_parameter_offset = num_parameters - 1;
   constexpr int sp_offset              = num_parameters - IsResult<ReturnType>::value;
   using StaticMemberFunction           = ReturnType (*)(VM *, TypeId, Ts...);
-  using StaticMemberFunctionInvoker    = typename StaticMemberFunctionInvoker<
-      Estimator, ReturnType, StaticMemberFunction>::template Invoker<first_parameter_offset, Ts...>;
-  StaticMemberFunctionInvoker::Invoke(vm, sp_offset, type_id, return_type_id, f,
-                                      std::forward<Estimator>(e));
+  using StaticMemberFunctionInvoker =
+      typename StaticMemberFunctionInvoker<decltype(e), ReturnType, StaticMemberFunction>::
+          template Invoker<first_parameter_offset, Ts...>;
+  StaticMemberFunctionInvoker::Invoke(vm, sp_offset, type_id, return_type_id, f, e);
 }
 
 }  // namespace vm

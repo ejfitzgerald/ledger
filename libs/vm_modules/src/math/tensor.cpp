@@ -25,8 +25,6 @@
 #include <cstdint>
 #include <vector>
 
-using fetch::vm::ConstantEstimator;
-
 namespace fetch {
 namespace vm_modules {
 namespace math {
@@ -60,20 +58,19 @@ fetch::vm::Ptr<VMTensor> VMTensor::Constructor(fetch::vm::VM *vm, fetch::vm::Typ
 
 void VMTensor::Bind(fetch::vm::Module &module)
 {
-  auto const tensor_ctor_estimator = ConstantEstimator<1>::Get();
+  auto const tensor_ctor_estimator = 1;
 
   module.CreateClassType<VMTensor>("Tensor")
-      .CreateConstuctor<decltype(tensor_ctor_estimator),
-                        fetch::vm::Ptr<fetch::vm::Array<VMTensor::SizeType>>>(
+      .CreateConstuctor<fetch::vm::Ptr<fetch::vm::Array<VMTensor::SizeType>>>(
           std::move(tensor_ctor_estimator))
       .CreateSerializeDefaultConstuctor<>()
-      .CreateMemberFunction("at", &VMTensor::AtOne, ConstantEstimator<1>::Get())
-      .CreateMemberFunction("at", &VMTensor::AtTwo, ConstantEstimator<2>::Get())
-      .CreateMemberFunction("at", &VMTensor::AtThree, ConstantEstimator<3>::Get())
-      .CreateMemberFunction("setAt", &VMTensor::SetAt, ConstantEstimator<2>::Get())
-      .CreateMemberFunction("fill", &VMTensor::Fill, ConstantEstimator<1>::Get())
-      .CreateMemberFunction("reshape", &VMTensor::Reshape, ConstantEstimator<1>::Get())
-      .CreateMemberFunction("toString", &VMTensor::ToString, ConstantEstimator<0>::Get());
+      .CreateMemberFunction("at", &VMTensor::AtOne, 1)
+      .CreateMemberFunction("at", &VMTensor::AtTwo, 1)
+      .CreateMemberFunction("at", &VMTensor::AtThree, 1)
+      .CreateMemberFunction("setAt", &VMTensor::SetAt, 1)
+      .CreateMemberFunction("fill", &VMTensor::Fill, 1)
+      .CreateMemberFunction("reshape", &VMTensor::Reshape, 1)
+      .CreateMemberFunction("toString", &VMTensor::ToString, 1);
 }
 
 VMTensor::SizeVector VMTensor::shape() const

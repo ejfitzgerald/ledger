@@ -22,8 +22,6 @@
 
 #include <cstdint>
 
-using fetch::vm::ConstantEstimator;
-
 namespace fetch {
 namespace vm_modules {
 
@@ -45,15 +43,15 @@ T Or(fetch::vm::VM * /*vm*/, T x, T s)
 
 void BindBitwiseOps(vm::Module &module)
 {
-  module.CreateFreeFunction("and", &And<int32_t>, ConstantEstimator<2>::Get());
-  module.CreateFreeFunction("and", &And<int64_t>, ConstantEstimator<2>::Get());
-  module.CreateFreeFunction("and", &And<uint32_t>, ConstantEstimator<2>::Get());
-  module.CreateFreeFunction("and", &And<uint64_t>, ConstantEstimator<2>::Get());
+  module.CreateFreeFunction("and", &And<int32_t>, 1);
+  module.CreateFreeFunction("and", &And<int64_t>, 1);
+  module.CreateFreeFunction("and", &And<uint32_t>, 1);
+  module.CreateFreeFunction("and", &And<uint64_t>, 1);
 
-  module.CreateFreeFunction("or", &Or<int32_t>, ConstantEstimator<2>::Get());
-  module.CreateFreeFunction("or", &Or<int64_t>, ConstantEstimator<2>::Get());
-  module.CreateFreeFunction("or", &Or<uint32_t>, ConstantEstimator<2>::Get());
-  module.CreateFreeFunction("or", &Or<uint64_t>, ConstantEstimator<2>::Get());
+  module.CreateFreeFunction("or", &Or<int32_t>, 1);
+  module.CreateFreeFunction("or", &Or<int64_t>, 1);
+  module.CreateFreeFunction("or", &Or<uint32_t>, 1);
+  module.CreateFreeFunction("or", &Or<uint64_t>, 1);
 }
 
 }  // namespace vm_modules

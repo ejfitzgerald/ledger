@@ -19,103 +19,33 @@
 
 #include "vm/vm.hpp"
 
-#include <cstddef>
-
 namespace fetch {
 namespace vm {
 
-template <std::size_t NUM_PARAMS>
-struct ConstantEstimator;
-
-template <>
-struct ConstantEstimator<0>
-{
-  static auto Get(VM::ChargeAmount const charge = 1u)
-  {
-    return [charge](VM *) -> VM::ChargeAmount { return charge; };
-  }
-};
-
-template <>
-struct ConstantEstimator<1>
-{
-  static auto Get(VM::ChargeAmount const charge = 1u)
-  {
-    return [charge](VM *, auto const &) -> VM::ChargeAmount { return charge; };
-  }
-};
-
-template <>
-struct ConstantEstimator<2>
-{
-  static auto Get(VM::ChargeAmount const charge = 1u)
-  {
-    return [charge](VM *, auto const &, auto const &) -> VM::ChargeAmount { return charge; };
-  }
-};
-
-template <>
-struct ConstantEstimator<3>
-{
-  static auto Get(VM::ChargeAmount const charge = 1u)
-  {
-    return [charge](VM *, auto const &, auto const &, auto const &) -> VM::ChargeAmount {
-      return charge;
-    };
-  }
-};
-
-template <>
-struct ConstantEstimator<4>
-{
-  static auto Get(VM::ChargeAmount const charge = 1u)
-  {
-    return [charge](VM *, auto const &, auto const &, auto const &,
-                    auto const &) -> VM::ChargeAmount { return charge; };
-  }
-};
-
-template <>
-struct ConstantEstimator<5>
-{
-  static auto Get(VM::ChargeAmount const charge = 1u)
-  {
-    return [charge](VM *, auto const &, auto const &, auto const &, auto const &,
-                    auto const &) -> VM::ChargeAmount { return charge; };
-  }
-};
-
-template <>
-struct ConstantEstimator<6>
-{
-  static auto Get(VM::ChargeAmount const charge = 1u)
-  {
-    return [charge](VM *, auto const &, auto const &, auto const &, auto const &, auto const &,
-                    auto const &) -> VM::ChargeAmount { return charge; };
-  }
-};
-
 /**
- * @tparam Estimator
  * @tparam Ts
  * @param vm
  * @param e charge estimator function. Should take the same parameters as the opcode handler, and
- * return a VM::ChargeAmount
+ * return a ChargeAmount
  * @param parameters
  * @return false if executing the opcode would exceed the specified charge limit; true otherwise.
  */
-template <typename Estimator, typename... Ts>
-bool EstimateCharge(VM *const vm, Estimator &&e, Ts const &... parameters)
+template <typename... Ts>
+bool EstimateCharge(VM *const vm, ChargeEstimator<Ts...> const &e, Ts &&... parameters)
 {
-  auto const charge_estimate = e(vm, parameters...);
-
-  vm->IncreaseChargeTotal(charge_estimate);
-
-  if (vm->GetChargeTotal() > vm->GetChargeLimit())
+  if (e)
   {
-    vm->RuntimeError("Charge limit exceeded");
+    // compute the estimate for this function invocation
+    auto const charge_estimate = e(vm, parameters...);
 
-    return false;
+    vm->IncreaseChargeTotal(charge_estimate);
+
+    if (vm->GetChargeTotal() > vm->GetChargeLimit())
+    {
+      vm->RuntimeError("Charge limit exceeded");
+
+      return false;
+    }
   }
 
   return true;

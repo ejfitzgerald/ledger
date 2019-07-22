@@ -31,8 +31,6 @@
 #include <string>
 #include <vector>
 
-using fetch::vm::ConstantEstimator;
-
 namespace fetch {
 namespace vm_modules {
 namespace ml {
@@ -60,17 +58,14 @@ fetch::vm::Ptr<VMAdamOptimiser> VMAdamOptimiser::Constructor(
 
 void VMAdamOptimiser::Bind(vm::Module &module)
 {
-  auto const adam_optimiser_ctor_estimator = ConstantEstimator<4>::Get();
+  auto const adam_optimiser_ctor_estimator = 1;
 
   module.CreateClassType<fetch::vm_modules::ml::VMAdamOptimiser>("AdamOptimiser")
-      .CreateConstuctor<decltype(std::move(adam_optimiser_ctor_estimator)),
-                        fetch::vm::Ptr<fetch::vm_modules::ml::VMGraph>,
+      .CreateConstuctor<fetch::vm::Ptr<fetch::vm_modules::ml::VMGraph>,
                         fetch::vm::Ptr<fetch::vm::String>, fetch::vm::Ptr<fetch::vm::String>,
                         fetch::vm::Ptr<fetch::vm::String>>(std::move(adam_optimiser_ctor_estimator))
-      .CreateMemberFunction("run", &fetch::vm_modules::ml::VMAdamOptimiser::RunData,
-                            ConstantEstimator<3>::Get())
-      .CreateMemberFunction("run", &fetch::vm_modules::ml::VMAdamOptimiser::RunLoader,
-                            ConstantEstimator<3>::Get());
+      .CreateMemberFunction("run", &fetch::vm_modules::ml::VMAdamOptimiser::RunData, 1)
+      .CreateMemberFunction("run", &fetch::vm_modules::ml::VMAdamOptimiser::RunLoader, 1);
 }
 
 VMAdamOptimiser::DataType VMAdamOptimiser::RunData(

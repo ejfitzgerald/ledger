@@ -28,8 +28,6 @@
 #include "vm_modules/ml/graph.hpp"
 #include "vm_modules/ml/state_dict.hpp"
 
-using fetch::vm::ConstantEstimator;
-
 namespace fetch {
 namespace vm_modules {
 namespace ml {
@@ -46,26 +44,23 @@ fetch::vm::Ptr<VMGraph> VMGraph::Constructor(fetch::vm::VM *vm, fetch::vm::TypeI
 
 void VMGraph::Bind(fetch::vm::Module &module)
 {
-  auto const graph_ctor_estimator = ConstantEstimator<0>::Get();
+  auto const graph_ctor_estimator = 1;
 
   module.CreateClassType<VMGraph>("Graph")
-      .CreateConstuctor<decltype(graph_ctor_estimator)>(std::move(graph_ctor_estimator))
-      .CreateMemberFunction("setInput", &VMGraph::SetInput, ConstantEstimator<2>::Get())
-      .CreateMemberFunction("evaluate", &VMGraph::Evaluate, ConstantEstimator<1>::Get())
-      .CreateMemberFunction("backPropagate", &VMGraph::BackPropagateError,
-                            ConstantEstimator<1>::Get())
-      .CreateMemberFunction("step", &VMGraph::Step, ConstantEstimator<1>::Get())
-      .CreateMemberFunction("addPlaceholder", &VMGraph::AddPlaceholder, ConstantEstimator<1>::Get())
-      .CreateMemberFunction("addFullyConnected", &VMGraph::AddFullyConnected,
-                            ConstantEstimator<4>::Get())
-      .CreateMemberFunction("addConv1D", &VMGraph::AddConv1D, ConstantEstimator<6>::Get())
-      .CreateMemberFunction("addRelu", &VMGraph::AddRelu, ConstantEstimator<2>::Get())
-      .CreateMemberFunction("addSoftmax", &VMGraph::AddSoftmax, ConstantEstimator<2>::Get())
-      .CreateMemberFunction("addDropout", &VMGraph::AddDropout, ConstantEstimator<3>::Get())
-      .CreateMemberFunction("addCrossEntropyLoss", &VMGraph::AddCrossEntropyLoss,
-                            ConstantEstimator<3>::Get())
-      .CreateMemberFunction("loadStateDict", &VMGraph::LoadStateDict, ConstantEstimator<1>::Get())
-      .CreateMemberFunction("stateDict", &VMGraph::StateDict, ConstantEstimator<0>::Get());
+      .CreateConstuctor<>(std::move(graph_ctor_estimator))
+      .CreateMemberFunction("setInput", &VMGraph::SetInput, 1)
+      .CreateMemberFunction("evaluate", &VMGraph::Evaluate, 1)
+      .CreateMemberFunction("backPropagate", &VMGraph::BackPropagateError, 1)
+      .CreateMemberFunction("step", &VMGraph::Step, 1)
+      .CreateMemberFunction("addPlaceholder", &VMGraph::AddPlaceholder, 1)
+      .CreateMemberFunction("addFullyConnected", &VMGraph::AddFullyConnected, 1)
+      .CreateMemberFunction("addConv1D", &VMGraph::AddConv1D, 1)
+      .CreateMemberFunction("addRelu", &VMGraph::AddRelu, 1)
+      .CreateMemberFunction("addSoftmax", &VMGraph::AddSoftmax, 1)
+      .CreateMemberFunction("addDropout", &VMGraph::AddDropout, 1)
+      .CreateMemberFunction("addCrossEntropyLoss", &VMGraph::AddCrossEntropyLoss, 1)
+      .CreateMemberFunction("loadStateDict", &VMGraph::LoadStateDict, 1)
+      .CreateMemberFunction("stateDict", &VMGraph::StateDict, 1);
 }
 
 void VMGraph::SetInput(VMPtrString const &name, fetch::vm::Ptr<VMTensorType> const &input)

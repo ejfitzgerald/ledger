@@ -27,8 +27,6 @@
 #include <cstddef>
 #include <cstdint>
 
-using fetch::vm::ConstantEstimator;
-
 namespace fetch {
 namespace vm_modules {
 namespace math {
@@ -77,24 +75,22 @@ meta::IfIsUnsignedInteger<T, T> IntegerAbs(fetch::vm::VM *, T const &value)
 
 void BindAbs(fetch::vm::Module &module)
 {
-  module.CreateFreeFunction<int8_t>("abs", &IntegerAbs<int8_t>, ConstantEstimator<1>::Get());
-  module.CreateFreeFunction<int16_t>("abs", &IntegerAbs<int16_t>, ConstantEstimator<1>::Get());
-  module.CreateFreeFunction<int32_t>("abs", &IntegerAbs<int32_t>, ConstantEstimator<1>::Get());
-  module.CreateFreeFunction<int64_t>("abs", &IntegerAbs<int64_t>, ConstantEstimator<1>::Get());
+  module.CreateFreeFunction<int8_t>("abs", &IntegerAbs<int8_t>, 1);
+  module.CreateFreeFunction<int16_t>("abs", &IntegerAbs<int16_t>, 1);
+  module.CreateFreeFunction<int32_t>("abs", &IntegerAbs<int32_t>, 1);
+  module.CreateFreeFunction<int64_t>("abs", &IntegerAbs<int64_t>, 1);
 
   // included for completeness sake
-  module.CreateFreeFunction<uint8_t>("abs", &IntegerAbs<uint8_t>, ConstantEstimator<1>::Get());
-  module.CreateFreeFunction<uint16_t>("abs", &IntegerAbs<uint16_t>, ConstantEstimator<1>::Get());
-  module.CreateFreeFunction<uint32_t>("abs", &IntegerAbs<uint32_t>, ConstantEstimator<1>::Get());
-  module.CreateFreeFunction<uint64_t>("abs", &IntegerAbs<uint64_t>, ConstantEstimator<1>::Get());
+  module.CreateFreeFunction<uint8_t>("abs", &IntegerAbs<uint8_t>, 1);
+  module.CreateFreeFunction<uint16_t>("abs", &IntegerAbs<uint16_t>, 1);
+  module.CreateFreeFunction<uint32_t>("abs", &IntegerAbs<uint32_t>, 1);
+  module.CreateFreeFunction<uint64_t>("abs", &IntegerAbs<uint64_t>, 1);
 
-  module.CreateFreeFunction<float_t>("abs", &Abs<float_t>, ConstantEstimator<1>::Get());
-  module.CreateFreeFunction<double_t>("abs", &Abs<double_t>, ConstantEstimator<1>::Get());
+  module.CreateFreeFunction<float_t>("abs", &Abs<float_t>, 1);
+  module.CreateFreeFunction<double_t>("abs", &Abs<double_t>, 1);
 
-  module.CreateFreeFunction<fixed_point::fp32_t>("abs", &Abs<fixed_point::fp32_t>,
-                                                 ConstantEstimator<1>::Get());
-  module.CreateFreeFunction<fixed_point::fp64_t>("abs", &Abs<fixed_point::fp64_t>,
-                                                 ConstantEstimator<1>::Get());
+  module.CreateFreeFunction<fixed_point::fp32_t>("abs", &Abs<fixed_point::fp32_t>, 1);
+  module.CreateFreeFunction<fixed_point::fp64_t>("abs", &Abs<fixed_point::fp64_t>, 1);
 }
 
 }  // namespace math

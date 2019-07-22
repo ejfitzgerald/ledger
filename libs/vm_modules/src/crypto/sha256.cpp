@@ -28,7 +28,6 @@
 
 #include <utility>
 
-using fetch::vm::ConstantEstimator;
 using fetch::vm::Ptr;
 
 namespace fetch {
@@ -46,15 +45,13 @@ fetch::vm::Ptr<SHA256Wrapper> SHA256Wrapper::Constructor(fetch::vm::VM *   vm,
 
 void SHA256Wrapper::Bind(vm::Module &module)
 {
-  auto const sha256_ctor_estimator = ConstantEstimator<0>::Get();
-
   module.CreateClassType<SHA256Wrapper>("SHA256")
-      .CreateConstuctor<decltype(sha256_ctor_estimator)>(std::move(sha256_ctor_estimator))
-      .CreateMemberFunction("update", &SHA256Wrapper::UpdateUInt256, ConstantEstimator<1>::Get())
-      .CreateMemberFunction("update", &SHA256Wrapper::UpdateString, ConstantEstimator<1>::Get())
-      .CreateMemberFunction("update", &SHA256Wrapper::UpdateBuffer, ConstantEstimator<1>::Get())
-      .CreateMemberFunction("final", &SHA256Wrapper::Final, ConstantEstimator<0>::Get())
-      .CreateMemberFunction("reset", &SHA256Wrapper::Reset, ConstantEstimator<0>::Get());
+      .CreateConstuctor(1)
+      .CreateMemberFunction("update", &SHA256Wrapper::UpdateUInt256, 1)
+      .CreateMemberFunction("update", &SHA256Wrapper::UpdateString, 1)
+      .CreateMemberFunction("update", &SHA256Wrapper::UpdateBuffer, 1)
+      .CreateMemberFunction("final", &SHA256Wrapper::Final, 1)
+      .CreateMemberFunction("reset", &SHA256Wrapper::Reset, 1);
 }
 
 void SHA256Wrapper::UpdateUInt256(vm::Ptr<vm_modules::math::UInt256Wrapper> const &uint)

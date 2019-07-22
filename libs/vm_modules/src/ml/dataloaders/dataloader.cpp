@@ -32,8 +32,6 @@
 #include <utility>
 #include <vector>
 
-using fetch::vm::ConstantEstimator;
-
 namespace fetch {
 namespace vm_modules {
 namespace ml {
@@ -49,13 +47,13 @@ fetch::vm::Ptr<VMDataLoader> VMDataLoader::Constructor(fetch::vm::VM *vm, fetch:
 
 void VMDataLoader::Bind(fetch::vm::Module &module)
 {
-  auto const dataloader_ctor_estimator = ConstantEstimator<0>::Get();
+  auto const dataloader_ctor_estimator = 1;
 
   module.CreateClassType<VMDataLoader>("DataLoader")
-      .CreateConstuctor<decltype(dataloader_ctor_estimator)>(std::move(dataloader_ctor_estimator))
-      .CreateMemberFunction("addData", &VMDataLoader::AddData, ConstantEstimator<3>::Get())
-      .CreateMemberFunction("getNext", &VMDataLoader::GetNext, ConstantEstimator<0>::Get())
-      .CreateMemberFunction("isDone", &VMDataLoader::IsDone, ConstantEstimator<0>::Get());
+      .CreateConstuctor<>(std::move(dataloader_ctor_estimator))
+      .CreateMemberFunction("addData", &VMDataLoader::AddData, 1)
+      .CreateMemberFunction("getNext", &VMDataLoader::GetNext, 1)
+      .CreateMemberFunction("isDone", &VMDataLoader::IsDone, 1);
 }
 
 void VMDataLoader::AddData(fetch::vm::Ptr<fetch::vm::String> const &mode,

@@ -24,8 +24,6 @@
 
 #include <utility>
 
-using fetch::vm::ConstantEstimator;
-
 namespace fetch {
 namespace vm_modules {
 namespace ml {
@@ -49,17 +47,14 @@ fetch::vm::Ptr<VMTrainingPair> VMTrainingPair::Constructor(
 
 void VMTrainingPair::Bind(vm::Module &module)
 {
-  auto const training_pair_ctor_estimator = ConstantEstimator<2>::Get();
+  auto const training_pair_ctor_estimator = 1;
 
   module.CreateClassType<fetch::vm_modules::ml::VMTrainingPair>("TrainingPair")
-      .CreateConstuctor<decltype(training_pair_ctor_estimator),
-                        fetch::vm::Ptr<fetch::vm_modules::math::VMTensor>,
+      .CreateConstuctor<fetch::vm::Ptr<fetch::vm_modules::math::VMTensor>,
                         fetch::vm::Ptr<fetch::vm_modules::math::VMTensor>>(
           std::move(training_pair_ctor_estimator))
-      .CreateMemberFunction("data", &fetch::vm_modules::ml::VMTrainingPair::data,
-                            ConstantEstimator<0>::Get())
-      .CreateMemberFunction("label", &fetch::vm_modules::ml::VMTrainingPair::label,
-                            ConstantEstimator<0>::Get());
+      .CreateMemberFunction("data", &fetch::vm_modules::ml::VMTrainingPair::data, 1)
+      .CreateMemberFunction("label", &fetch::vm_modules::ml::VMTrainingPair::label, 1);
 }
 
 fetch::vm::Ptr<fetch::vm_modules::math::VMTensor> VMTrainingPair::data()

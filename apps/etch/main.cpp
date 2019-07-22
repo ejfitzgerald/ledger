@@ -53,7 +53,7 @@ using fetch::vm::Ptr;
 using fetch::vm::VM;
 using fetch::vm::String;
 using fetch::vm::TypeId;
-using fetch::vm::ConstantEstimator;
+
 using fetch::vm_modules::VMFactory;
 using fetch::variant::Variant;
 using fetch::json::JSONDocument;
@@ -313,8 +313,8 @@ int main(int argc, char **argv)
 
   // additional module bindings
   module->CreateClassType<System>("System")
-      .CreateStaticMemberFunction("Argc", &Argc, ConstantEstimator<0>::Get())
-      .CreateStaticMemberFunction("Argv", &Argv, ConstantEstimator<1>::Get());
+      .CreateStaticMemberFunction("Argc", &Argc, 1)
+      .CreateStaticMemberFunction("Argv", &Argv, 1);
 
   // attempt to compile the program
   auto errors = VMFactory::Compile(module, source, *executable);

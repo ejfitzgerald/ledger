@@ -231,7 +231,6 @@ class VM
 public:
   using InputDeviceMap  = std::unordered_map<std::string, std::istream *>;
   using OutputDeviceMap = std::unordered_map<std::string, std::ostream *>;
-  using ChargeAmount    = uint64_t;
 
   explicit VM(Module *module);
   ~VM() = default;
@@ -506,6 +505,8 @@ public:
   struct OpcodeInfo
   {
     OpcodeInfo() = default;
+
+    // TODO Remove
     OpcodeInfo(std::string name__, Handler handler__)
       : name(std::move(name__))
       , handler(std::move(handler__))
@@ -569,17 +570,15 @@ private:
   friend struct TypeGetter;
   template <typename T, typename S>
   friend struct ParameterTypeGetter;
-  template <typename ReturnType, typename FreeFunction, typename Estimator, typename... Ts>
+  template <typename ReturnType, typename FreeFunction, typename... Ts>
   friend struct FreeFunctionInvokerHelper;
-  template <typename Type, typename ReturnType, typename MemberFunction, typename Estimator,
-            typename... Ts>
+  template <typename Type, typename ReturnType, typename MemberFunction, typename... Ts>
   friend struct MemberFunctionInvokerHelper;
-  template <typename Type, typename ReturnType, typename Constructor, typename Estimator,
-            typename... Ts>
+  template <typename Type, typename ReturnType, typename Constructor, typename... Ts>
   friend struct ConstructorInvokerHelper;
-  template <typename Estimator, typename ReturnType, typename StaticMemberFunction, typename... Ts>
+  template <typename ReturnType, typename StaticMemberFunction, typename... Ts>
   friend struct StaticMemberFunctionInvokerHelper;
-  template <typename ReturnType, typename Functor, typename Estimator, typename... Ts>
+  template <typename ReturnType, typename Functor, typename... Ts>
   friend struct FunctorInvokerHelper;
 
   TypeInfoArray                  type_info_array_;
@@ -614,13 +613,14 @@ private:
 
   /// @name Charges
   /// @{
-  ChargeAmount charge_limit_{std::numeric_limits<VM::ChargeAmount>::max()};
+  ChargeAmount charge_limit_{std::numeric_limits<ChargeAmount>::max()};
   ChargeAmount charge_total_{0};
   /// @}
 
-  void AddOpcodeInfo(uint16_t opcode, std::string const &name, Handler const &handler)
+  void AddOpcodeInfo(uint16_t opcode, std::string const &name, Handler const &handler,
+                     ChargeAmount static_charge = 1)  // TODO remove default
   {
-    opcode_info_array_[opcode] = OpcodeInfo(name, handler);
+    opcode_info_array_[opcode] = OpcodeInfo(name, handler, static_charge);
   }
 
   bool Execute(std::string &error, Variant &output);

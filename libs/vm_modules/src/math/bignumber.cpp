@@ -27,7 +27,6 @@
 #include <algorithm>
 #include <cstdint>
 
-using fetch::vm::ConstantEstimator;
 using fetch::vm::Ptr;
 
 namespace fetch {
@@ -50,18 +49,15 @@ fetch::vm::Ptr<fetch::vm::String> UInt256Wrapper::ToString(fetch::vm::VM *      
 
 void UInt256Wrapper::Bind(vm::Module &module)
 {
-  auto const bignumber_ctor_estimator1 = ConstantEstimator<1>::Get();
-  auto const bignumber_ctor_estimator2 = ConstantEstimator<1>::Get();
-  auto const bignumber_ctor_estimator3 = ConstantEstimator<1>::Get();
+  auto const bignumber_ctor_estimator1 = 1;
+  auto const bignumber_ctor_estimator2 = 1;
+  auto const bignumber_ctor_estimator3 = 1;
 
   module.CreateClassType<UInt256Wrapper>("UInt256")
       .CreateSerializeDefaultConstuctor<uint64_t>(static_cast<uint64_t>(0))
-      .CreateConstuctor<decltype(bignumber_ctor_estimator1), uint64_t>(
-          std::move(bignumber_ctor_estimator1))
-      .CreateConstuctor<decltype(bignumber_ctor_estimator2), Ptr<vm::String>>(
-          std::move(bignumber_ctor_estimator2))
-      .CreateConstuctor<decltype(bignumber_ctor_estimator3), Ptr<ByteArrayWrapper>>(
-          std::move(bignumber_ctor_estimator3))
+      .CreateConstuctor<uint64_t>(std::move(bignumber_ctor_estimator1))
+      .CreateConstuctor<Ptr<vm::String>>(std::move(bignumber_ctor_estimator2))
+      .CreateConstuctor<Ptr<ByteArrayWrapper>>(std::move(bignumber_ctor_estimator3))
       .EnableOperator(vm::Operator::Equal)
       .EnableOperator(vm::Operator::NotEqual)
       .EnableOperator(vm::Operator::LessThan)
@@ -69,22 +65,18 @@ void UInt256Wrapper::Bind(vm::Module &module)
       .EnableOperator(vm::Operator::GreaterThan)
       //        .EnableOperator(vm::Operator::GreaterThanOrEqual)
       //        .CreateMemberFunction("toBuffer", &UInt256Wrapper::ToBuffer)
-      .CreateMemberFunction("increase", &UInt256Wrapper::Increase, ConstantEstimator<0>::Get())
+      .CreateMemberFunction("increase", &UInt256Wrapper::Increase, 1)
       //        .CreateMemberFunction("lessThan", &UInt256Wrapper::LessThan)
-      .CreateMemberFunction("logValue", &UInt256Wrapper::LogValue, ConstantEstimator<0>::Get())
-      .CreateMemberFunction("toFloat64", &UInt256Wrapper::ToFloat64, ConstantEstimator<0>::Get())
-      .CreateMemberFunction("toInt32", &UInt256Wrapper::ToInt32, ConstantEstimator<0>::Get())
-      .CreateMemberFunction("size", &UInt256Wrapper::size, ConstantEstimator<0>::Get());
+      .CreateMemberFunction("logValue", &UInt256Wrapper::LogValue, 1)
+      .CreateMemberFunction("toFloat64", &UInt256Wrapper::ToFloat64, 1)
+      .CreateMemberFunction("toInt32", &UInt256Wrapper::ToInt32, 1)
+      .CreateMemberFunction("size", &UInt256Wrapper::size, 1);
 
-  module.CreateFreeFunction("toString", &UInt256Wrapper::ToString, ConstantEstimator<1>::Get());
-  module.CreateFreeFunction("toUInt64", &UInt256Wrapper::ToPrimitive<uint64_t>,
-                            ConstantEstimator<1>::Get());
-  module.CreateFreeFunction("toInt64", &UInt256Wrapper::ToPrimitive<int64_t>,
-                            ConstantEstimator<1>::Get());
-  module.CreateFreeFunction("toUInt32", &UInt256Wrapper::ToPrimitive<uint32_t>,
-                            ConstantEstimator<1>::Get());
-  module.CreateFreeFunction("toInt32", &UInt256Wrapper::ToPrimitive<int32_t>,
-                            ConstantEstimator<1>::Get());
+  module.CreateFreeFunction("toString", &UInt256Wrapper::ToString, 1);
+  module.CreateFreeFunction("toUInt64", &UInt256Wrapper::ToPrimitive<uint64_t>, 1);
+  module.CreateFreeFunction("toInt64", &UInt256Wrapper::ToPrimitive<int64_t>, 1);
+  module.CreateFreeFunction("toUInt32", &UInt256Wrapper::ToPrimitive<uint32_t>, 1);
+  module.CreateFreeFunction("toInt32", &UInt256Wrapper::ToPrimitive<int32_t>, 1);
 }
 
 UInt256Wrapper::UInt256Wrapper(fetch::vm::VM *vm, fetch::vm::TypeId type_id, UInt256 data)

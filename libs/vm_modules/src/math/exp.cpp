@@ -22,8 +22,6 @@
 #include "vm/module/estimate_charge.hpp"
 #include "vm_modules/math/exp.hpp"
 
-using fetch::vm::ConstantEstimator;
-
 namespace fetch {
 namespace vm_modules {
 namespace math {
@@ -42,12 +40,10 @@ fetch::math::meta::IfIsMath<T, T> Exp(fetch::vm::VM *, T const &a)
 
 void BindExp(fetch::vm::Module &module)
 {
-  module.CreateFreeFunction<float_t>("exp", &Exp<float_t>, ConstantEstimator<1>::Get());
-  module.CreateFreeFunction<double_t>("exp", &Exp<double_t>, ConstantEstimator<1>::Get());
-  module.CreateFreeFunction<fixed_point::fp32_t>("exp", &Exp<fixed_point::fp32_t>,
-                                                 ConstantEstimator<1>::Get());
-  module.CreateFreeFunction<fixed_point::fp64_t>("exp", &Exp<fixed_point::fp64_t>,
-                                                 ConstantEstimator<1>::Get());
+  module.CreateFreeFunction<float_t>("exp", &Exp<float_t>, 1);
+  module.CreateFreeFunction<double_t>("exp", &Exp<double_t>, 1);
+  module.CreateFreeFunction<fixed_point::fp32_t>("exp", &Exp<fixed_point::fp32_t>, 1);
+  module.CreateFreeFunction<fixed_point::fp64_t>("exp", &Exp<fixed_point::fp64_t>, 1);
 }
 
 }  // namespace math

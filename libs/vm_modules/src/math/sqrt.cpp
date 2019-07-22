@@ -21,8 +21,6 @@
 #include "vm/module/estimate_charge.hpp"
 #include "vm_modules/math/sqrt.hpp"
 
-using fetch::vm::ConstantEstimator;
-
 namespace fetch {
 namespace vm_modules {
 namespace math {
@@ -41,12 +39,10 @@ fetch::math::meta::IfIsMath<T, T> Sqrt(fetch::vm::VM *, T const &a)
 
 void BindSqrt(fetch::vm::Module &module)
 {
-  module.CreateFreeFunction<float_t>("sqrt", &Sqrt<float_t>, ConstantEstimator<1>::Get());
-  module.CreateFreeFunction<double_t>("sqrt", &Sqrt<double_t>, ConstantEstimator<1>::Get());
-  module.CreateFreeFunction<fixed_point::fp32_t>("sqrt", &Sqrt<fixed_point::fp32_t>,
-                                                 ConstantEstimator<1>::Get());
-  module.CreateFreeFunction<fixed_point::fp64_t>("sqrt", &Sqrt<fixed_point::fp64_t>,
-                                                 ConstantEstimator<1>::Get());
+  module.CreateFreeFunction<float_t>("sqrt", &Sqrt<float_t>, 1);
+  module.CreateFreeFunction<double_t>("sqrt", &Sqrt<double_t>, 1);
+  module.CreateFreeFunction<fixed_point::fp32_t>("sqrt", &Sqrt<fixed_point::fp32_t>, 1);
+  module.CreateFreeFunction<fixed_point::fp64_t>("sqrt", &Sqrt<fixed_point::fp64_t>, 1);
 }
 
 }  // namespace math

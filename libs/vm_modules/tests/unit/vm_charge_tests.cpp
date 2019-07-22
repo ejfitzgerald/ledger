@@ -28,16 +28,15 @@ namespace {
 
 using fetch::vm::TypeId;
 using fetch::vm::VM;
-using fetch::vm::ConstantEstimator;
 
-VM::ChargeAmount const low_charge_limit  = 10;
-VM::ChargeAmount const high_charge_limit = 1000;
+ChargeAmount const low_charge_limit  = 10;
+ChargeAmount const high_charge_limit = 1000;
 
-auto const affordable_estimator = [](VM *, uint8_t x, uint16_t y) -> VM::ChargeAmount {
-  return static_cast<VM::ChargeAmount>(low_charge_limit + x * y);
+auto const affordable_estimator = [](VM *, uint8_t x, uint16_t y) -> ChargeAmount {
+  return static_cast<ChargeAmount>(low_charge_limit + x * y);
 };
-auto const expensive_estimator = [](VM *, uint8_t x, uint16_t y) -> VM::ChargeAmount {
-  return static_cast<VM::ChargeAmount>(high_charge_limit + x * y);
+auto const expensive_estimator = [](VM *, uint8_t x, uint16_t y) -> ChargeAmount {
+  return static_cast<ChargeAmount>(high_charge_limit + x * y);
 };
 
 auto const handler = [](VM *, uint8_t, uint16_t) -> bool { return true; };
@@ -164,8 +163,7 @@ TEST_F(VmChargeTests, ctor_bind_with_charge_estimate_execution_fails_when_limit_
 {
   toolkit.module()
       .CreateClassType<CustomType>("TooExpensive")
-      .CreateConstuctor<decltype(expensive_estimator), uint8_t, uint16_t>(
-          std::move(expensive_estimator));
+      .CreateConstuctor<uint8_t, uint16_t>(1000);
 
   static char const *TEXT = R"(
     function main()
@@ -181,8 +179,7 @@ TEST_F(VmChargeTests, ctor_bind_with_charge_estimate_execution_succeeds_when_lim
 {
   toolkit.module()
       .CreateClassType<CustomType>("Affordable")
-      .CreateConstuctor<decltype(affordable_estimator), uint8_t, uint16_t>(
-          std::move(affordable_estimator));
+      .CreateConstuctor<uint8_t, uint16_t>(10);
 
   static char const *TEXT = R"(
     function main()
@@ -196,11 +193,9 @@ TEST_F(VmChargeTests, ctor_bind_with_charge_estimate_execution_succeeds_when_lim
 
 TEST_F(VmChargeTests, member_function_bind_with_charge_estimate_execution_fails_when_limit_exceeded)
 {
-  auto const ctor_estimator = ConstantEstimator<0>::Get();
-
   toolkit.module()
       .CreateClassType<CustomType>("CustomType")
-      .CreateConstuctor<decltype(ctor_estimator)>(std::move(ctor_estimator))
+      .CreateConstuctor<>(1)
       .CreateMemberFunction("tooExpensive", &CustomType::TooExpensive,
                             std::move(expensive_estimator));
 
@@ -218,11 +213,9 @@ TEST_F(VmChargeTests, member_function_bind_with_charge_estimate_execution_fails_
 TEST_F(VmChargeTests,
        member_function_bind_with_charge_estimate_execution_succeeds_when_limit_obeyed)
 {
-  auto const ctor_estimator = ConstantEstimator<0>::Get();
-
   toolkit.module()
       .CreateClassType<CustomType>("CustomType")
-      .CreateConstuctor<decltype(ctor_estimator)>(std::move(ctor_estimator))
+      .CreateConstuctor<>(1)
       .CreateMemberFunction("affordable", &CustomType::Affordable, std::move(affordable_estimator));
 
   static char const *TEXT = R"(
@@ -274,15 +267,10 @@ TEST_F(VmChargeTests,
 
 TEST_F(VmChargeTests, index_operator_bind_with_charge_estimate_execution_fails_when_limit_exceeded)
 {
-  auto const ctor_estimator   = ConstantEstimator<0>::Get();
-  auto const getter_estimator = ConstantEstimator<1>::Get(10000);
-  auto const setter_estimator = ConstantEstimator<2>::Get(10000);
-
   toolkit.module()
       .CreateClassType<CustomType>("CustomType")
-      .CreateConstuctor<decltype(ctor_estimator)>(std::move(ctor_estimator))
-      .EnableIndexOperator<decltype(getter_estimator), decltype(setter_estimator), int32_t,
-                           int32_t>(std::move(getter_estimator), std::move(setter_estimator));
+      .CreateConstuctor<>(1)
+      .EnableIndexOperator<int32_t, int32_t>(1000, 1000);
 
   static char const *TEXT = R"(
     function main()
@@ -297,15 +285,10 @@ TEST_F(VmChargeTests, index_operator_bind_with_charge_estimate_execution_fails_w
 
 TEST_F(VmChargeTests, index_operator_bind_with_charge_estimate_execution_succeeds_when_limit_obeyed)
 {
-  auto const ctor_estimator   = ConstantEstimator<0>::Get();
-  auto const getter_estimator = ConstantEstimator<1>::Get();
-  auto const setter_estimator = ConstantEstimator<2>::Get();
-
   toolkit.module()
       .CreateClassType<CustomType>("CustomType")
-      .CreateConstuctor<decltype(ctor_estimator)>(std::move(ctor_estimator))
-      .EnableIndexOperator<decltype(getter_estimator), decltype(setter_estimator), int32_t,
-                           int32_t>(std::move(getter_estimator), std::move(setter_estimator));
+      .CreateConstuctor<>(1)
+      .EnableIndexOperator<int32_t, int32_t>(10, 10);
 
   static char const *TEXT = R"(
     function main()

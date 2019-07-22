@@ -22,8 +22,6 @@
 #include "vm/module/estimate_charge.hpp"
 #include "vm_modules/math/pow.hpp"
 
-using fetch::vm::ConstantEstimator;
-
 namespace fetch {
 namespace vm_modules {
 namespace math {
@@ -42,12 +40,10 @@ fetch::math::meta::IfIsMath<T, T> Pow(fetch::vm::VM *, T const &a, T const &b)
 
 void BindPow(fetch::vm::Module &module)
 {
-  module.CreateFreeFunction<float_t>("pow", &Pow<float_t>, ConstantEstimator<2>::Get());
-  module.CreateFreeFunction<double_t>("pow", &Pow<double_t>, ConstantEstimator<2>::Get());
-  module.CreateFreeFunction<fixed_point::fp32_t>("pow", &Pow<fixed_point::fp32_t>,
-                                                 ConstantEstimator<2>::Get());
-  module.CreateFreeFunction<fixed_point::fp64_t>("pow", &Pow<fixed_point::fp64_t>,
-                                                 ConstantEstimator<2>::Get());
+  module.CreateFreeFunction<float_t>("pow", &Pow<float_t>, 1);
+  module.CreateFreeFunction<double_t>("pow", &Pow<double_t>, 1);
+  module.CreateFreeFunction<fixed_point::fp32_t>("pow", &Pow<fixed_point::fp32_t>, 1);
+  module.CreateFreeFunction<fixed_point::fp64_t>("pow", &Pow<fixed_point::fp64_t>, 1);
 }
 
 }  // namespace math

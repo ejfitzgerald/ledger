@@ -85,8 +85,8 @@ public:
   } call_counter;
 };
 
-auto const estimator_no_args  = ConstantEstimator<0>::Get();
-auto const estimator_two_args = ConstantEstimator<2>::Get();
+auto const estimator_no_args  = 1;
+auto const estimator_two_args = 1;
 
 void CustomBinding_void_no_args(VM *)
 {

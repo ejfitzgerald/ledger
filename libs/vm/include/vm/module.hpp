@@ -97,30 +97,16 @@ public:
       , type_index_(type_index__)
     {}
 
-    template <typename Estimator, typename... Ts>
-    ClassInterface &CreateConstuctor(Estimator &&estimator)
+    template <typename... Ts>
+    ClassInterface &CreateConstuctor(ChargeEstimator<Ts...> &&estimator)
     {
-      TypeIndex const type_index__ = type_index_;
-      TypeIndexArray  parameter_type_index_array;
-      UnrollTypes<Ts...>::Unroll(parameter_type_index_array);
-      Handler handler = [e{std::forward<Estimator>(estimator)}](VM *vm) {
-        InvokeConstructor<Type, Estimator, Ts...>(vm, vm->instruction_->type_id,
-                                                  std::forward<Estimator>(e));
-      };
-      auto compiler_setup_function = [type_index__, parameter_type_index_array,
-                                      handler](Compiler *compiler) {
-        compiler->CreateConstructor(type_index__, parameter_type_index_array, handler);
-      };
+      return InternalCreateConstuctor<Ts...>(std::forward<ChargeEstimator<Ts...>>(estimator), 0);
+    }
 
-      module_->AddCompilerSetupFunction(compiler_setup_function);
-
-      if (sizeof...(Ts) == 0)
-      {
-        DefaultConstructorHandler h = details::CreateSerializeConstructor<Type, Ts...>::Apply();
-        module_->deserialization_constructors_.insert({type_index__, std::move(h)});
-      }
-
-      return *this;
+    template <typename... Ts>
+    ClassInterface &CreateConstuctor(ChargeAmount static_charge)
+    {
+      return InternalCreateConstuctor<Ts...>({}, static_charge);
     }
 
     template <typename... Ts>
@@ -137,55 +123,55 @@ public:
       return *this;
     }
 
-    template <typename Estimator, typename ReturnType, typename... Ts>
+    template <typename ReturnType, typename... Ts>
     ClassInterface &CreateStaticMemberFunction(std::string const &function_name,
                                                ReturnType (*f)(VM *, TypeId, Ts...),
-                                               Estimator &&estimator)
+                                               ChargeEstimator<Ts...> &&estimator)
     {
-      TypeIndex const type_index__ = type_index_;
-      TypeIndexArray  parameter_type_index_array;
-      UnrollParameterTypes<Ts...>::Unroll(parameter_type_index_array);
-      TypeIndex const return_type_index = TypeGetter<ReturnType>::GetTypeIndex();
-      Handler         handler           = [f, e{std::forward<Estimator>(estimator)}](VM *vm) {
-        InvokeStaticMemberFunction(vm, vm->instruction_->data, vm->instruction_->type_id, f, e);
-      };
-      auto compiler_setup_function = [type_index__, function_name, parameter_type_index_array,
-                                      return_type_index, handler](Compiler *compiler) {
-        compiler->CreateStaticMemberFunction(
-            type_index__, function_name, parameter_type_index_array, return_type_index, handler);
-      };
-      module_->AddCompilerSetupFunction(compiler_setup_function);
-      return *this;
+      return InternalCreateStaticMemberFunction<ReturnType, Ts...>(
+          function_name, f, std::forward<ChargeEstimator<Ts...>>(estimator), 0);
     }
 
-    template <typename Estimator, typename ReturnType, typename... Ts>
+    template <typename ReturnType, typename... Ts>
+    ClassInterface &CreateStaticMemberFunction(std::string const &function_name,
+                                               ReturnType (*f)(VM *, TypeId, Ts...),
+                                               ChargeAmount static_charge)
+    {
+      return InternalCreateStaticMemberFunction<ReturnType, Ts...>(function_name, f, {},
+                                                                   static_charge);
+    }
+
+    template <typename ReturnType, typename... Ts>
     ClassInterface &CreateMemberFunction(std::string const &name, ReturnType (Type::*f)(Ts...),
-                                         Estimator &&       e)
+                                         ChargeEstimator<Ts...> &&e)
     {
-      using MemberFunction = ReturnType (Type::*)(Ts...);
-      return InternalCreateMemberFunction<Estimator, ReturnType, MemberFunction, Ts...>(
-          name, f, std::forward<Estimator>(e));
+      return InternalCreateMemberFunction<ReturnType, decltype(f), Ts...>(
+          name, f, std::forward<ChargeEstimator<Ts...>>(e), 0);
     }
 
-    template <typename Estimator, typename ReturnType, typename... Ts>
-    ClassInterface &CreateMemberFunction(std::string const &name,
-                                         ReturnType (Type::*f)(Ts...) const, Estimator &&e)
+    template <typename ReturnType, typename... Ts>
+    ClassInterface &CreateMemberFunction(std::string const &name, ReturnType (Type::*f)(Ts...),
+                                         ChargeAmount       static_charge)
     {
-      using MemberFunction = ReturnType (Type::*)(Ts...) const;
-      return InternalCreateMemberFunction<Estimator, ReturnType, MemberFunction, Ts...>(
-          name, f, std::forward<Estimator>(e));
+      return InternalCreateMemberFunction<ReturnType, decltype(f), Ts...>(name, f, {},
+                                                                          static_charge);
     }
 
     template <typename ReturnType, typename... Ts>
     ClassInterface &CreateMemberFunction(std::string const &name,
                                          ReturnType (Type::*f)(Ts...) const,
-                                         VM::ChargeAmount const charge)
+                                         ChargeEstimator<Ts...> &&e)
     {
-      auto e = ConstantEstimator<sizeof...(Ts)>::Get(charge);
+      return InternalCreateMemberFunction<ReturnType, decltype(f), Ts...>(
+          name, f, std::forward<ChargeEstimator<Ts...>>(e), 0);
+    }
 
-      using MemberFunction = ReturnType (Type::*)(Ts...) const;
-      return InternalCreateMemberFunction<decltype(e), ReturnType, MemberFunction, Ts...>(
-          name, f, std::move(e));
+    template <typename ReturnType, typename... Ts>
+    ClassInterface &CreateMemberFunction(std::string const &name,
+                                         ReturnType (Type::*f)(Ts...) const,
+                                         ChargeAmount const charge)
+    {
+      return InternalCreateMemberFunction<ReturnType, decltype(f), Ts...>(name, f, {}, charge);
     }
 
     ClassInterface &EnableOperator(Operator op)
@@ -199,36 +185,22 @@ public:
     }
 
     // input type 1, input type 2 ... input type N, output type
-    template <typename GetterEstimator, typename SetterEstimator, typename... Types>
-    ClassInterface &EnableIndexOperator(GetterEstimator &&getter_estimator,
-                                        SetterEstimator &&setter_estimator)  // order changed!
+    template <typename... Types>
+    ClassInterface &EnableIndexOperator(
+        ChargeEstimator<Types...> &&getter_estimator,
+        ChargeEstimator<Types...> &&setter_estimator)  // order changed!
     {
-      static_assert(sizeof...(Types) >= 2, "2 or more types expected");
-      using Tuple       = std::tuple<Types...>;
-      using InputsTuple = typename meta::RemoveLastType<Tuple>::type;
-      using OutputType  = typename meta::GetLastType<Tuple>::type;
-      using Getter      = typename IndexedValueGetter<Type, InputsTuple, OutputType>::type;
-      using Setter      = typename IndexedValueSetter<Type, InputsTuple, OutputType>::type;
-      TypeIndex const type_index__ = type_index_;
-      TypeIndexArray  input_type_index_array;
-      UnrollTypes<Types...>::Unroll(input_type_index_array);
-      TypeIndex const output_type_index = input_type_index_array.back();
-      input_type_index_array.pop_back();
-      Getter  gf          = &Type::GetIndexedValue;
-      Handler get_handler = [gf, ge{std::forward<GetterEstimator>(getter_estimator)}](VM *vm) {
-        InvokeMemberFunction(vm, vm->instruction_->type_id, gf, ge);
-      };
-      Setter  sf          = &Type::SetIndexedValue;
-      Handler set_handler = [sf, se{std::forward<SetterEstimator>(setter_estimator)}](VM *vm) {
-        InvokeMemberFunction(vm, vm->instruction_->type_id, sf, se);
-      };
-      auto compiler_setup_function = [type_index__, input_type_index_array, output_type_index,
-                                      get_handler, set_handler](Compiler *compiler) {
-        compiler->EnableIndexOperator(type_index__, input_type_index_array, output_type_index,
-                                      get_handler, set_handler);
-      };
-      module_->AddCompilerSetupFunction(compiler_setup_function);
-      return *this;
+      return InternalEnableIndexOperator<Types...>(
+          std::forward<ChargeEstimator<Types...>>(getter_estimator),
+          std::forward<ChargeEstimator<Types...>>(setter_estimator), 0, 0);
+    }
+
+    // input type 1, input type 2 ... input type N, output type
+    template <typename... Types>
+    ClassInterface &EnableIndexOperator(ChargeAmount get_static_charge,
+                                        ChargeAmount set_static_charge)  // order changed!
+    {
+      return InternalEnableIndexOperator<Types...>({}, {}, get_static_charge, set_static_charge);
     }
 
     template <typename InstantiationType>
@@ -249,21 +221,110 @@ public:
     }
 
   private:
-    template <typename Estimator, typename ReturnType, typename MemberFunction, typename... Ts>
-    ClassInterface &InternalCreateMemberFunction(std::string const &function_name, MemberFunction f,
-                                                 Estimator &&estimator)
+    template <typename... Types>
+    ClassInterface &InternalEnableIndexOperator(ChargeEstimator<Types...> &&getter_estimator,
+                                                ChargeEstimator<Types...> &&setter_estimator,
+                                                ChargeAmount                get_charge,
+                                                ChargeAmount set_charge)  // order changed!
+    {
+      static_assert(sizeof...(Types) >= 2, "2 or more types expected");
+      using Tuple       = std::tuple<Types...>;
+      using InputsTuple = typename meta::RemoveLastType<Tuple>::type;
+      using OutputType  = typename meta::GetLastType<Tuple>::type;
+      using Getter      = typename IndexedValueGetter<Type, InputsTuple, OutputType>::type;
+      using Setter      = typename IndexedValueSetter<Type, InputsTuple, OutputType>::type;
+      TypeIndex const type_index__ = type_index_;
+      TypeIndexArray  input_type_index_array;
+      UnrollTypes<Types...>::Unroll(input_type_index_array);
+      TypeIndex const output_type_index = input_type_index_array.back();
+      input_type_index_array.pop_back();
+      Getter  gf          = &Type::GetIndexedValue;
+      Handler get_handler = [gf, getter_estimator](VM *vm) {
+        InvokeMemberFunction(vm, vm->instruction_->type_id, gf, getter_estimator);
+      };
+      Setter  sf          = &Type::SetIndexedValue;
+      Handler set_handler = [sf, setter_estimator](VM *vm) {
+        InvokeMemberFunction(vm, vm->instruction_->type_id, sf, setter_estimator);
+      };
+      auto compiler_setup_function = [type_index__, input_type_index_array, output_type_index,
+                                      get_handler, set_handler, get_charge,
+                                      set_charge](Compiler *compiler) {
+        compiler->EnableIndexOperator(type_index__, input_type_index_array, output_type_index,
+                                      get_handler, set_handler, get_charge, set_charge);
+      };
+      module_->AddCompilerSetupFunction(compiler_setup_function);
+      return *this;
+    }
+
+    template <typename ReturnType, typename... Ts>
+    ClassInterface &InternalCreateStaticMemberFunction(std::string const &function_name,
+                                                       ReturnType (*f)(VM *, TypeId, Ts...),
+                                                       ChargeEstimator<Ts...> &&estimator,
+                                                       ChargeAmount             static_charge)
     {
       TypeIndex const type_index__ = type_index_;
       TypeIndexArray  parameter_type_index_array;
       UnrollParameterTypes<Ts...>::Unroll(parameter_type_index_array);
       TypeIndex const return_type_index = TypeGetter<ReturnType>::GetTypeIndex();
-      Handler         handler           = [f, e{std::forward<Estimator>(estimator)}](VM *vm) {
-        InvokeMemberFunction(vm, vm->instruction_->type_id, f, e);
+      Handler         handler           = [f, estimator](VM *vm) {
+        InvokeStaticMemberFunction(vm, vm->instruction_->data, vm->instruction_->type_id, f,
+                                   estimator);
       };
       auto compiler_setup_function = [type_index__, function_name, parameter_type_index_array,
-                                      return_type_index, handler](Compiler *compiler) {
+                                      return_type_index, handler,
+                                      static_charge](Compiler *compiler) {
+        compiler->CreateStaticMemberFunction(type_index__, function_name,
+                                             parameter_type_index_array, return_type_index, handler,
+                                             static_charge);
+      };
+      module_->AddCompilerSetupFunction(compiler_setup_function);
+      return *this;
+    }
+
+    template <typename... Ts>
+    ClassInterface &InternalCreateConstuctor(ChargeEstimator<Ts...> &&estimator,
+                                             ChargeAmount             static_charge)
+    {
+      TypeIndex const type_index__ = type_index_;
+      TypeIndexArray  parameter_type_index_array;
+      UnrollTypes<Ts...>::Unroll(parameter_type_index_array);
+      Handler handler = [estimator](VM *vm) {
+        InvokeConstructor<Type, Ts...>(vm, vm->instruction_->type_id, estimator);
+      };
+      auto compiler_setup_function = [type_index__, parameter_type_index_array, handler,
+                                      static_charge](Compiler *compiler) {
+        compiler->CreateConstructor(type_index__, parameter_type_index_array, handler,
+                                    static_charge);
+      };
+
+      module_->AddCompilerSetupFunction(compiler_setup_function);
+
+      if (sizeof...(Ts) == 0)
+      {
+        DefaultConstructorHandler h = details::CreateSerializeConstructor<Type, Ts...>::Apply();
+        module_->deserialization_constructors_.insert({type_index__, std::move(h)});
+      }
+
+      return *this;
+    }
+
+    template <typename ReturnType, typename MemberFunction, typename... Ts>
+    ClassInterface &InternalCreateMemberFunction(std::string const &function_name, MemberFunction f,
+                                                 ChargeEstimator<Ts...> &&estimator,
+                                                 vm::ChargeAmount         static_charge)
+    {
+      TypeIndex const type_index__ = type_index_;
+      TypeIndexArray  parameter_type_index_array;
+      UnrollParameterTypes<Ts...>::Unroll(parameter_type_index_array);
+      TypeIndex const return_type_index = TypeGetter<ReturnType>::GetTypeIndex();
+      Handler         handler           = [f, estimator](VM *vm) {
+        InvokeMemberFunction(vm, vm->instruction_->type_id, f, estimator);
+      };
+      auto compiler_setup_function = [type_index__, function_name, parameter_type_index_array,
+                                      return_type_index, handler,
+                                      static_charge](Compiler *compiler) {
         compiler->CreateMemberFunction(type_index__, function_name, parameter_type_index_array,
-                                       return_type_index, handler);
+                                       return_type_index, handler, static_charge);
       };
       module_->AddCompilerSetupFunction(compiler_setup_function);
       return *this;
@@ -273,54 +334,30 @@ public:
     TypeIndex type_index_;
   };
 
-  template <typename ReturnType, typename Estimator, typename... Ts>
-  void CreateFreeFunction(std::string const &name, ReturnType (*f)(VM *, Ts...),
-                          Estimator &&       estimator)
+  template <typename Functor, typename... Ts>
+  void CreateFreeFunctor(std::string const &name, Functor &&f, ChargeEstimator<Ts...> &&estimator)
   {
-    TypeIndexArray parameter_type_index_array;
-    UnrollParameterTypes<Ts...>::Unroll(parameter_type_index_array);
-    TypeIndex const return_type_index = TypeGetter<ReturnType>::GetTypeIndex();
-    Handler         handler           = [f, e{std::forward<Estimator>(estimator)}](VM *vm) {
-      InvokeFreeFunction(vm, vm->instruction_->type_id, f, e);
-    };
-    auto compiler_setup_function = [name, parameter_type_index_array, return_type_index,
-                                    handler](Compiler *compiler) {
-      compiler->CreateFreeFunction(name, parameter_type_index_array, return_type_index, handler);
-    };
-    AddCompilerSetupFunction(compiler_setup_function);
+    InternalCreateFreeFunctor<Functor, Ts...>(name, std::forward<Functor>(f), estimator, 0);
   }
 
-  /*
-  // Create a free function that takes an Int32 and a Float32 and returns a Float64
-  auto handler = [](fetch::vm::VM*, int32_t i, float f)
+  template <typename Functor>
+  void CreateFreeFunctor(std::string const &name, Functor &&f, ChargeAmount charge)
   {
-    return double(float(i) + f);
-  };
-  auto estimator = [](fetch::vm::VM*, int32_t i, float f) -> VM::ChargeAmount
-  {
-    return double(float(i) + f);
-  };
-  module.CreateFreeFunction("myfunc", std::move(handler), std::move(estimator));
-  */
-  template <typename Functor, typename Estimator>
-  void CreateFreeFunction(std::string const &name, Functor &&functor, Estimator &&estimator)
-  {
-    using ReturnType     = typename FunctorTraits<Functor>::return_type;
-    using SignatureTuple = typename FunctorTraits<Functor>::args_tuple_type;
-    using ParameterTuple = typename meta::RemoveFirstType<SignatureTuple>::type;
-    TypeIndexArray parameter_type_index_array;
-    UnrollTupleParameterTypes<ParameterTuple>::Unroll(parameter_type_index_array);
-    TypeIndex const return_type_index = TypeGetter<ReturnType>::GetTypeIndex();
+    InternalCreateFreeFunctor<Functor>(name, std::forward<Functor>(f), {}, charge);
+  }
 
-    Handler handler = [f{std::forward<Functor>(functor)},
-                       e{std::forward<Estimator>(estimator)}](VM *vm) {
-      InvokeFunctor(vm, vm->instruction_->type_id, f, e, ParameterTuple());
-    };
-    auto compiler_setup_function = [name, parameter_type_index_array, return_type_index,
-                                    handler](Compiler *compiler) {
-      compiler->CreateFreeFunction(name, parameter_type_index_array, return_type_index, handler);
-    };
-    AddCompilerSetupFunction(compiler_setup_function);
+  template <typename ReturnType, typename... Ts>
+  void CreateFreeFunction(std::string const &      name, ReturnType (*f)(VM *, Ts...),
+                          ChargeEstimator<Ts...> &&estimator)
+  {
+    InternalCreateFreeFunction<ReturnType, Ts...>(name, f, estimator, 0);
+  }
+
+  template <typename ReturnType, typename... Ts>
+  void CreateFreeFunction(std::string const &name, ReturnType (*f)(VM *, Ts...),
+                          ChargeAmount       charge)
+  {
+    InternalCreateFreeFunction<ReturnType, Ts...>(name, f, {}, charge);
   }
 
   template <typename Type>
@@ -342,6 +379,58 @@ public:
   }
 
 private:
+  /*
+  // Create a free function that takes an Int32 and a Float32 and returns a Float64
+  auto handler = [](fetch::vm::VM*, int32_t i, float f)
+  {
+    return double(float(i) + f);
+  };
+  auto estimator = [](fetch::vm::VM*, int32_t i, float f) -> ChargeAmount
+  {
+    return double(float(i) + f);
+  };
+  module.CreateFreeFunction("myfunc", std::move(handler), std::move(estimator));
+  */
+  template <typename Functor, typename... Ts>
+  void InternalCreateFreeFunctor(std::string const &name, Functor &&functor,
+                                 ChargeEstimator<Ts...> &&estimator, ChargeAmount static_charge)
+  {
+    using ReturnType     = typename FunctorTraits<Functor>::return_type;
+    using SignatureTuple = typename FunctorTraits<Functor>::args_tuple_type;
+    using ParameterTuple = typename meta::RemoveFirstType<SignatureTuple>::type;
+    TypeIndexArray parameter_type_index_array;
+    UnrollTupleParameterTypes<ParameterTuple>::Unroll(parameter_type_index_array);
+    TypeIndex const return_type_index = TypeGetter<ReturnType>::GetTypeIndex();
+
+    Handler handler = [f{std::forward<Functor>(functor)}, estimator](VM *vm) {
+      InvokeFunctor(vm, vm->instruction_->type_id, f, estimator, ParameterTuple());
+    };
+    auto compiler_setup_function = [name, parameter_type_index_array, return_type_index, handler,
+                                    static_charge](Compiler *compiler) {
+      compiler->CreateFreeFunction(name, parameter_type_index_array, return_type_index, handler,
+                                   static_charge);
+    };
+    AddCompilerSetupFunction(compiler_setup_function);
+  }
+
+  template <typename ReturnType, typename... Ts>
+  void InternalCreateFreeFunction(std::string const &      name, ReturnType (*f)(VM *, Ts...),
+                                  ChargeEstimator<Ts...> &&estimator, ChargeAmount static_charge)
+  {
+    TypeIndexArray parameter_type_index_array;
+    UnrollParameterTypes<Ts...>::Unroll(parameter_type_index_array);
+    TypeIndex const return_type_index = TypeGetter<ReturnType>::GetTypeIndex();
+    Handler         handler           = [f, estimator](VM *vm) {
+      InvokeFreeFunction(vm, vm->instruction_->type_id, f, estimator);
+    };
+    auto compiler_setup_function = [name, parameter_type_index_array, return_type_index, handler,
+                                    static_charge](Compiler *compiler) {
+      compiler->CreateFreeFunction(name, parameter_type_index_array, return_type_index, handler,
+                                   static_charge);
+    };
+    AddCompilerSetupFunction(compiler_setup_function);
+  }
+
   void CompilerSetup(Compiler *compiler)
   {
     for (auto const &compiler_setup_function : compiler_setup_functions_)
