@@ -28,9 +28,9 @@ template <typename ReturnType, typename FreeFunction, typename... Ts>
 struct FreeFunctionInvokerHelper
 {
   static void Invoke(VM *vm, int sp_offset, TypeId return_type_id, FreeFunction f,
-                     ChargeEstimator<Ts...> const &e, Ts &&... parameters)
+                     ChargeEstimator<Ts...> const &e, Ts const &... parameters)
   {
-    if (EstimateCharge(vm, e, parameters...))
+    if (EstimateCharge(vm, e/*, parameters...*/))
     {
       ReturnType result((*f)(vm, parameters...));
       StackSetter<ReturnType>::Set(vm, sp_offset, std::move(result), return_type_id);
@@ -43,9 +43,9 @@ template <typename FreeFunction, typename... Ts>
 struct FreeFunctionInvokerHelper<void, FreeFunction, Ts...>
 {
   static void Invoke(VM *vm, int sp_offset, TypeId /* return_type_id */, FreeFunction f,
-                     ChargeEstimator<Ts...> const &e, Ts &&... parameters)
+                     ChargeEstimator<Ts...> const &e, Ts const &... parameters)
   {
-    if (EstimateCharge(vm, e, parameters...))
+    if (EstimateCharge(vm, e /*, parameters...*/))
     {
       (*f)(vm, parameters...);
       vm->sp_ -= sp_offset;
@@ -62,41 +62,43 @@ struct FreeFunctionInvoker
   struct Invoker<PARAMETER_OFFSET, T, Ts...>
   {
     // Invoked on non-final parameter
-    static void Invoke(VM *vm, int sp_offset, TypeId return_type_id, FreeFunction f, Estimator &&e,
-                       Used &&... used)
+    static void Invoke(VM *vm, int sp_offset, TypeId return_type_id, FreeFunction f, Estimator const &e,
+                       Used const &... used)
     {
       using P = std::decay_t<T>;
-      P parameter(StackGetter<P>::Get(vm, PARAMETER_OFFSET));
       using InvokerType =
           typename FreeFunctionInvoker<ReturnType, FreeFunction, Estimator, Used...,
                                        T>::template Invoker<PARAMETER_OFFSET - 1, Ts...>;
-      InvokerType::Invoke(vm, sp_offset, return_type_id, f, std::forward<Estimator>(e),
-                          std::forward<Used...>(used)..., parameter);
+
+      InvokerType::Invoke(vm, sp_offset, return_type_id, f, e,
+                          used..., StackGetter<P>::Get(vm, PARAMETER_OFFSET));
     }
   };
+
   template <int PARAMETER_OFFSET, typename T>
   struct Invoker<PARAMETER_OFFSET, T>
   {
     // Invoked on final parameter
-    static void Invoke(VM *vm, int sp_offset, TypeId return_type_id, FreeFunction f, Estimator &&e,
-                       Used &&... used)
+    static void Invoke(VM *vm, int sp_offset, TypeId return_type_id, FreeFunction f, Estimator const &e,
+                       Used const &... used)
     {
       using P = std::decay_t<T>;
-      P parameter(StackGetter<P>::Get(vm, PARAMETER_OFFSET));
       using InvokerType =
-          FreeFunctionInvokerHelper<ReturnType, FreeFunction, Estimator, Used..., T>;
-      InvokerType::Invoke(vm, sp_offset, return_type_id, f, std::forward<Estimator>(e),
-                          std::forward<Used...>(used)..., parameter);
+          FreeFunctionInvokerHelper<ReturnType, FreeFunction, Used..., T>;
+
+      InvokerType::Invoke(vm, sp_offset, return_type_id, f, e,
+                          used..., StackGetter<P>::Get(vm, PARAMETER_OFFSET));
     }
   };
+
   template <int PARAMETER_OFFSET>
   struct Invoker<PARAMETER_OFFSET>
   {
     // Invoked on no parameters
-    static void Invoke(VM *vm, int sp_offset, TypeId return_type_id, FreeFunction f, Estimator &&e)
+    static void Invoke(VM *vm, int sp_offset, TypeId return_type_id, FreeFunction f, Estimator const &e)
     {
-      using InvokerType = FreeFunctionInvokerHelper<ReturnType, FreeFunction, Estimator>;
-      InvokerType::Invoke(vm, sp_offset, return_type_id, f, std::forward<Estimator>(e));
+      using InvokerType = FreeFunctionInvokerHelper<ReturnType, FreeFunction>;
+      InvokerType::Invoke(vm, sp_offset, return_type_id, f, e);
     }
   };
 };
@@ -111,7 +113,7 @@ void InvokeFreeFunction(VM *vm, TypeId return_type_id, ReturnType (*f)(VM *, Ts.
   using FreeFunction                   = ReturnType (*)(VM *, Ts...);
   using FreeFunctionInvoker =
       typename FreeFunctionInvoker<ReturnType, FreeFunction,
-                                   decltype(e)>::template Invoker<first_parameter_offset, Ts...>;
+          ChargeEstimator<Ts...>>::template Invoker<first_parameter_offset, Ts...>;
   FreeFunctionInvoker::Invoke(vm, sp_offset, return_type_id, f, e);
 }
 

@@ -28,9 +28,9 @@ template <typename ReturnType, typename Functor, typename... Ts>
 struct FunctorInvokerHelper
 {
   static void Invoke(VM *vm, int sp_offset, TypeId return_type_id, Functor &&functor,
-                     ChargeEstimator<Ts...> const &e, Ts &&... parameters)
+                     ChargeEstimator<Ts...> const &e, Ts const &... parameters)
   {
-    if (EstimateCharge(vm, e, parameters...))
+    if (EstimateCharge(vm, e/*, parameters...*/))
     {
       ReturnType result(functor(vm, parameters...));
       StackSetter<ReturnType>::Set(vm, sp_offset, std::move(result), return_type_id);
@@ -43,9 +43,9 @@ template <typename Functor, typename... Ts>
 struct FunctorInvokerHelper<void, Functor, Ts...>
 {
   static void Invoke(VM *vm, int sp_offset, TypeId /* return_type_id */, Functor &&functor,
-                     ChargeEstimator<Ts...> const &e, Ts &&... parameters)
+                     ChargeEstimator<Ts...> const &e, Ts const &... parameters)
   {
-    if (EstimateCharge(vm, e, parameters...))
+    if (EstimateCharge(vm, e/*, parameters...*/))
     {
       functor(vm, parameters...);
       vm->sp_ -= sp_offset;
@@ -63,14 +63,14 @@ struct FunctorInvoker
   {
     // Invoked on non-final parameter
     static void Invoke(VM *vm, int sp_offset, TypeId return_type_id, Functor &&functor,
-                       Estimator &&e, Used &&... used)
+                       Estimator const &e, Used const &... used)
     {
       using P = std::decay_t<T>;
       P parameter(StackGetter<P>::Get(vm, PARAMETER_OFFSET));
       using InvokerType = typename FunctorInvoker<ReturnType, Functor, Estimator, Used...,
                                                   T>::template Invoker<PARAMETER_OFFSET - 1, Ts...>;
       InvokerType::Invoke(vm, sp_offset, return_type_id, std::forward<Functor>(functor),
-                          std::forward<Estimator>(e), used..., parameter);
+                          e, used..., parameter);
     }
   };
   template <int PARAMETER_OFFSET, typename T>
@@ -78,13 +78,13 @@ struct FunctorInvoker
   {
     // Invoked on final parameter
     static void Invoke(VM *vm, int sp_offset, TypeId return_type_id, Functor &&functor,
-                       Estimator &&e, Used &&... used)
+                       Estimator const &e, Used const &... used)
     {
       using P = std::decay_t<T>;
       P parameter(StackGetter<P>::Get(vm, PARAMETER_OFFSET));
-      using InvokerType = FunctorInvokerHelper<ReturnType, Functor, Estimator, Used..., T>;
+      using InvokerType = FunctorInvokerHelper<ReturnType, Functor, Used..., T>;
       InvokerType::Invoke(vm, sp_offset, return_type_id, std::forward<Functor>(functor),
-                          std::forward<Estimator>(e), std::forward<Used...>(used)..., parameter);
+                          e, used..., parameter);
     }
   };
   template <int PARAMETER_OFFSET>
@@ -92,11 +92,10 @@ struct FunctorInvoker
   {
     // Invoked on no parameters
     static void Invoke(VM *vm, int sp_offset, TypeId return_type_id, Functor &&functor,
-                       Estimator &&e)
+                       Estimator const &e)
     {
-      using InvokerType = FunctorInvokerHelper<ReturnType, Functor, Estimator>;
-      InvokerType::Invoke(vm, sp_offset, return_type_id, std::forward<Functor>(functor),
-                          std::forward<Estimator>(e));
+      using InvokerType = FunctorInvokerHelper<ReturnType, Functor>;
+      InvokerType::Invoke(vm, sp_offset, return_type_id, std::forward<Functor>(functor), e);
     }
   };
 };
@@ -111,7 +110,7 @@ void InvokeFunctor(VM *vm, TypeId return_type_id, Functor &&functor,
   constexpr int sp_offset              = num_parameters - IsResult<ReturnType>::value;
   using FunctorInvoker =
       typename FunctorInvoker<ReturnType, Functor,
-                              decltype(e)>::template Invoker<first_parameter_offset, Ts...>;
+          ChargeEstimator<Ts...>>::template Invoker<first_parameter_offset, Ts...>;
   FunctorInvoker::Invoke(vm, sp_offset, return_type_id, std::forward<Functor>(functor), e);
 }
 

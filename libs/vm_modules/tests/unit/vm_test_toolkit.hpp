@@ -44,6 +44,7 @@ using fetch::vm::Compiler;
 using fetch::vm::Module;
 using fetch::vm::Variant;
 using fetch::vm_modules::VMFactory;
+using fetch::vm::ChargeAmount;
 
 using ExecutablePtr = std::unique_ptr<Executable>;
 using CompilerPtr   = std::unique_ptr<Compiler>;

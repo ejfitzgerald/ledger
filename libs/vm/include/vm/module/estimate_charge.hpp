@@ -31,12 +31,12 @@ namespace vm {
  * @return false if executing the opcode would exceed the specified charge limit; true otherwise.
  */
 template <typename... Ts>
-bool EstimateCharge(VM *const vm, ChargeEstimator<Ts...> const &e, Ts &&... parameters)
+bool EstimateCharge(VM *const vm, ChargeEstimator<Ts...> const &e/*, Ts const &... parameters*/)
 {
   if (e)
   {
     // compute the estimate for this function invocation
-    auto const charge_estimate = e(vm, parameters...);
+    auto const charge_estimate = 1 /*e(vm, parameters...)*/;
 
     vm->IncreaseChargeTotal(charge_estimate);
 

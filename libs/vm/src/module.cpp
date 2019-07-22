@@ -176,49 +176,40 @@ fixed_point::fp64_t toFixed64(VM * /* vm */, AnyPrimitive const &from)
 
 Module::Module()
 {
-  CreateFreeFunction("toInt8", &toInt8, 1);
-  CreateFreeFunction("toUInt8", &toUInt8, 1);
-  CreateFreeFunction("toInt16", &toInt16, 1);
-  CreateFreeFunction("toUInt16", &toUInt16, 1);
-  CreateFreeFunction("toInt32", &toInt32, 1);
-  CreateFreeFunction("toUInt32", &toUInt32, 1);
-  CreateFreeFunction("toInt64", &toInt64, 1);
-  CreateFreeFunction("toUInt64", &toUInt64, 1);
-  CreateFreeFunction("toFloat32", &toFloat32, 1);
-  CreateFreeFunction("toFloat64", &toFloat64, 1);
-  CreateFreeFunction("toFixed32", &toFixed32, 1);
-  CreateFreeFunction("toFixed64", &toFixed64, 1);
+  static constexpr uint64_t DEFAULT_CHARGE = 1;
 
-  auto const imatrix_ctor_estimator   = 1;
-  auto const imatrix_getter_estimator = 1;
-  auto const imatrix_setter_estimator = 1;
+  CreateFreeFunction("toInt8", &toInt8, DEFAULT_CHARGE);
+  CreateFreeFunction("toUInt8", &toUInt8, DEFAULT_CHARGE);
+  CreateFreeFunction("toInt16", &toInt16, DEFAULT_CHARGE);
+  CreateFreeFunction("toUInt16", &toUInt16, DEFAULT_CHARGE);
+  CreateFreeFunction("toInt32", &toInt32, DEFAULT_CHARGE);
+  CreateFreeFunction("toUInt32", &toUInt32, DEFAULT_CHARGE);
+  CreateFreeFunction("toInt64", &toInt64, DEFAULT_CHARGE);
+  CreateFreeFunction("toUInt64", &toUInt64, DEFAULT_CHARGE);
+  CreateFreeFunction("toFloat32", &toFloat32, DEFAULT_CHARGE);
+  CreateFreeFunction("toFloat64", &toFloat64, DEFAULT_CHARGE);
+  CreateFreeFunction("toFixed32", &toFixed32, DEFAULT_CHARGE);
+  CreateFreeFunction("toFixed64", &toFixed64, DEFAULT_CHARGE);
 
   GetClassInterface<IMatrix>()
-      .CreateConstuctor<int32_t, int32_t>(std::move(imatrix_ctor_estimator))
-      .EnableIndexOperator<decltype(imatrix_getter_estimator), decltype(imatrix_setter_estimator),
-                           AnyInteger, AnyInteger, TemplateParameter1>(
-          std::move(imatrix_getter_estimator), std::move(imatrix_setter_estimator))
+      .CreateConstuctor<int32_t, int32_t>(DEFAULT_CHARGE)
+      .EnableIndexOperator<AnyInteger, AnyInteger, TemplateParameter1>(DEFAULT_CHARGE,DEFAULT_CHARGE)
       .CreateInstantiationType<Matrix<double>>()
       .CreateInstantiationType<Matrix<float>>();
 
-  auto const iarray_ctor_estimator   = 1;
-  auto const iarray_getter_estimator = 1;
-  auto const iarray_setter_estimator = 1;
   GetClassInterface<IArray>()
-      .CreateConstuctor<int32_t>(std::move(iarray_ctor_estimator))
+      .CreateConstuctor<int32_t>(DEFAULT_CHARGE)
       .CreateSerializeDefaultConstuctor<int32_t>(static_cast<int32_t>(0))
-      .CreateMemberFunction("append", &IArray::Append, 1)
-      .CreateMemberFunction("count", &IArray::Count, 1)
-      .CreateMemberFunction("erase", &IArray::Erase, 1)
-      .CreateMemberFunction("extend", &IArray::Extend, 1)
-      .CreateMemberFunction("popBack", &IArray::PopBackOne, 1)
-      .CreateMemberFunction("popBack", &IArray::PopBackMany, 1)
-      .CreateMemberFunction("popFront", &IArray::PopFrontOne, 1)
-      .CreateMemberFunction("popFront", &IArray::PopFrontMany, 1)
-      .CreateMemberFunction("reverse", &IArray::Reverse, 1)
-      .EnableIndexOperator<decltype(iarray_getter_estimator), decltype(iarray_setter_estimator),
-                           AnyInteger, TemplateParameter1>(std::move(iarray_getter_estimator),
-                                                           std::move(iarray_setter_estimator))
+      .CreateMemberFunction("append", &IArray::Append, DEFAULT_CHARGE)
+      .CreateMemberFunction("count", &IArray::Count, DEFAULT_CHARGE)
+      .CreateMemberFunction("erase", &IArray::Erase, DEFAULT_CHARGE)
+      .CreateMemberFunction("extend", &IArray::Extend, DEFAULT_CHARGE)
+      .CreateMemberFunction("popBack", &IArray::PopBackOne, DEFAULT_CHARGE)
+      .CreateMemberFunction("popBack", &IArray::PopBackMany, DEFAULT_CHARGE)
+      .CreateMemberFunction("popFront", &IArray::PopFrontOne, DEFAULT_CHARGE)
+      .CreateMemberFunction("popFront", &IArray::PopFrontMany, DEFAULT_CHARGE)
+      .CreateMemberFunction("reverse", &IArray::Reverse, DEFAULT_CHARGE)
+      .EnableIndexOperator<AnyInteger, TemplateParameter1>(DEFAULT_CHARGE, DEFAULT_CHARGE)
       .CreateInstantiationType<Array<bool>>()
       .CreateInstantiationType<Array<int8_t>>()
       .CreateInstantiationType<Array<uint8_t>>()
@@ -237,78 +228,68 @@ Module::Module()
 
   GetClassInterface<String>()
       .CreateSerializeDefaultConstuctor<>()
-      .CreateMemberFunction("find", &String::Find, 1)
-      .CreateMemberFunction("length", &String::Length, 1)
-      .CreateMemberFunction("reverse", &String::Reverse, 1)
-      .CreateMemberFunction("split", &String::Split, 1)
-      .CreateMemberFunction("substr", &String::Substring, 1)
-      .CreateMemberFunction("trim", &String::Trim, 1);
+      .CreateMemberFunction("find", &String::Find, DEFAULT_CHARGE)
+      .CreateMemberFunction("length", &String::Length, DEFAULT_CHARGE)
+      .CreateMemberFunction("reverse", &String::Reverse, DEFAULT_CHARGE)
+      .CreateMemberFunction("split", &String::Split, DEFAULT_CHARGE)
+      .CreateMemberFunction("substr", &String::Substring, DEFAULT_CHARGE)
+      .CreateMemberFunction("trim", &String::Trim, DEFAULT_CHARGE);
 
-  auto const imap_ctor_estimator   = 1;
-  auto const imap_getter_estimator = 1;
-  auto const imap_setter_estimator = 1;
   GetClassInterface<IMap>()
-      .CreateConstuctor<>(std::move(imap_ctor_estimator))
-      .CreateMemberFunction("count", &IMap::Count, 1)
-      .EnableIndexOperator<decltype(imap_getter_estimator), decltype(imap_setter_estimator),
-                           TemplateParameter1, TemplateParameter2>(
-          std::move(imap_getter_estimator), std::move(imap_setter_estimator));
+      .CreateConstuctor<>(DEFAULT_CHARGE)
+      .CreateMemberFunction("count", &IMap::Count, DEFAULT_CHARGE)
+      .EnableIndexOperator<TemplateParameter1, TemplateParameter2>(DEFAULT_CHARGE,DEFAULT_CHARGE);
 
-  auto const address_ctor_estimator = 1;
   GetClassInterface<Address>()
       .CreateSerializeDefaultConstuctor<>()
-      .CreateConstuctor<Ptr<String>>(std::move(address_ctor_estimator))
-      .CreateMemberFunction("signedTx", &Address::HasSignedTx, 1);
+      .CreateConstuctor<Ptr<String>>(DEFAULT_CHARGE)
+      .CreateMemberFunction("signedTx", &Address::HasSignedTx, DEFAULT_CHARGE);
 
-  auto const istate_ctor_estimator1 = 1;
-  auto const istate_ctor_estimator2 = 1;
   GetClassInterface<IState>()
-      .CreateConstuctor<Ptr<String>>(std::move(istate_ctor_estimator1))
-      .CreateConstuctor<Ptr<Address>>(std::move(istate_ctor_estimator2))
-      .CreateMemberFunction("get", static_cast<TemplateParameter1 (IState::*)()>(&IState::Get), 1)
+      .CreateConstuctor<Ptr<String>>(DEFAULT_CHARGE)
+      .CreateConstuctor<Ptr<Address>>(DEFAULT_CHARGE)
+      .CreateMemberFunction("get", static_cast<TemplateParameter1 (IState::*)()>(&IState::Get), DEFAULT_CHARGE)
       .CreateMemberFunction(
           "get",
-          static_cast<TemplateParameter1 (IState::*)(TemplateParameter1 const &)>(&IState::Get), 1)
-      .CreateMemberFunction("set", &IState::Set, 1)
-      .CreateMemberFunction("existed", &IState::Existed, 1);
+          static_cast<TemplateParameter1 (IState::*)(TemplateParameter1 const &)>(&IState::Get), DEFAULT_CHARGE)
+      .CreateMemberFunction("set", &IState::Set, DEFAULT_CHARGE)
+      .CreateMemberFunction("existed", &IState::Existed, DEFAULT_CHARGE);
 
-  auto const ishardedstate_ctor_estimator1 = 1;
-  auto const ishardedstate_ctor_estimator2 = 1;
   GetClassInterface<IShardedState>()
-      .CreateConstuctor<Ptr<String>>(std::move(ishardedstate_ctor_estimator1))
-      .CreateConstuctor<Ptr<Address>>(std::move(ishardedstate_ctor_estimator2))
+      .CreateConstuctor<Ptr<String>>(DEFAULT_CHARGE)
+      .CreateConstuctor<Ptr<Address>>(DEFAULT_CHARGE)
       // TODO (issue 1172): This will be enabled once the issue is resolved
       //.EnableIndexOperator<Ptr<String>, TemplateParameter1>()
       //.EnableIndexOperator<Ptr<Address>, TemplateParameter1>();
       .CreateMemberFunction("get",
                             static_cast<TemplateParameter1 (IShardedState::*)(Ptr<String> const &)>(
                                 &IShardedState::Get),
-                            1)
+                            DEFAULT_CHARGE)
       .CreateMemberFunction(
           "get",
           static_cast<TemplateParameter1 (IShardedState::*)(Ptr<Address> const &)>(
               &IShardedState::Get),
-          1)
+          DEFAULT_CHARGE)
       .CreateMemberFunction(
           "get",
           static_cast<TemplateParameter1 (IShardedState::*)(
               Ptr<String> const &, TemplateParameter1 const &)>(&IShardedState::Get),
-          1)
+          DEFAULT_CHARGE)
       .CreateMemberFunction(
           "get",
           static_cast<TemplateParameter1 (IShardedState::*)(
               Ptr<Address> const &, TemplateParameter1 const &)>(&IShardedState::Get),
-          1)
+          DEFAULT_CHARGE)
       .CreateMemberFunction(
           "set",
           static_cast<void (IShardedState::*)(Ptr<String> const &, TemplateParameter1 const &)>(
               &IShardedState::Set),
-          1)
+          DEFAULT_CHARGE)
       .CreateMemberFunction(
           "set",
           static_cast<void (IShardedState::*)(Ptr<Address> const &, TemplateParameter1 const &)>(
               &IShardedState::Set),
-          1);
+          DEFAULT_CHARGE);
 }
 
 }  // namespace vm

@@ -28,9 +28,9 @@ template <typename Type, typename ReturnType, typename MemberFunction, typename.
 struct MemberFunctionInvokerHelper
 {
   static void Invoke(VM *vm, int sp_offset, TypeId return_type_id, MemberFunction f,
-                     ChargeEstimator<Ts...> const &e, Ts &&... parameters)
+                     ChargeEstimator<Ts...> const &e, Ts const &... parameters)
   {
-    if (EstimateCharge(vm, e, parameters...))
+    if (EstimateCharge(vm, e/*, parameters...*/))
     {
       Variant & v      = vm->stack_[vm->sp_ - sp_offset];
       Ptr<Type> object = v.object;
@@ -50,9 +50,9 @@ template <typename Type, typename MemberFunction, typename... Ts>
 struct MemberFunctionInvokerHelper<Type, void, MemberFunction, Ts...>
 {
   static void Invoke(VM *vm, int sp_offset, TypeId /* return_type_id */, MemberFunction f,
-                     ChargeEstimator<Ts...> const &e, Ts &&... parameters)
+                     ChargeEstimator<Ts...> const &e, Ts const &... parameters)
   {
-    if (EstimateCharge(vm, e, parameters...))
+    if (EstimateCharge(vm, e/*, parameters...*/))
     {
       Variant & v      = vm->stack_[vm->sp_ - sp_offset];
       Ptr<Type> object = v.object;
@@ -79,15 +79,14 @@ struct MemberFunctionInvoker
   {
     // Invoked on non-final parameter
     static void Invoke(VM *vm, int sp_offset, TypeId return_type_id, MemberFunction f,
-                       Estimator &&e, Used &&... used)
+                       Estimator const &e, Used const &... used)
     {
       using P = std::decay_t<T>;
-      P parameter(StackGetter<P>::Get(vm, PARAMETER_OFFSET));
       using InvokerType =
           typename MemberFunctionInvoker<Type, ReturnType, MemberFunction, Estimator, Used...,
                                          T>::template Invoker<PARAMETER_OFFSET - 1, Ts...>;
-      InvokerType::Invoke(vm, sp_offset, return_type_id, f, std::forward<Estimator>(e),
-                          std::forward<Used...>(used)..., parameter);
+      InvokerType::Invoke(vm, sp_offset, return_type_id, f, e,
+                          used..., StackGetter<P>::Get(vm, PARAMETER_OFFSET));
     }
   };
   template <int PARAMETER_OFFSET, typename T>
@@ -95,14 +94,14 @@ struct MemberFunctionInvoker
   {
     // Invoked on final parameter
     static void Invoke(VM *vm, int sp_offset, TypeId return_type_id, MemberFunction f,
-                       Estimator &&e, Used &&... used)
+                       Estimator const &e, Used const &... used)
     {
       using P = std::decay_t<T>;
-      P parameter(StackGetter<P>::Get(vm, PARAMETER_OFFSET));
       using InvokerType =
-          MemberFunctionInvokerHelper<Type, ReturnType, MemberFunction, Estimator, Used..., T>;
-      InvokerType::Invoke(vm, sp_offset, return_type_id, f, std::forward<Estimator>(e),
-                          std::forward<Used...>(used)..., parameter);
+          MemberFunctionInvokerHelper<Type, ReturnType, MemberFunction, Used..., T>;
+
+      InvokerType::Invoke(vm, sp_offset, return_type_id, f, e,
+                          used..., StackGetter<P>::Get(vm, PARAMETER_OFFSET));
     }
   };
   template <int PARAMETER_OFFSET>
@@ -110,10 +109,10 @@ struct MemberFunctionInvoker
   {
     // Invoked on no parameters
     static void Invoke(VM *vm, int sp_offset, TypeId return_type_id, MemberFunction f,
-                       Estimator &&e)
+                       Estimator const &e)
     {
-      using InvokerType = MemberFunctionInvokerHelper<Type, ReturnType, MemberFunction, Estimator>;
-      InvokerType::Invoke(vm, sp_offset, return_type_id, f, std::forward<Estimator>(e));
+      using InvokerType = MemberFunctionInvokerHelper<Type, ReturnType, MemberFunction>;
+      InvokerType::Invoke(vm, sp_offset, return_type_id, f, e);
     }
   };
 };
@@ -142,7 +141,7 @@ void InvokeMemberFunction(VM *vm, TypeId return_type_id, ReturnType (Type::*f)(T
   using MemberFunction                 = ReturnType (Type::*)(Ts...) const;
   using MemberFunctionInvoker =
       typename MemberFunctionInvoker<Type, ReturnType, MemberFunction,
-                                     decltype(e)>::template Invoker<first_parameter_offset, Ts...>;
+          ChargeEstimator<Ts...>>::template Invoker<first_parameter_offset, Ts...>;
   MemberFunctionInvoker::Invoke(vm, sp_offset, return_type_id, f, e);
 }
 

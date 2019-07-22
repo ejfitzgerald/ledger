@@ -32,14 +32,20 @@ using fetch::vm::VM;
 ChargeAmount const low_charge_limit  = 10;
 ChargeAmount const high_charge_limit = 1000;
 
-auto const affordable_estimator = [](VM *, uint8_t x, uint16_t y) -> ChargeAmount {
+ChargeAmount AffordableEstimator(VM *, uint8_t x, uint16_t y)
+{
   return static_cast<ChargeAmount>(low_charge_limit + x * y);
-};
-auto const expensive_estimator = [](VM *, uint8_t x, uint16_t y) -> ChargeAmount {
-  return static_cast<ChargeAmount>(high_charge_limit + x * y);
-};
+}
 
-auto const handler = [](VM *, uint8_t, uint16_t) -> bool { return true; };
+ChargeAmount ExpensiveEstimator(VM *, uint8_t x, uint16_t y)
+{
+  return static_cast<ChargeAmount>(high_charge_limit + x * y);
+}
+
+bool Handler(VM *, uint8_t, uint16_t)
+{
+  return true;
+}
 
 class VmChargeTests : public ::testing::Test
 {
@@ -92,7 +98,7 @@ TEST_F(VmChargeTests, execution_fails_when_charge_limit_exceeded)
 
 TEST_F(VmChargeTests, functor_bind_with_charge_estimate_execution_fails_when_limit_exceeded)
 {
-  toolkit.module().CreateFreeFunction("tooExpensive", std::move(handler), expensive_estimator);
+  toolkit.module().CreateFreeFunction("tooExpensive", &Handler, fetch::vm::ChargeEstimator<uint8_t, uint16_t>{&ExpensiveEstimator});
 
   static char const *TEXT = R"(
     function main()
@@ -107,7 +113,7 @@ TEST_F(VmChargeTests, functor_bind_with_charge_estimate_execution_fails_when_lim
 
 TEST_F(VmChargeTests, functor_bind_with_charge_estimate_execution_succeeds_when_limit_obeyed)
 {
-  toolkit.module().CreateFreeFunction("affordable", std::move(handler), affordable_estimator);
+  toolkit.module().CreateFreeFunction("affordable", &Handler, fetch::vm::ChargeEstimator<uint8_t, uint16_t>{&AffordableEstimator});
 
   static char const *TEXT = R"(
     function main()
@@ -196,8 +202,7 @@ TEST_F(VmChargeTests, member_function_bind_with_charge_estimate_execution_fails_
   toolkit.module()
       .CreateClassType<CustomType>("CustomType")
       .CreateConstuctor<>(1)
-      .CreateMemberFunction("tooExpensive", &CustomType::TooExpensive,
-                            std::move(expensive_estimator));
+      .CreateMemberFunction("tooExpensive", &CustomType::TooExpensive, fetch::vm::ChargeEstimator<uint8_t, uint16_t>{&ExpensiveEstimator});
 
   static char const *TEXT = R"(
     function main()
@@ -216,7 +221,7 @@ TEST_F(VmChargeTests,
   toolkit.module()
       .CreateClassType<CustomType>("CustomType")
       .CreateConstuctor<>(1)
-      .CreateMemberFunction("affordable", &CustomType::Affordable, std::move(affordable_estimator));
+      .CreateMemberFunction("affordable", &CustomType::Affordable, fetch::vm::ChargeEstimator<uint8_t, uint16_t>{&AffordableEstimator});
 
   static char const *TEXT = R"(
     function main()
@@ -235,7 +240,7 @@ TEST_F(VmChargeTests,
   toolkit.module()
       .CreateClassType<CustomType>("CustomType")
       .CreateStaticMemberFunction("tooExpensive", &CustomType::TooExpensiveStatic,
-                                  std::move(expensive_estimator));
+                                  fetch::vm::ChargeEstimator<uint8_t, uint16_t>{&ExpensiveEstimator});
 
   static char const *TEXT = R"(
     function main()
@@ -253,7 +258,7 @@ TEST_F(VmChargeTests,
   toolkit.module()
       .CreateClassType<CustomType>("CustomType")
       .CreateStaticMemberFunction("affordable", &CustomType::AffordableStatic,
-                                  std::move(affordable_estimator));
+                                  fetch::vm::ChargeEstimator<uint8_t, uint16_t>{&AffordableEstimator});
 
   static char const *TEXT = R"(
     function main()
