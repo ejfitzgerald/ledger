@@ -18,15 +18,32 @@
 
 #include "in_memory_storage.hpp"
 
-#include <stdexcept>
+#include <chrono>
+#include <thread>
+#include <iostream>
 
 using Document  = InMemoryStorageUnit::Document;
 using Keys      = InMemoryStorageUnit::Keys;
 using TxLayouts = InMemoryStorageUnit::TxLayouts;
 using Hash      = InMemoryStorageUnit::Hash;
 
+static void Delay(std::size_t delay)
+{
+  if (delay)
+  {
+    std::this_thread::sleep_for(std::chrono::microseconds{delay});
+  }
+}
+
+InMemoryStorageUnit::InMemoryStorageUnit(std::size_t delay_us)
+  : delay_us_{delay_us}
+{
+}
+
 Document InMemoryStorageUnit::Get(ResourceAddress const &key)
 {
+  Delay(delay_us_);
+
   Document ret;
 
   auto it = state_->find(key.id());
@@ -44,6 +61,8 @@ Document InMemoryStorageUnit::Get(ResourceAddress const &key)
 
 Document InMemoryStorageUnit::GetOrCreate(ResourceAddress const &key)
 {
+  Delay(delay_us_);
+
   Document ret;
 
   auto it = state_->find(key.id());
@@ -65,11 +84,15 @@ Document InMemoryStorageUnit::GetOrCreate(ResourceAddress const &key)
 
 void InMemoryStorageUnit::Set(ResourceAddress const &key, StateValue const &value)
 {
+  Delay(delay_us_);
+
   (*state_)[key.id()] = value;
 }
 
 bool InMemoryStorageUnit::Lock(ShardIndex shard)
 {
+  Delay(delay_us_);
+
   bool success{false};
 
   auto it = locks_.find(shard);
@@ -84,6 +107,8 @@ bool InMemoryStorageUnit::Lock(ShardIndex shard)
 
 bool InMemoryStorageUnit::Unlock(ShardIndex shard)
 {
+  Delay(delay_us_);
+
   bool success{false};
 
   auto it = locks_.find(shard);
@@ -113,6 +138,8 @@ void InMemoryStorageUnit::AddTransaction(Transaction const &tx)
 
 bool InMemoryStorageUnit::GetTransaction(Digest const &digest, Transaction &tx)
 {
+  Delay(delay_us_);
+
   bool success{false};
 
   auto it = tx_store_.find(digest);
@@ -127,6 +154,8 @@ bool InMemoryStorageUnit::GetTransaction(Digest const &digest, Transaction &tx)
 
 bool InMemoryStorageUnit::HasTransaction(Digest const &digest)
 {
+  Delay(delay_us_);
+
   return tx_store_.find(digest) != tx_store_.end();
 }
 

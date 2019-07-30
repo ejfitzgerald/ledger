@@ -119,6 +119,7 @@ std::shared_ptr<ledger::DAGInterface> GenerateDAG(bool generate, std::string con
 }
 
 ledger::ShardConfigs GenerateShardsConfig(uint32_t num_lanes, uint16_t start_port,
+                                          uint32_t           verification_threads,
                                           std::string const &storage_path)
 {
   ledger::ShardConfigs configs(num_lanes);
@@ -134,9 +135,10 @@ ledger::ShardConfigs GenerateShardsConfig(uint32_t num_lanes, uint16_t start_por
     cfg.external_port     = start_port++;
     cfg.external_network_id =
         muddle::NetworkId{(static_cast<uint32_t>(i) & 0xFFFFFFu) | (uint32_t{'L'} << 24u)};
-    cfg.internal_identity   = std::make_shared<crypto::ECDSASigner>();
-    cfg.internal_port       = start_port++;
-    cfg.internal_network_id = muddle::NetworkId{"ISRD"};
+    cfg.internal_identity    = std::make_shared<crypto::ECDSASigner>();
+    cfg.internal_port        = start_port++;
+    cfg.internal_network_id  = muddle::NetworkId{"ISRD"};
+    cfg.verification_threads = verification_threads;
 
     auto const ext_identity = cfg.external_identity->identity().identifier();
     auto const int_identity = cfg.internal_identity->identity().identifier();
@@ -201,7 +203,8 @@ Constellation::Constellation(CertificatePtr certificate, Config config)
   , p2p_port_(LookupLocalPort(cfg_.manifest, ServiceType::CORE))
   , http_port_(LookupLocalPort(cfg_.manifest, ServiceType::HTTP))
   , lane_port_start_(LookupLocalPort(cfg_.manifest, ServiceType::LANE))
-  , shard_cfgs_{GenerateShardsConfig(config.num_lanes(), lane_port_start_, cfg_.db_prefix)}
+  , shard_cfgs_{GenerateShardsConfig(config.num_lanes(), lane_port_start_,
+                                     cfg_.verification_threads, cfg_.db_prefix)}
   , reactor_{"Reactor"}
   , network_manager_{"NetMgr", CalcNetworkManagerThreads(cfg_.num_lanes())}
   , http_network_manager_{"Http", HTTP_THREADS}

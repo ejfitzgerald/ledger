@@ -74,6 +74,7 @@ public:
   virtual void IssueCallForMissingTxs(DigestSet const &tx_set)       = 0;
   /// @}
 
+  virtual void PreCacheTx(DigestSet const &digests) = 0;
   virtual TxLayouts PollRecentTx(uint32_t) = 0;
 
   /// @name Revertible Document Store Interface

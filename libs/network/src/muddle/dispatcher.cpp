@@ -21,6 +21,8 @@
 #include "core/time/to_seconds.hpp"
 #include "network/muddle/dispatcher.hpp"
 #include "network/muddle/network_id.hpp"
+#include "telemetry/histogram.hpp"
+#include "telemetry/registry.hpp"
 #include "telemetry/counter.hpp"
 #include "telemetry/gauge.hpp"
 #include "telemetry/histogram.hpp"
@@ -30,6 +32,8 @@ namespace fetch {
 namespace muddle {
 namespace {
 
+using std::chrono::duration_cast;
+using std::chrono::microseconds;
 using telemetry::Registry;
 
 const std::chrono::seconds PROMISE_TIMEOUT{30};

@@ -38,6 +38,9 @@ namespace fetch {
 namespace miner {
 namespace {
 
+using ledger::DigestSet;
+using ledger::Block;
+
 /**
  * Clip the specified to the bounds: [min_value, max_value]
  *
@@ -51,6 +54,28 @@ template <typename T>
 T Clip3(T value, T min_value, T max_value)
 {
   return std::min(std::max(value, min_value), max_value);
+}
+
+/**
+ * Extract out the set of transactions digests which make up this block
+ *
+ * @param block The reference to the block to be processed
+ * @return The generated set of transaction digests
+ */
+DigestSet BuildDigestSet(Block const &block)
+{
+  DigestSet digests{};
+  digests.reserve(block.GetTransactionCount());
+
+  for (auto const &slice : block.body.slices)
+  {
+    for (auto const &layout : slice)
+    {
+      digests.emplace(layout.digest());
+    }
+  }
+
+  return digests;
 }
 
 }  // namespace
@@ -127,7 +152,7 @@ void BasicMiner::EnqueueTransaction(ledger::TransactionLayout const &layout)
  * @param num_lanes The number of lanes for the block
  * @param num_slices The number of slices for the block
  */
-void BasicMiner::GenerateBlock(Block &block, std::size_t num_lanes, std::size_t num_slices,
+DigestSet BasicMiner::GenerateBlock(Block &block, std::size_t num_lanes, std::size_t num_slices,
                                MainChain const &chain)
 {
   FETCH_LOCK(mining_pool_lock_);
@@ -209,8 +234,14 @@ void BasicMiner::GenerateBlock(Block &block, std::size_t num_lanes, std::size_t 
   std::size_t const remaining_transactions = mining_pool_.size();
   std::size_t const packed_transactions    = pool_size_before - remaining_transactions;
 
+  // calculate the digest set from the block. This can actually be built up during the packing but
+  // this can be added at another date.
+  auto digests = BuildDigestSet(block);
+
   FETCH_LOG_INFO(LOGGING_NAME, "Finished block packing (packed: ", packed_transactions,
                  " remaining: ", remaining_transactions, ")");
+
+  return digests;
 }
 
 /**

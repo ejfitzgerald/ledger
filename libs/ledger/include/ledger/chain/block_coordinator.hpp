@@ -326,6 +326,7 @@ private:
   Address         mining_address_;         ///< The miners address
   StateMachinePtr state_machine_;          ///< The main state machine for this service
   std::size_t     block_difficulty_;       ///< The number of leading zeros needed in the proof
+  uint32_t        log2_num_lanes_;         ///< The current log2 of the number of lanes
   std::size_t     num_lanes_;              ///< The current number of lanes
   std::size_t     num_slices_;             ///< The current number of slices
   Flag            mining_{false};          ///< Flag to signal if this node generating blocks
@@ -335,6 +336,7 @@ private:
   BlockPtr        current_block_{};        ///< The pointer to the current block (read only)
   NextBlockPtr    next_block_{};           ///< The next block being created (read / write)
   TxDigestSetPtr  pending_txs_{};          ///< The list of pending txs that are being waited on
+  DigestSet       completed_txs_{};        ///< The set of completed txs for this block
   PeriodicAction  tx_wait_periodic_;       ///< Periodic print for transaction waiting
   PeriodicAction  exec_wait_periodic_;     ///< Periodic print for execution
   PeriodicAction  syncing_periodic_;       ///< Periodic print for synchronisation

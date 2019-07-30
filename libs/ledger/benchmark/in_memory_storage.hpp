@@ -33,7 +33,7 @@ public:
   using DigestSet   = fetch::ledger::DigestSet;
 
   // Construction / Destruction
-  InMemoryStorageUnit()                            = default;
+  explicit InMemoryStorageUnit(std::size_t delay_us = 0);
   InMemoryStorageUnit(InMemoryStorageUnit const &) = delete;
   InMemoryStorageUnit(InMemoryStorageUnit &&)      = delete;
   ~InMemoryStorageUnit() override                  = default;
@@ -79,6 +79,8 @@ private:
   using StateSnapshotPtr = std::shared_ptr<StateSnapshot>;
   using StateSnapshots   = std::vector<StateSnapshotPtr>;
   using ShardLocks       = std::unordered_set<ShardIndex>;
+
+  std::size_t delay_us_{0};
 
   /// @name TX Information
   /// @{

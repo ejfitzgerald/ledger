@@ -17,6 +17,7 @@
 //
 //------------------------------------------------------------------------------
 
+#include "core/time/to_seconds.hpp"
 #include "core/byte_array/encoders.hpp"
 #include "core/mutex.hpp"
 #include "core/threading/synchronised_state.hpp"
@@ -29,6 +30,7 @@
 #include "telemetry/utils/timer.hpp"
 
 #include <map>
+#include <chrono>
 
 namespace fetch {
 namespace storage {
@@ -50,6 +52,7 @@ public:
     GET_OR_CREATE,
     LAZY_GET,
     SET,
+    SET_BULK,
 
     COMMIT,
     REVERT_TO_HASH,
@@ -87,6 +90,8 @@ public:
                                      "The histogram of get request durations"))
     , set_durations_(CreateHistogram(lane, "ledger_statedb_set_request_seconds",
                                      "The histogram of set request durations"))
+    , set_bulk_durations_(CreateHistogram(lane, "ledger_statedb_set_bulk_request_seconds",
+                                     "The histogram of set build request durations"))
     , lock_durations_(CreateHistogram(lane, "ledger_statedb_lock_request_seconds",
                                       "The histogram of lock request durations"))
     , unlock_durations_(CreateHistogram(lane, "ledger_statedb_unlock_request_seconds",
@@ -95,6 +100,7 @@ public:
     this->Expose(GET, this, &RevertibleDocumentStoreProtocol::Get);
     this->Expose(GET_OR_CREATE, this, &RevertibleDocumentStoreProtocol::GetOrCreate);
     this->Expose(SET, this, &RevertibleDocumentStoreProtocol::Set);
+    this->Expose(SET_BULK, this, &RevertibleDocumentStoreProtocol::SetBulk);
 
     // Functionality for hashing/state
     this->Expose(COMMIT, this, &RevertibleDocumentStoreProtocol::Commit);
@@ -138,6 +144,7 @@ public:
   bool LockResource(CallContext const &context)
   {
     telemetry::FunctionTimer const timer{*lock_durations_};
+
     if (!context.is_valid())
     {
       // TODO(issue 11): set exception number
@@ -169,6 +176,7 @@ public:
   bool UnlockResource(CallContext const &context)
   {
     telemetry::FunctionTimer const timer{*unlock_durations_};
+
     if (!context.is_valid())
     {
       throw serializers::SerializableException(  // TODO(issue 11): set exception number
@@ -240,6 +248,17 @@ private:
 
     doc_store_->Set(rid, data);
     set_count_->increment();
+  }
+  
+  void SetBulk(std::unordered_map<ResourceID, byte_array::ConstByteArray> const &updates)
+  {
+    telemetry::FunctionTimer const timer{*set_bulk_durations_};
+
+    for (auto const &element : updates)
+    {
+      doc_store_->Set(element.first, element.second);
+      set_count_->increment();
+    }
   }
 
   NewRevertibleDocumentStore::Hash Commit()
@@ -316,6 +335,7 @@ private:
   telemetry::CounterPtr   has_lock_count_;
   telemetry::HistogramPtr get_durations_;
   telemetry::HistogramPtr set_durations_;
+  telemetry::HistogramPtr set_bulk_durations_;
   telemetry::HistogramPtr lock_durations_;
   telemetry::HistogramPtr unlock_durations_;
 };

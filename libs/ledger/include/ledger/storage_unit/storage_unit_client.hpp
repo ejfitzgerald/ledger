@@ -22,6 +22,7 @@
 #include "core/service_ids.hpp"
 #include "crypto/merkle_tree.hpp"
 #include "ledger/shard_config.hpp"
+#include "ledger/chain/transaction.hpp"
 #include "ledger/storage_unit/lane_connectivity_details.hpp"
 #include "ledger/storage_unit/lane_identity.hpp"
 #include "ledger/storage_unit/lane_identity_protocol.hpp"
@@ -73,6 +74,10 @@ public:
   bool      GetTransaction(ConstByteArray const &digest, Transaction &tx) override;
   bool      HasTransaction(ConstByteArray const &digest) override;
   void      IssueCallForMissingTxs(DigestSet const &tx_set) override;
+
+  void PreCacheTx(DigestSet const &digests) override;
+
+
   TxLayouts PollRecentTx(uint32_t max_to_poll) override;
 
   Document GetOrCreate(ResourceAddress const &key) override;
@@ -81,6 +86,8 @@ public:
 
   Keys KeyDump() const override;
   void Reset() override;
+
+
 
   // state hash functions
   byte_array::ConstByteArray CurrentHash() override;
@@ -103,6 +110,15 @@ private:
   using MerkleTree           = crypto::MerkleTree;
   using PermanentMerkleStack = fetch::storage::ObjectStack<crypto::MerkleTree>;
   using Mutex                = fetch::mutex::Mutex;
+  using ShardStateCache      = std::unordered_map<storage::ResourceID, StateValue>;
+  using TxCache              = std::unordered_map<ConstByteArray, Transaction>;
+
+  struct ShardCacheElement
+  {
+    mutable Mutex   lock{__LINE__, __FILE__};
+    ShardStateCache state_cache;
+    TxCache         tx_cache;
+  };
 
   static constexpr char const *MERKLE_FILENAME_DOC   = "merkle_stack.db";
   static constexpr char const *MERKLE_FILENAME_INDEX = "merkle_stack_index.db";
@@ -112,11 +128,22 @@ private:
 
   bool HashInStack(Hash const &hash, uint64_t index);
 
+  // Cache Helpers
+  void AddToCache(storage::ResourceID const &resource, StateValue value);
+  bool LookupInCache(storage::ResourceID const &resource, StateValue& value) const;
+  bool LookupInCache(storage::ResourceID const &resource, Transaction& tx) const;
+  void FlushClientSideCache();
+
   /// @name Client Information
   /// @{
   AddressList const addresses_;
   uint32_t const    log2_num_lanes_ = 0;
   ClientPtr         rpc_client_;
+  /// @}
+
+  /// @name Client Side Block Cache
+  /// @{
+  std::vector<ShardCacheElement> client_side_cache_;
   /// @}
 
   /// @name State Hash Support

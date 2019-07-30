@@ -50,6 +50,7 @@ public:
   enum
   {
     GET = 0,
+    GET_BULK,
     SET,
     SET_BULK,
     HAS,
@@ -66,8 +67,11 @@ public:
                                      "The histogram of set operation durations in seconds")}
     , get_durations_{CreateHistogram(lane, "ledger_tx_store_get_duration",
                                      "The histogram of get operation durations in seconds")}
+    , get_bulk_durations_{CreateHistogram(lane, "ledger_tx_store_get_bulk_duration",
+                                     "The histogram of get bulk operation durations in seconds")}
   {
     this->Expose(GET, this, &self_type::Get);
+    this->Expose(GET_BULK, this, &self_type::GetBulk);
     this->Expose(SET, this, &self_type::Set);
     this->Expose(SET_BULK, this, &self_type::SetBulk);
     this->Expose(HAS, obj_store, &TransientObjectStore<T>::Has);
@@ -129,11 +133,33 @@ private:
     return ret;
   }
 
+  std::vector<T> GetBulk(std::vector<ResourceID> const &resources)
+  {
+    telemetry::FunctionTimer const timer{*get_bulk_durations_};
+
+    std::vector<T> responses(resources.size());
+
+    for (std::size_t i = 0, end = responses.size(); i < end; ++i)
+    {
+      if (!obj_store_->Get(resources[i], responses[i]))
+      {
+        throw std::runtime_error("Unable to lookup element across object store protocol");
+      }
+
+      // once we have retrieved a transaction from the core it is important that we persist it to disk
+      obj_store_->Confirm(resources[i]);
+      get_count_->increment();
+    }
+
+    return responses;
+  }
+
   TransientObjectStore<T> *obj_store_;
   telemetry::CounterPtr    set_count_;
   telemetry::CounterPtr    get_count_;
   telemetry::HistogramPtr  set_durations_;
   telemetry::HistogramPtr  get_durations_;
+  telemetry::HistogramPtr  get_bulk_durations_;
 };
 
 }  // namespace storage

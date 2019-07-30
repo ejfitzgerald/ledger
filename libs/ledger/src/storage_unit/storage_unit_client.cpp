@@ -65,6 +65,7 @@ StorageUnitClient::StorageUnitClient(MuddleEndpoint &muddle, ShardConfigs const 
   : addresses_(GenerateAddressList(shards))
   , log2_num_lanes_(log2_num_lanes)
   , rpc_client_{std::make_shared<Client>("STUC", muddle, SERVICE_LANE_CTRL, CHANNEL_RPC)}
+  , client_side_cache_(1u << log2_num_lanes)
   , current_merkle_{num_lanes()}
 {
   if (num_lanes() != shards.size())
@@ -80,6 +81,8 @@ StorageUnitClient::StorageUnitClient(MuddleEndpoint &muddle, ShardConfigs const 
 // Get the current hash of the world state (merkle tree root)
 byte_array::ConstByteArray StorageUnitClient::CurrentHash()
 {
+  FlushClientSideCache();
+
   MerkleTree                    tree{num_lanes()};
   std::vector<service::Promise> promises;
 
@@ -190,7 +193,7 @@ bool StorageUnitClient::RevertToHash(Hash const &hash, uint64_t index)
   {
     assert(!hash.empty());
 
-    FETCH_LOG_INFO(LOGGING_NAME, "reverting tree leaf: ", lane_merkle_hash.ToHex());
+    FETCH_LOG_DEBUG(LOGGING_NAME, "reverting tree leaf: ", lane_merkle_hash.ToHex());
 
     // make the call to the RPC server
     auto promise = rpc_client_->CallSpecificAddress(LookupAddress(lane_index++), RPC_STATE,
@@ -234,6 +237,8 @@ bool StorageUnitClient::RevertToHash(Hash const &hash, uint64_t index)
 // We have finished execution presumably, commit this state
 byte_array::ConstByteArray StorageUnitClient::Commit(uint64_t const commit_index)
 {
+  FlushClientSideCache();
+
   FETCH_LOG_DEBUG(LOGGING_NAME, "Committing: ", commit_index);
 
   MerkleTree tree{num_lanes()};
@@ -405,7 +410,14 @@ bool StorageUnitClient::GetTransaction(byte_array::ConstByteArray const &digest,
 
   try
   {
-    ResourceID resource{digest};
+    ResourceID const resource{digest};
+
+#if 1
+    if (LookupInCache(resource, tx))
+    {
+      return true;
+    }
+#endif
 
     // make the request to the RPC server
     auto promise = rpc_client_->CallSpecificAddress(LookupAddress(resource), RPC_TX_STORE,
@@ -430,7 +442,7 @@ bool StorageUnitClient::HasTransaction(ConstByteArray const &digest)
 
   try
   {
-    ResourceID resource{digest};
+    ResourceID const resource{digest};
 
     // make the request to the RPC server
     auto promise = rpc_client_->CallSpecificAddress(LookupAddress(resource), RPC_TX_STORE,
@@ -468,6 +480,67 @@ void StorageUnitClient::IssueCallForMissingTxs(DigestSet const &tx_set)
   }
 }
 
+void StorageUnitClient::PreCacheTx(DigestSet const &digests)
+{
+  FETCH_LOG_WARN(LOGGING_NAME, "Pre Caching transaction elements...");
+
+  try
+  {
+    // Step 1. Determine where the transactions will be stored and dispatch to correct lane
+    std::vector<std::vector<storage::ResourceID>> shard_resources(num_lanes());
+
+    // pre-allocate
+    std::size_t const pre_alloc_size = (digests.size() + num_lanes() - 1) / num_lanes();
+    for (auto &resources : shard_resources)
+    {
+      resources.reserve(pre_alloc_size);
+    }
+
+    // populate the resource ids
+    for (auto const &digest : digests)
+    {
+      ResourceID resource{digest};
+
+      // map the digest to the shard where it will be stored
+      std::size_t const shard = resource.lane(log2_num_lanes_);
+
+      // add the resource to the array
+      shard_resources[shard].emplace_back(resource);
+    }
+
+    // request all the transactions
+    std::vector<service::Promise> promises(num_lanes());
+    for (uint32_t i = 0, total = num_lanes(); i < total; ++i)
+    {
+      // make the request to the RPC server
+      promises[i] = rpc_client_->CallSpecificAddress(LookupAddress(i), RPC_TX_STORE,
+                                                     TxStoreProtocol::GET_BULK, shard_resources[i]);
+    }
+
+    // collect up all the responses
+    for (uint32_t i = 0, total = num_lanes(); i < total; ++i)
+    {
+      ShardCacheElement &shard_cache = client_side_cache_[i];
+
+      // wait for the response
+      auto txs = promises[i]->As<std::vector<Transaction>>();
+
+      // populate the shard cache
+      FETCH_LOCK(shard_cache.lock);
+      for (auto &tx : txs)
+      {
+        shard_cache.tx_cache.emplace(tx.digest(), tx);
+      }
+    }
+  }
+  catch (std::exception const &ex)
+  {
+    FETCH_LOG_WARN(LOGGING_NAME, "TX Pre allocation failed: ", ex.what());
+  }
+
+  FETCH_LOG_WARN(LOGGING_NAME, "Pre Caching transaction elements...complete");
+}
+
 StorageUnitClient::Document StorageUnitClient::GetOrCreate(ResourceAddress const &key)
 {
   FETCH_LOG_DEBUG(LOGGING_NAME, "GetOrCreate: ", key.address());
@@ -476,6 +549,14 @@ StorageUnitClient::Document StorageUnitClient::GetOrCreate(ResourceAddress const
 
   try
   {
+#if 1
+    // attempt to access the element that has already been created
+    if (LookupInCache(key, doc.document))
+    {
+      return doc;
+    }
+#endif
+
     // make the request to the RPC client
     auto promise = rpc_client_->CallSpecificAddress(LookupAddress(key), RPC_STATE,
                                                     RevertibleDocumentStoreProtocol::GET_OR_CREATE,
@@ -499,6 +580,14 @@ StorageUnitClient::Document StorageUnitClient::Get(ResourceAddress const &key)
 
   try
   {
+#if 1
+    // attempt to access the element that has already been created
+    if (LookupInCache(key, doc.document))
+    {
+      return doc;
+    }
+#endif
+
     // make the request to the RPC server
     auto promise = rpc_client_->CallSpecificAddress(
         LookupAddress(key), RPC_STATE, fetch::storage::RevertibleDocumentStoreProtocol::GET,
@@ -522,6 +611,9 @@ void StorageUnitClient::Set(ResourceAddress const &key, StateValue const &value)
 {
   FETCH_LOG_DEBUG(LOGGING_NAME, "Set: ", key.address(), " value: 0x", value.ToHex());
 
+#if 1
+  AddToCache(key, value);
+#else
   try
   {
     // make the request to the RPC server
@@ -536,10 +628,15 @@ void StorageUnitClient::Set(ResourceAddress const &key, StateValue const &value)
   {
     FETCH_LOG_WARN(LOGGING_NAME, "Failed to call SET (store document), because: ", e.what());
   }
+#endif
 }
 
 bool StorageUnitClient::Lock(ShardIndex index)
 {
+#if 1
+  FETCH_UNUSED(index);
+  return true;
+#else
   bool success{false};
 
   try
@@ -557,10 +654,15 @@ bool StorageUnitClient::Lock(ShardIndex index)
   }
 
   return success;
+#endif
 }
 
 bool StorageUnitClient::Unlock(ShardIndex index)
 {
+#if 1
+  FETCH_UNUSED(index);
+  return true;
+#else
   bool success{false};
 
   try
@@ -578,6 +680,7 @@ bool StorageUnitClient::Unlock(ShardIndex index)
   }
 
   return success;
+#endif
 }
 
 StorageUnitClient::Keys StorageUnitClient::KeyDump() const
@@ -631,6 +734,92 @@ void StorageUnitClient::Reset()
   current_merkle_ = MerkleTree{num_lanes()};
   permanent_state_merkle_stack_.New(MERKLE_FILENAME_DOC, MERKLE_FILENAME_INDEX);
 }
+
+void StorageUnitClient::AddToCache(storage::ResourceID const &resource, StateValue value)
+{
+  uint32_t const shard = resource.lane(log2_num_lanes_);
+  ShardCacheElement &element = client_side_cache_[shard];
+
+  FETCH_LOCK(element.lock);
+  element.state_cache[resource] = std::move(value);
+}
+
+bool StorageUnitClient::LookupInCache(storage::ResourceID const &resource, StateValue& value) const
+{
+  bool success{false};
+
+  uint32_t const shard = resource.lane(log2_num_lanes_);
+  ShardCacheElement const &element = client_side_cache_[shard];
+
+  {
+    FETCH_LOCK(element.lock);
+    auto it = element.state_cache.find(resource);
+    if (it != element.state_cache.end())
+    {
+      value   = it->second;
+      success = true;
+    }
+  }
+
+  return success;
+}
+
+bool StorageUnitClient::LookupInCache(storage::ResourceID const &resource, Transaction& tx) const
+{
+  bool success{false};
+
+  uint32_t const shard = resource.lane(log2_num_lanes_);
+  ShardCacheElement const &element = client_side_cache_[shard];
+
+  {
+    FETCH_LOCK(element.lock);
+    auto it = element.tx_cache.find(resource.id());
+    if (it != element.tx_cache.end())
+    {
+      tx      = it->second;
+      success = true;
+    }
+  }
+
+  return success;
+}
+
+void StorageUnitClient::FlushClientSideCache()
+{
+  try
+  {
+    uint32_t const num_shards = 1u << log2_num_lanes_;
+
+    std::vector<service::Promise> promises;
+    promises.reserve(num_shards);
+
+    // loop through all the caches and simple purge them.
+    for (uint32_t shard_idx = 0; shard_idx < num_shards; ++shard_idx)
+    {
+      ShardCacheElement &shard = client_side_cache_[shard_idx];
+
+      // make the set call
+      promises.emplace_back(rpc_client_->CallSpecificAddress(
+          LookupAddress(shard_idx), RPC_STATE, RevertibleDocumentStoreProtocol::SET_BULK,
+          shard.state_cache));
+
+      // clear the caches
+      shard.state_cache.clear();
+      shard.tx_cache.clear();
+    }
+
+    // wait for all the promises are complete
+    for (auto &promise : promises)
+    {
+      promise->Wait();
+    }
+  }
+  catch (std::exception const &ex)
+  {
+    FETCH_LOG_WARN(LOGGING_NAME, "Unable to set bulk transactions: ", ex.what());
+  }
+}
+
 
 }  // namespace ledger
 }  // namespace fetch

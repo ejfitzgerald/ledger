@@ -26,6 +26,7 @@
 #include <string>
 #include <unordered_map>
 #include <vector>
+#include <algorithm>
 
 namespace fetch {
 namespace telemetry {

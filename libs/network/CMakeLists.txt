@@ -24,6 +24,7 @@ target_link_libraries(fetch-network
 
 # Test targets
 add_test_target()
+add_benchmark_target()
 
 # Example targets
 add_subdirectory(examples)

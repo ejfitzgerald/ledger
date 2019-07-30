@@ -63,7 +63,7 @@ std::shared_ptr<Transaction> CreateSampleTransaction()
 
 void Executor_BasicBenchmark(benchmark::State &state)
 {
-  auto     storage = std::make_shared<InMemoryStorageUnit>();
+  auto     storage = std::make_shared<InMemoryStorageUnit>(0);
   Executor executor{storage, nullptr};
 
   // create and add the transaction to storage

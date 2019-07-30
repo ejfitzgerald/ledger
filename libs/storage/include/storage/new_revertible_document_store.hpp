@@ -19,6 +19,7 @@
 
 #include "storage/document_store.hpp"
 #include "storage/new_versioned_random_access_stack.hpp"
+#include "storage/cache_line_random_access_stack.hpp"
 
 #include <cstddef>
 #include <string>
@@ -59,9 +60,19 @@ private:
   using Storage = storage::DocumentStore<
       2048,                 // block size
       FileBlockType<2048>,  // file block type
-      KeyValueIndex<KeyValuePair<>, NewVersionedRandomAccessStack<KeyValuePair<>>>,  // Key value
+      KeyValueIndex<
+        KeyValuePair<>,
+        NewVersionedRandomAccessStack<
+          KeyValuePair<>,
+          CacheLineRandomAccessStack<KeyValuePair<>, NewBookmarkHeader>
+        >
+      >,  // Key value
                                                                                      // index
-      NewVersionedRandomAccessStack<FileBlockType<2048>>>;                           // File store
+      NewVersionedRandomAccessStack<
+        FileBlockType<2048>,
+        CacheLineRandomAccessStack<FileBlockType<2048>, NewBookmarkHeader>
+      >
+  >;                           // File store
 
   std::string state_path_;
   std::string state_history_path_;

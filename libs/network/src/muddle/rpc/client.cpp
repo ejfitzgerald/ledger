@@ -189,7 +189,7 @@ void Client::BackgroundWorker()
     // if we are in sustained a period of idleness then we should sleep the thread
     if (consecutive_idle_loops >= 3)
     {
-      std::this_thread::sleep_for(std::chrono::milliseconds{100});
+      std::this_thread::sleep_for(std::chrono::milliseconds{1});
     }
   }
 }

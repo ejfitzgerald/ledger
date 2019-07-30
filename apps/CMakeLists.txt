@@ -6,5 +6,6 @@ project(fetch-apps)
 
 add_subdirectory(constellation)
 add_subdirectory(etch)
+add_subdirectory(state-query)
 add_subdirectory(tx-generator)
 add_subdirectory(dkg)

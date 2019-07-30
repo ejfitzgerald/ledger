@@ -35,6 +35,7 @@
 #include "ledger/upow/synergetic_executor.hpp"
 #include "telemetry/counter.hpp"
 #include "telemetry/registry.hpp"
+#include "vectorise/platform.hpp"
 
 #include <cassert>
 #include <chrono>
@@ -107,6 +108,7 @@ BlockCoordinator::BlockCoordinator(MainChain &chain, DAGPtr dag, StakeManagerPtr
   , state_machine_{std::make_shared<StateMachine>("BlockCoordinator", State::RELOAD_STATE,
                                                   [](State state) { return ToString(state); })}
   , block_difficulty_{block_difficulty}
+  , log2_num_lanes_{platform::ToLog2(static_cast<uint32_t>(num_lanes))}
   , num_lanes_{num_lanes}
   , num_slices_{num_slices}
   , tx_wait_periodic_{TX_SYNC_NOTIFY_INTERVAL}
@@ -386,8 +388,7 @@ BlockCoordinator::State BlockCoordinator::OnSynchronising()
                                   common_parent->body.block_number))
     {
       FETCH_LOG_ERROR(LOGGING_NAME, "Ancestor block's state hash cannot be retrieved for block: 0x",
-                      current_hash.ToHex(), " number: ", common_parent->body.block_number,
-                      " merkle hash: ", common_parent->body.merkle_hash.ToHex());
+                      current_hash.ToHex(), " number: ", common_parent->body.block_number, " merkle hash: ", common_parent->body.merkle_hash.ToHex());
 
       // this is a bad situation so the easiest solution is to revert back to genesis
       execution_manager_.SetLastProcessedBlock(GENESIS_DIGEST);
@@ -475,10 +476,11 @@ BlockCoordinator::State BlockCoordinator::OnSynchronised(State current, State pr
     }
 
     // create a new block
-    next_block_                     = std::make_unique<Block>();
-    next_block_->body.previous_hash = current_block_->body.hash;
-    next_block_->body.block_number  = current_block_->body.block_number + 1;
-    next_block_->body.miner         = mining_address_;
+    next_block_                      = std::make_unique<Block>();
+    next_block_->body.previous_hash  = current_block_->body.hash;
+    next_block_->body.block_number   = current_block_->body.block_number + 1;
+    next_block_->body.miner          = mining_address_;
+    next_block_->body.log2_num_lanes = log2_num_lanes_;
 
     if (stake_)
     {
@@ -692,13 +694,14 @@ BlockCoordinator::State BlockCoordinator::OnWaitForTransactions(State current, S
   // if the transaction digests have not been cached then do this now
   if (!pending_txs_)
   {
-    pending_txs_ = std::make_unique<DigestSet>();
+    pending_txs_   = std::make_unique<DigestSet>();
+    assert(completed_txs_.empty());
 
     for (auto const &slice : current_block_->body.slices)
     {
       for (auto const &tx : slice)
       {
-        pending_txs_->insert(tx.digest());
+        pending_txs_->emplace(tx.digest());
       }
     }
   }
@@ -709,6 +712,9 @@ BlockCoordinator::State BlockCoordinator::OnWaitForTransactions(State current, S
   {
     if (storage_unit_.HasTransaction(*it))
     {
+      // transfer it to the completed set
+      completed_txs_.emplace(*it);
+
       // success - remove this element from the set
       it = pending_txs_->erase(it);
     }
@@ -864,6 +870,7 @@ BlockCoordinator::State BlockCoordinator::OnPostExecBlockValidation()
       {
         dag_->RevertToEpoch(0);
       }
+
       storage_unit_.RevertToHash(GENESIS_MERKLE_ROOT, 0);
       execution_manager_.SetLastProcessedBlock(GENESIS_DIGEST);
     }
@@ -902,7 +909,7 @@ BlockCoordinator::State BlockCoordinator::OnPackNewBlock()
   try
   {
     // call the block packer
-    block_packer_.GenerateBlock(*next_block_, num_lanes_, num_slices_, chain_);
+    completed_txs_ = block_packer_.GenerateBlock(*next_block_, num_lanes_, num_slices_, chain_);
 
     // update our desired next block time
     UpdateNextBlockTime();
@@ -1090,6 +1097,7 @@ BlockCoordinator::State BlockCoordinator::OnReset()
   current_block_.reset();
   next_block_.reset();
   pending_txs_.reset();
+  completed_txs_.clear();
   blocks_to_common_ancestor_.clear();
 
   // we should update the next block time
@@ -1136,6 +1144,9 @@ bool BlockCoordinator::ScheduleBlock(Block const &block)
   bool success{false};
 
   FETCH_LOG_DEBUG(LOGGING_NAME, "Attempting exec on block: 0x", block.body.hash.ToHex());
+
+  // attempt to pre-cache the required transactions
+  storage_unit_.PreCacheTx(completed_txs_);
 
   // instruct the execution manager to execute the current block
   auto const execution_status = execution_manager_.Execute(block.body);

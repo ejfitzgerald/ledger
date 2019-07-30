@@ -17,6 +17,8 @@
 //
 //------------------------------------------------------------------------------
 
+#include "ledger/chain/digest.hpp"
+
 #include <cstddef>
 #include <cstdint>
 
@@ -65,9 +67,10 @@ public:
    * @param num_lanes The number of lanes for the block
    * @param num_slices The number of slices for the block
    * @param chain The main chain
+   * @return The set of transaction packed into the block
    */
-  virtual void GenerateBlock(Block &block, std::size_t num_lanes, std::size_t num_slices,
-                             MainChain const &chain) = 0;
+  virtual DigestSet GenerateBlock(Block &block, std::size_t num_lanes, std::size_t num_slices,
+                                  MainChain const &chain) = 0;
 
   /**
    * How many transactions are yet to be processed (mem-pool size). Not guaranteed to be accurate.

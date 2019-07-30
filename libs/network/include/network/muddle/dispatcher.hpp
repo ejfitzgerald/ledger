@@ -93,6 +93,7 @@ private:
   Mutex     handles_lock_{__LINE__, __FILE__};
   HandleMap handles_;
 
+
   /// @name Telemetry
   /// @{
   telemetry::CounterPtr       exchange_success_totals_;

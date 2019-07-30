@@ -30,6 +30,7 @@
 #include "storage/object_store.hpp"
 #include "telemetry/telemetry.hpp"
 #include "transaction_status_cache.hpp"
+#include "telemetry/telemetry.hpp"
 
 #include <atomic>
 #include <condition_variable>
