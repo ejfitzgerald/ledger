@@ -48,9 +48,10 @@ using fetch::byte_array::ConstByteArray;
 using fetch::ledger::FromJsonTransaction;
 using fetch::variant::Variant;
 
-ConstByteArray const API_PATH_CONTRACT_PREFIX("/api/contract/");
-ConstByteArray const CONTRACT_NAME_SEPARATOR(".");
-ConstByteArray const PATH_SEPARATOR("/");
+constexpr char const *LOGGING_NAME = "ContractHttpInterface";
+ConstByteArray const  API_PATH_CONTRACT_PREFIX("/api/contract/");
+ConstByteArray const  CONTRACT_NAME_SEPARATOR(".");
+ConstByteArray const  PATH_SEPARATOR("/");
 
 ConstByteArray Quoted(std::string const &value)
 {
@@ -92,6 +93,57 @@ bool CreateTxFromJson(Variant const &tx_obj, std::vector<ConstByteArray> &txs,
   if (FromJsonTransaction(tx_obj, *tx))
   {
     txs.emplace_back(tx->digest());
+
+#if 1
+    std::ostringstream oss;
+
+    // debug the input transaction
+    oss << "\n\n-- New TX Begin --\n";
+    oss << "Digest..........: 0x" << tx->digest().ToHex() << '\n';
+    oss << "From............: " << tx->from().display() << '\n';
+
+    // transfers
+    auto const &transfers = tx->transfers();
+    oss << "Num Transfers...: " << transfers.size() << '\n';
+    for (auto const &transfer : transfers)
+    {
+      oss << "- To............: " << transfer.to.display() << '\n';
+      oss << "  Amount........: " << transfer.amount << '\n';
+    }
+
+    oss << "Valid From......: " << tx->valid_from() << '\n';
+    oss << "Valid Until.....: " << tx->valid_until() << '\n';
+    oss << "Charge Rate.....: " << tx->charge() << '\n';
+    oss << "Charge Limit....: " << tx->charge_limit() << '\n';
+    oss << "Charge Limit....: " << tx->charge_limit() << '\n';
+
+    switch (tx->contract_mode())
+    {
+    case Transaction::ContractMode::NOT_PRESENT:
+      oss << "Type............: Basic\n";
+      break;
+    case Transaction::ContractMode::PRESENT:
+      oss << "Type............: Smart Contract\n";
+      oss << "Shard Mask......: " << tx->shard_mask() << '\n';
+      oss << "Contract Digest.: 0x" << tx->contract_digest().address().ToHex() << '\n';
+      oss << "Contract Address: " << tx->contract_address().display() << '\n';
+      oss << "Action..........: " << tx->action() << '\n';
+      break;
+    case Transaction::ContractMode::CHAIN_CODE:
+      oss << "Type............: Chain Code" << '\n';
+      oss << "Shard Mask......: " << tx->shard_mask() << '\n';
+      oss << "Chain Code......: " << tx->chain_code() << '\n';
+      oss << "Action..........: " << tx->action() << '\n';
+      break;
+    case Transaction::ContractMode::SYNERGETIC:
+      oss << "Type............: Synergetic\n";
+      break;
+    }
+
+    oss << "-- New TX End --\n\n";
+    FETCH_LOG_WARN(LOGGING_NAME, oss.str()); // flush the formatted buffer to logging
+#endif
+
     processor.AddTransaction(std::move(tx));
 
     return true;
@@ -116,8 +168,6 @@ bool CreateTxFromBuffer(ConstByteArray const &encoded_tx, std::vector<ConstByteA
 
   return false;
 }
-
-constexpr char const *LOGGING_NAME = "ContractHttpInterface";
 
 }  // namespace
 
