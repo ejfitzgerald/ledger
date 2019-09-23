@@ -419,13 +419,21 @@ std::size_t BitVector::PopCount() const
 std::ostream &operator<<(std::ostream &s, BitVector const &b)
 {
 #if 1
-  for (std::size_t i = 0; i < b.size(); ++i)
+  if (b.size() == 0)
   {
-    if (i && ((i % 10) == 0))
+    s << '-';
+  }
+  else
+  {
+    for (std::size_t i = 0; i < b.size(); ++i)
     {
-      s << ' ';
+      if (i && ((i % 10) == 0))
+      {
+        s << ' ';
+      }
+
+      s << b.bit(i);
     }
-    s << b.bit(i);
   }
 #else
   for (std::size_t i = 0; i < b.blocks(); ++i)
