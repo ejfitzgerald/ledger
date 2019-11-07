@@ -79,6 +79,12 @@ Contract::Result SmartContractManager::OnCreate(chain::Transaction const &tx)
                                Extract(data, CONTRACT_SOURCE, contract_source) &&
                                Extract(data, CONTRACT_NONCE, nonce);
 
+  // debug
+  FETCH_LOG_INFO(LOGGING_NAME, "---------------------------------------------------------------");
+  FETCH_LOG_INFO(LOGGING_NAME, "Digest...........: ", contract_hash);
+  FETCH_LOG_INFO(LOGGING_NAME, "Nonce............: ", nonce);
+  FETCH_LOG_INFO(LOGGING_NAME, "Text.............:\n\n", contract_source, "\n\n");
+
   // fail if the extraction fails
   if (!extract_success)
   {
@@ -91,13 +97,8 @@ Contract::Result SmartContractManager::OnCreate(chain::Transaction const &tx)
   // decode the contents of the contract
   contract_source = FromBase64(contract_source);
 
-  // debug
-  FETCH_LOG_DEBUG(LOGGING_NAME, "---------------------------------------------------------------");
-  FETCH_LOG_DEBUG(LOGGING_NAME, "New Contract Mode: ", contract_type);
-  FETCH_LOG_DEBUG(LOGGING_NAME, "Digest...........: ", contract_hash);
-  FETCH_LOG_DEBUG(LOGGING_NAME, "Nonce............: ", nonce);
-  FETCH_LOG_DEBUG(LOGGING_NAME, "Text.............:\n\n", contract_source, "\n\n");
-  FETCH_LOG_DEBUG(LOGGING_NAME, "---------------------------------------------------------------");
+  FETCH_LOG_INFO(LOGGING_NAME, "Text.............:\n\n", contract_source, "\n\n");
+  FETCH_LOG_INFO(LOGGING_NAME, "---------------------------------------------------------------");
 
   // calculate a hash to compare against the one submitted
   auto const calculated_hash = crypto::Hash<crypto::SHA256>(contract_source).ToHex();
@@ -146,7 +147,7 @@ Contract::Result SmartContractManager::OnCreate(chain::Transaction const &tx)
         FETCH_LOG_WARN(LOGGING_NAME, "More than one init function found in SC. Terminating.");
         return {Status::FAILED};
       }
-      FETCH_LOG_DEBUG(LOGGING_NAME, "Found init function for SC");
+      FETCH_LOG_INFO(LOGGING_NAME, "Found init function for SC");
       on_init_function = fn.name;
       break;
 

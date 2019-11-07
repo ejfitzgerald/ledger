@@ -310,7 +310,10 @@ bool Executor::ExecuteTransactionContract(Result &result)
     }
 
     // Dispatch the transaction to the contract
-    FETCH_LOG_DEBUG(LOGGING_NAME, "Dispatch: ", current_tx_->action());
+    FETCH_LOG_INFO(LOGGING_NAME, "Chain Code: ", current_tx_->chain_code());
+    FETCH_LOG_INFO(LOGGING_NAME, "Contract Digest: ", current_tx_->contract_digest().address().ToHex());
+    FETCH_LOG_INFO(LOGGING_NAME, "Contract Address: ", current_tx_->contract_address().display());
+    FETCH_LOG_INFO(LOGGING_NAME, "Dispatch: ", current_tx_->action());
 
     contract->Attach({&token_contract_, current_tx_->contract_address(), &storage_adapter, block_});
     auto const contract_status = contract->DispatchTransaction(*current_tx_);
@@ -335,7 +338,7 @@ bool Executor::ExecuteTransactionContract(Result &result)
 
     result.return_value = contract_status.return_value;
 
-    FETCH_LOG_DEBUG(LOGGING_NAME, "Executing tx ", byte_array::ToBase64(current_tx_->digest()),
+    FETCH_LOG_INFO(LOGGING_NAME, "Executing tx ", byte_array::ToBase64(current_tx_->digest()),
                     " (success)");
 
     // attempt to generate a fee for this transaction
@@ -348,7 +351,7 @@ bool Executor::ExecuteTransactionContract(Result &result)
       uint64_t const scaled_charge =
           std::max<uint64_t>(allowed_shards_.PopCount(), 1) * base_charge;
 
-      FETCH_LOG_DEBUG(LOGGING_NAME, "Calculated charge for 0x", current_tx_->digest().ToHex(), ": ",
+      FETCH_LOG_INFO(LOGGING_NAME, "Calculated charge for 0x", current_tx_->digest().ToHex(), ": ",
                       scaled_charge, " (base: ", base_charge, " storage: ", storage_charge,
                       " compute: ", compute_charge, " shards: ", allowed_shards_.PopCount(), ")");
 
