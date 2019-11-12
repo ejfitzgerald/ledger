@@ -369,12 +369,17 @@ public:
 
   std::ostream &GetOutputDevice(std::string const &name)
   {
+#if 1
+    FETCH_UNUSED(name);
+    return std::cout;
+#else
     if (output_devices_.find(name) == output_devices_.end())
     {
       RuntimeError("Output device " + name + " does not exist.");
       return std::cout;
     }
     return *output_devices_[name];
+#endif
   }
 
   std::istream &GetInputDevice(std::string const &name)

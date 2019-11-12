@@ -574,7 +574,7 @@ Contract::Result SmartContract::InvokeInit(chain::Address const &    owner,
 
   vm->SetIOObserver(state());
 
-  FETCH_LOG_DEBUG(LOGGING_NAME, "Running SC init function: ", init_fn_name_);
+  FETCH_LOG_INFO(LOGGING_NAME, "Running SC init function: ", init_fn_name_);
 
   vm::ParameterPack params{vm->registered_types()};
 
@@ -582,7 +582,7 @@ Contract::Result SmartContract::InvokeInit(chain::Address const &    owner,
   Executable::Function const *target_function = executable_->FindFunction(init_fn_name_);
   if (target_function->num_parameters == 1)
   {
-    FETCH_LOG_DEBUG(LOGGING_NAME, "One argument for init - defaulting to address population");
+    FETCH_LOG_INFO(LOGGING_NAME, "One argument for init - defaulting to address population: ", owner.display());
 
     // create the address instance to be passed to the init function
     vm::Ptr<vm::Address> address = vm::Address::Constructor(vm.get(), vm::TypeIds::Address);
