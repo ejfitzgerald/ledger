@@ -602,6 +602,8 @@ Contract::Result SmartContract::InvokeInit(chain::Address const &    owner,
 
   vm->AttachOutputDevice(vm::VM::STDOUT, console);
 
+  FETCH_LOG_INFO(LOGGING_NAME, "Output from contract:\n\n", console.str(), "\n\n");
+
   if (!vm->Execute(*executable_, init_fn_name_, error, output, params))
   {
     FETCH_LOG_INFO(LOGGING_NAME, "Runtime error: ", error);
@@ -684,6 +686,8 @@ SmartContract::Status SmartContract::InvokeQuery(std::string const &name, Query 
   std::stringstream console;
 
   vm->AttachOutputDevice(vm::VM::STDOUT, console);
+
+  FETCH_LOG_INFO(LOGGING_NAME, "Output from contract:\n\n", console.str(), "\n\n");
 
   if (!vm->Execute(*executable_, name, error, output, params))
   {
