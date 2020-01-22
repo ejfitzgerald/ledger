@@ -1,0 +1,19 @@
+name: Clang Release Build
+
+on: [push]
+
+jobs:
+  build:
+
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v1
+    - name: Dependencies
+      run: apt-get update && apt-get install clang cmake protobuf-compiler libprotobuf-dev python3-dev python3-pip ninja-build
+    - name: Configure
+      run: mkdir build && cd build && CC=clang CXX=clang++ cmake -G Ninja ../
+    - name: Build
+      run: cd build && ninja
+    - name: Test
+      run: cd build && ctest
