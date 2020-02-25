@@ -16,6 +16,8 @@
 //
 //------------------------------------------------------------------------------
 
+#include "constellation/muddle_status_http_module.hpp"
+#include "constellation/telemetry_http_module.hpp"
 #include "core/commandline/parameter_parser.hpp"
 #include "core/filesystem/read_file_contents.hpp"
 #include "crypto/ecdsa.hpp"
@@ -24,8 +26,6 @@
 #include "logging/logging.hpp"
 #include "muddle/network_id.hpp"
 #include "network/management/network_manager.hpp"
-#include "constellation/muddle_status_http_module.hpp"
-#include "constellation/telemetry_http_module.hpp"
 
 #include <chrono>
 #include <csignal>
@@ -46,12 +46,13 @@ using fetch::http::HTTPServer;
 using fetch::http::HTTPModule;
 
 using LaneServicePtr = std::unique_ptr<LaneService>;
-using HTTPServerPtr = std::unique_ptr<HTTPServer>;
-using HTTPModulePtr = std::unique_ptr<HTTPModule>;
+using HTTPServerPtr  = std::unique_ptr<HTTPServer>;
+using HTTPModulePtr  = std::unique_ptr<HTTPModule>;
 
 constexpr char const *LOGGING_NAME = "main";
 
 std::atomic<bool>        global_running{true};
+std::atomic<bool>        global_ready{false};
 std::atomic<std::size_t> global_interrupt_count{0};
 
 struct Settings
@@ -63,6 +64,26 @@ struct HttpServerContext
 {
   HTTPServerPtr              server{};
   std::vector<HTTPModulePtr> modules{};
+};
+
+class HealthCheckModule : public fetch::http::HTTPModule
+{
+public:
+  HealthCheckModule()
+  {
+    Get("/api/health/alive", "Endpoint to check if the server is alive.",
+        [](fetch::http::ViewParameters const &, fetch::http::HTTPRequest const &) {
+          return fetch::http::CreateJsonResponse("{}");
+        });
+
+    Get("/api/health/ready", "Endpoint to check if the server is ready.",
+        [](fetch::http::ViewParameters const &, fetch::http::HTTPRequest const &) {
+          auto const status = (global_ready) ? fetch::http::Status::SUCCESS_OK
+                                             : fetch::http::Status::CLIENT_ERROR_BAD_REQUEST;
+
+          return fetch::http::CreateJsonResponse("{}", status);
+        });
+  }
 };
 
 ShardConfig::CertificatePtr LoadOrCreateCertificate(char const *filename)
@@ -119,9 +140,10 @@ HttpServerContext CreateHttpServer(Settings const &settings, NetworkManager cons
   if (settings.http_port > 0)
   {
     // create all the modules
-    ctx.modules.reserve(2);
+    ctx.modules.reserve(3);
     ctx.modules.emplace_back(std::make_unique<fetch::constellation::MuddleStatusModule>());
     ctx.modules.emplace_back(std::make_unique<fetch::TelemetryHttpModule>());
+    ctx.modules.emplace_back(std::make_unique<HealthCheckModule>());
 
     // create the server
     ctx.server = std::make_unique<HTTPServer>(nm);
@@ -165,7 +187,7 @@ int Run(int argc, char const *const *argv)
 {
   // build the configuration
   ShardConfig cfg{};
-  Settings settings{};
+  Settings    settings{};
   BuildConfiguration(argc, argv, cfg, settings);
 
   // create the network manager
@@ -185,6 +207,7 @@ int Run(int argc, char const *const *argv)
   // wait for the process to stop
   while (global_running)
   {
+    global_ready = true; // signal that the server is up and ready
     std::this_thread::sleep_for(std::chrono::milliseconds{100});
   }
 
