@@ -45,9 +45,9 @@ std::string NetworkId::ToString() const
   std::ostringstream oss;
   for (std::size_t i = 0; i < BYTE_SIZE; ++i)
   {
-    auto const &curr_char = id_raw[BYTE_SIZE - (i + 1)];
+    char const &curr_char = id_raw[BYTE_SIZE - (i + 1)];
 
-    if (std::isprint(curr_char) != 0)
+    if (std::isalnum(curr_char))
     {
       oss << curr_char;
     }
