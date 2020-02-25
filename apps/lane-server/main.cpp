@@ -24,12 +24,15 @@
 #include "logging/logging.hpp"
 #include "muddle/network_id.hpp"
 #include "network/management/network_manager.hpp"
+#include "constellation/muddle_status_http_module.hpp"
+#include "constellation/telemetry_http_module.hpp"
 
 #include <chrono>
 #include <csignal>
 #include <fstream>
 #include <memory>
 #include <thread>
+#include <vector>
 
 namespace {
 
@@ -39,13 +42,28 @@ using fetch::muddle::NetworkId;
 using fetch::crypto::ECDSASigner;
 using fetch::commandline::ParamsParser;
 using fetch::network::NetworkManager;
+using fetch::http::HTTPServer;
+using fetch::http::HTTPModule;
 
 using LaneServicePtr = std::unique_ptr<LaneService>;
+using HTTPServerPtr = std::unique_ptr<HTTPServer>;
+using HTTPModulePtr = std::unique_ptr<HTTPModule>;
 
 constexpr char const *LOGGING_NAME = "main";
 
 std::atomic<bool>        global_running{true};
 std::atomic<std::size_t> global_interrupt_count{0};
+
+struct Settings
+{
+  uint16_t http_port{0};
+};
+
+struct HttpServerContext
+{
+  HTTPServerPtr              server{};
+  std::vector<HTTPModulePtr> modules{};
+};
 
 ShardConfig::CertificatePtr LoadOrCreateCertificate(char const *filename)
 {
@@ -71,10 +89,8 @@ ShardConfig::CertificatePtr LoadOrCreateCertificate(char const *filename)
   return certificate;
 }
 
-ShardConfig BuildConfiguration(int argc, char const *const *argv)
+void BuildConfiguration(int argc, char const *const *argv, ShardConfig &cfg, Settings &settings)
 {
-  ShardConfig cfg{};
-
   // parse the command line
   ParamsParser parser;
   parser.Parse(argc, argv);
@@ -93,7 +109,34 @@ ShardConfig BuildConfiguration(int argc, char const *const *argv)
   cfg.internal_port       = parser.GetParam<uint16_t>("internal-port", 8011);
   cfg.internal_network_id = NetworkId{"ISRD"};
 
-  return cfg;
+  settings.http_port = parser.GetParam<uint16_t>("http-port", 0);
+}
+
+HttpServerContext CreateHttpServer(Settings const &settings, NetworkManager const &nm)
+{
+  HttpServerContext ctx;
+
+  if (settings.http_port > 0)
+  {
+    // create all the modules
+    ctx.modules.reserve(2);
+    ctx.modules.emplace_back(std::make_unique<fetch::constellation::MuddleStatusModule>());
+    ctx.modules.emplace_back(std::make_unique<fetch::TelemetryHttpModule>());
+
+    // create the server
+    ctx.server = std::make_unique<HTTPServer>(nm);
+
+    // add all the modules to the server
+    for (auto const &mod : ctx.modules)
+    {
+      ctx.server->AddModule(*mod);
+    }
+
+    // start the http server
+    ctx.server->Start(settings.http_port);
+  }
+
+  return ctx;
 }
 
 void InterruptHandler(int /*signal*/)
@@ -121,17 +164,22 @@ void InterruptHandler(int /*signal*/)
 int Run(int argc, char const *const *argv)
 {
   // build the configuration
-  ShardConfig cfg = BuildConfiguration(argc, argv);
+  ShardConfig cfg{};
+  Settings settings{};
+  BuildConfiguration(argc, argv, cfg, settings);
 
   // create the network manager
   NetworkManager nm{"lane", 1};
+  nm.Start();
+
+  // create the http stack if required
+  auto http = CreateHttpServer(settings, nm);
 
   // create the lane service
   auto lane_service =
       std::make_unique<LaneService>(nm, std::move(cfg), LaneService::Mode::LOAD_DATABASE);
 
   // start the internal network
-  nm.Start();
   lane_service->StartInternal();
 
   // wait for the process to stop
@@ -141,6 +189,12 @@ int Run(int argc, char const *const *argv)
   }
 
   lane_service->StopInternal();
+
+  if (http.server)
+  {
+    http.server->Stop();
+  }
+
   nm.Stop();
 
   return EXIT_SUCCESS;
