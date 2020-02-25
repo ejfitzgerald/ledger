@@ -91,6 +91,7 @@ Settings::Settings()
   : num_lanes             {*this, "lanes",                   DEFAULT_NUM_LANES,            "The number of lanes to be used"}
   , num_slices            {*this, "slices",                  DEFAULT_NUM_SLICES,           "The number of slices to be used"}
   , block_interval        {*this, "block-interval",          DEFAULT_BLOCK_INTERVAL,       "The block interval is milliseconds"}
+  , external_lanes        {*this, "external-lanes",          false,                        "Signal that lane services are external to this process"}
   , standalone            {*this, "standalone",              false,                        "Signal the network should run in standalone mode"}
   , private_network       {*this, "private-network",         false,                        "Signal the network should run as part of a private network"}
   , db_prefix             {*this, "db-prefix",               "node_storage",               "The prefix for filenames related to constellation databases"}

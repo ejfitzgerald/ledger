@@ -85,12 +85,12 @@ ShardConfig BuildConfiguration(int argc, char const *const *argv)
 
   cfg.external_name       = parser.GetParam<std::string>("external", "127.0.0.1");
   cfg.external_identity   = LoadOrCreateCertificate("external.key");
-  cfg.external_port       = parser.GetParam<uint16_t>("external-port", 8001);
+  cfg.external_port       = parser.GetParam<uint16_t>("external-port", 8010);
   cfg.external_network_id = NetworkId{(cfg.lane_id & 0xFFFFFFu) | (uint32_t{'L'} << 24u)};
 
   cfg.internal_name       = parser.GetParam<std::string>("external", "127.0.0.1");
   cfg.internal_identity   = LoadOrCreateCertificate("internal.key");
-  cfg.internal_port       = parser.GetParam<uint16_t>("internal-port", 8002);
+  cfg.internal_port       = parser.GetParam<uint16_t>("internal-port", 8011);
   cfg.internal_network_id = NetworkId{"ISRD"};
 
   return cfg;

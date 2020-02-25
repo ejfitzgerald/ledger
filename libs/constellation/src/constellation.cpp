@@ -22,6 +22,7 @@
 #include "beacon/beacon_setup_service.hpp"
 #include "beacon/event_manager.hpp"
 #include "bloom_filter/bloom_filter.hpp"
+#include "core/filesystem/read_file_contents.hpp"
 #include "constellation/health_check_http_module.hpp"
 #include "constellation/logging_http_module.hpp"
 #include "constellation/muddle_status_http_module.hpp"
@@ -49,6 +50,7 @@
 #include "network/uri.hpp"
 #include "telemetry/counter.hpp"
 #include "telemetry/registry.hpp"
+#include "crypto/ecdsa.hpp"
 
 #include <chrono>
 #include <cstddef>
@@ -68,6 +70,8 @@ using fetch::network::AtomicInFlightCounter;
 using fetch::network::NetworkManager;
 using fetch::shards::Manifest;
 using fetch::shards::ServiceIdentifier;
+using fetch::ledger::ShardConfig;
+using fetch::crypto::ECDSASigner;
 
 using ExecutorPtr = std::shared_ptr<Executor>;
 
@@ -110,6 +114,30 @@ private:
   Constellation *const instance_;
   Callback const       callback_;
 };
+
+ShardConfig::CertificatePtr LoadOrCreateCertificate(std::string const &filename)
+{
+  // read the contents of the certificate file
+  auto contents = fetch::core::ReadContentsOfFile(filename.c_str());
+
+  // try and load the certificate
+  if (!contents.empty())
+  {
+    return std::make_shared<ECDSASigner>(contents);
+  }
+
+  // create a new key
+  auto        certificate = std::make_shared<ECDSASigner>();
+  auto        private_key = certificate->private_key();
+  auto const &private_key_ref{private_key};
+
+  // flush to disk
+  std::ofstream stream{filename, std::ios::out | std::ios::binary | std::ios::trunc};
+  stream.write(private_key_ref.char_pointer(),
+               static_cast<std::streamsize>(private_key_ref.size()));
+
+  return certificate;
+}
 
 char const *ToString(ledger::MainChainRpcService::Mode mode)
 {
@@ -217,13 +245,13 @@ ledger::ShardConfigs GenerateShardsConfig(Config &cfg, uint16_t start_port)
     shard.num_lanes         = cfg.num_lanes();
     shard.storage_path      = cfg.db_prefix;
     shard.external_name     = it->second.uri().GetTcpPeer().address();
-    shard.external_identity = std::make_shared<crypto::ECDSASigner>();
-    shard.external_port     = start_port++;
+    shard.external_identity = LoadOrCreateCertificate("lane-" + std::to_string(i) + "-external.key");
+    shard.external_port     = (cfg.external_lane_services) ? it->second.uri().GetTcpPeer().port() : start_port++;
     shard.external_network_id =
         muddle::NetworkId{(static_cast<uint32_t>(i) & 0xFFFFFFu) | (uint32_t{'L'} << 24u)};
     shard.internal_name        = it->second.uri().GetTcpPeer().address();
-    shard.internal_identity    = std::make_shared<crypto::ECDSASigner>();
-    shard.internal_port        = start_port++;
+    shard.internal_identity    = LoadOrCreateCertificate("lane-" + std::to_string(i) + "-internal.key");
+    shard.internal_port        = (cfg.external_lane_services) ? it->second.uri().GetTcpPeer().port() + 1 : start_port++;
     shard.internal_network_id  = muddle::NetworkId{"ISRD"};
     shard.verification_threads = cfg.verification_threads;
 
@@ -442,20 +470,23 @@ bool Constellation::OnBringUpLaneServices()
 
   FETCH_LOG_INFO(LOGGING_NAME, "Starting shard services...");
 
-  // configure all the lane services
-  lane_services_.Setup(network_manager_, shard_cfgs_);
-
-  // start all the lane services and wait for them to start accepting
-  // connections
-  lane_services_.StartInternal();
-
-  if (!WaitForLaneServersToStart())
+  if (!cfg_.external_lane_services)
   {
-    FETCH_LOG_ERROR(LOGGING_NAME, "Unable to start lane server instances");
-    return false;
-  }
+    // configure all the lane services
+    lane_services_.Setup(network_manager_, shard_cfgs_);
 
-  FETCH_LOG_INFO(LOGGING_NAME, "Starting shard services...complete");
+    // start all the lane services and wait for them to start accepting
+    // connections
+    lane_services_.StartInternal();
+
+    if (!WaitForLaneServersToStart())
+    {
+      FETCH_LOG_ERROR(LOGGING_NAME, "Unable to start lane server instances");
+      return false;
+    }
+
+    FETCH_LOG_INFO(LOGGING_NAME, "Starting shard services...complete");
+  }
 
   // create the internal muddle instance
   internal_muddle_ =
@@ -877,8 +908,11 @@ void Constellation::OnTearDownLaneServices()
     internal_muddle_.reset();
   }
 
-  // tear down the lane services
-  lane_services_.StopInternal();
+  if (!cfg_.external_lane_services)
+  {
+    // tear down the lane services
+    lane_services_.StopInternal();
+  }
 }
 
 void Constellation::OnCleanup()
@@ -894,7 +928,7 @@ bool Constellation::StartInternalMuddle()
   Peers internal_peers{};
   for (auto const &shard : shard_cfgs_)
   {
-    internal_peers.emplace("tcp://127.0.0.1:" + std::to_string(shard.internal_port));
+    internal_peers.emplace("tcp://" + shard.internal_name + ":" + std::to_string(shard.internal_port));
   }
 
   // start the muddle up and connect to all the shards

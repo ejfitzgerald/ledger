@@ -113,6 +113,7 @@ public:
     std::string ihub_peer_cache{"peer_table.ihub.cache.db"};
     std::string beacon_peer_cache{"peer_table.dkgn.cache.db"};
 
+    bool     external_lane_services{false};
     bool     enable_agents{false};
     uint16_t messenger_port{0};
     uint16_t mailbox_port{0};
