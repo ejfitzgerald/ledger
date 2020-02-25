@@ -1,6 +1,6 @@
 //------------------------------------------------------------------------------
 //
-//   Copyright 2018-2019 Fetch.AI Limited
+//   Copyright 2018-2020 Fetch.AI Limited
 //
 //   Licensed under the Apache License, Version 2.0 (the "License");
 //   you may not use this file except in compliance with the License.
@@ -16,20 +16,20 @@
 //
 //------------------------------------------------------------------------------
 
-#include "ledger/storage_unit/lane_service.hpp"
-#include "network/management/network_manager.hpp"
-#include "http/http_server.hpp"
-#include "logging/logging.hpp"
-#include "crypto/ecdsa.hpp"
-#include "muddle/network_id.hpp"
 #include "core/commandline/parameter_parser.hpp"
 #include "core/filesystem/read_file_contents.hpp"
+#include "crypto/ecdsa.hpp"
+#include "http/http_server.hpp"
+#include "ledger/storage_unit/lane_service.hpp"
+#include "logging/logging.hpp"
+#include "muddle/network_id.hpp"
+#include "network/management/network_manager.hpp"
 
+#include <chrono>
+#include <csignal>
+#include <fstream>
 #include <memory>
 #include <thread>
-#include <chrono>
-#include <fstream>
-#include <csignal>
 
 namespace {
 
@@ -44,7 +44,7 @@ using LaneServicePtr = std::unique_ptr<LaneService>;
 
 constexpr char const *LOGGING_NAME = "main";
 
-std::atomic<bool> global_running{true};
+std::atomic<bool>        global_running{true};
 std::atomic<std::size_t> global_interrupt_count{0};
 
 ShardConfig::CertificatePtr LoadOrCreateCertificate(char const *filename)
@@ -59,18 +59,19 @@ ShardConfig::CertificatePtr LoadOrCreateCertificate(char const *filename)
   }
 
   // create a new key
-  auto certificate = std::make_shared<ECDSASigner>();
-  auto private_key = certificate->private_key();
+  auto        certificate = std::make_shared<ECDSASigner>();
+  auto        private_key = certificate->private_key();
   auto const &private_key_ref{private_key};
 
   // flush to disk
   std::ofstream stream{filename, std::ios::out | std::ios::binary | std::ios::trunc};
-  stream.write(private_key_ref.char_pointer(), static_cast<std::streamsize>(private_key_ref.size()));
+  stream.write(private_key_ref.char_pointer(),
+               static_cast<std::streamsize>(private_key_ref.size()));
 
   return certificate;
 }
 
-ShardConfig BuildConfiguration(int argc, char const * const *argv)
+ShardConfig BuildConfiguration(int argc, char const *const *argv)
 {
   ShardConfig cfg{};
 
@@ -78,18 +79,18 @@ ShardConfig BuildConfiguration(int argc, char const * const *argv)
   ParamsParser parser;
   parser.Parse(argc, argv);
 
-  cfg.lane_id = parser.GetParam<uint32_t>("lane", 0);
-  cfg.num_lanes = parser.GetParam<uint32_t>("num-lanes", 1);
+  cfg.lane_id      = parser.GetParam<uint32_t>("lane", 0);
+  cfg.num_lanes    = parser.GetParam<uint32_t>("num-lanes", 1);
   cfg.storage_path = "";
 
-  cfg.external_name = parser.GetParam<std::string>("external", "127.0.0.1");
-  cfg.external_identity = LoadOrCreateCertificate("external.key");
-  cfg.external_port = parser.GetParam<uint16_t>("external-port", 8001);
+  cfg.external_name       = parser.GetParam<std::string>("external", "127.0.0.1");
+  cfg.external_identity   = LoadOrCreateCertificate("external.key");
+  cfg.external_port       = parser.GetParam<uint16_t>("external-port", 8001);
   cfg.external_network_id = NetworkId{(cfg.lane_id & 0xFFFFFFu) | (uint32_t{'L'} << 24u)};
 
-  cfg.internal_name = parser.GetParam<std::string>("external", "127.0.0.1");
-  cfg.internal_identity = LoadOrCreateCertificate("internal.key");
-  cfg.internal_port = parser.GetParam<uint16_t>("internal-port", 8002);
+  cfg.internal_name       = parser.GetParam<std::string>("external", "127.0.0.1");
+  cfg.internal_identity   = LoadOrCreateCertificate("internal.key");
+  cfg.internal_port       = parser.GetParam<uint16_t>("internal-port", 8002);
   cfg.internal_network_id = NetworkId{"ISRD"};
 
   return cfg;
@@ -117,7 +118,7 @@ void InterruptHandler(int /*signal*/)
   }
 }
 
-int Run(int argc, char const * const *argv)
+int Run(int argc, char const *const *argv)
 {
   // build the configuration
   ShardConfig cfg = BuildConfiguration(argc, argv);
@@ -127,7 +128,7 @@ int Run(int argc, char const * const *argv)
 
   // create the lane service
   auto lane_service =
-           std::make_unique<LaneService>(nm, std::move(cfg), LaneService::Mode::LOAD_DATABASE);
+      std::make_unique<LaneService>(nm, std::move(cfg), LaneService::Mode::LOAD_DATABASE);
 
   // start the internal network
   nm.Start();
@@ -145,9 +146,9 @@ int Run(int argc, char const * const *argv)
   return EXIT_SUCCESS;
 }
 
-} // namespace
+}  // namespace
 
-int main(int argc, char const * const *argv)
+int main(int argc, char const *const *argv)
 {
   int exit_code{EXIT_FAILURE};
 
