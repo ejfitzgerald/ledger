@@ -11,6 +11,7 @@ add_subdirectory(muddle-probe)
 add_subdirectory(chain-tool)
 add_subdirectory(muddle-test-network)
 add_subdirectory(storage-tools)
+add_subdirectory(lane-server)
 
 if (NOT APPLE)
   add_subdirectory(oef-core)
