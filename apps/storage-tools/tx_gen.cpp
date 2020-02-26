@@ -41,6 +41,8 @@ using fetch::serializers::LargeObjectSerializeHelper;
 using SignerPtr  = std::unique_ptr<ECDSASigner>;
 using AddressPtr = std::unique_ptr<Address>;
 
+static ConstByteArray FIXED_REFERENCE_KEY = ConstByteArray{"ywylQQ9fu+tTMm6s0dwOOD3rBQy9ekaRMxN8UxFMK5w="}.FromBase64();
+
 static std::vector<SignerPtr> GenerateSignersInParallel(std::size_t count)
 {
   Pool pool{};
@@ -57,7 +59,14 @@ static std::vector<SignerPtr> GenerateSignersInParallel(std::size_t count)
       // create this batch of keys
       for (std::size_t i = start; i < end; ++i)
       {
-        signers.at(i) = std::make_unique<ECDSASigner>();
+        if (i == 0)
+        {
+          signers.at(i) = std::make_unique<ECDSASigner>(FIXED_REFERENCE_KEY);
+        }
+        else
+        {
+          signers.at(i) = std::make_unique<ECDSASigner>();
+        }
       }
     });
   }
@@ -83,7 +92,14 @@ static std::vector<SignerPtr> GenerateSigners(std::size_t count)
 
   for (std::size_t i = 0; i < count; ++i)
   {
-    output.emplace_back(std::make_unique<ECDSASigner>());
+    if (i == 0)
+    {
+      output.emplace_back(std::make_unique<ECDSASigner>(FIXED_REFERENCE_KEY));
+    }
+    else
+    {
+      output.emplace_back(std::make_unique<ECDSASigner>());
+    }
   }
 
   std::cout << "Generating Keys...complete" << std::endl;
