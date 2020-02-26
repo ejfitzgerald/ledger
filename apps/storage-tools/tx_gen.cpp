@@ -126,8 +126,11 @@ static std::vector<ConstByteArray> GenerateTransactionsInParallel(
   std::vector<SignerPtr> signer_copies(num_batches);
   for (auto &signer : signer_copies)
   {
-    signer = std::make_unique<ECDSASigner>(reference_signer->private_key());
+    pool.Dispatch([&signer, &reference_signer]() {
+      signer = std::make_unique<ECDSASigner>(reference_signer->private_key());
+    });
   }
+  pool.Wait();
 
   for (std::size_t batch = 0; batch < num_batches; ++batch)
   {
