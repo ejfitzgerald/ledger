@@ -15,4 +15,7 @@ add_executable(tx-ctl
 target_link_libraries(tx-ctl PRIVATE fetch-ledger)
 
 add_executable(tx-gen tx_gen.cpp)
+add_executable(tx-gen_nathans-bestcase-scenario-even-lane-distribution tx-gen_nathans-bestcase-scenario-even-lane_distribution.cpp)
+
 target_link_libraries(tx-gen PRIVATE fetch-ledger)
+target_link_libraries(tx-gen_nathans-bestcase-scenario-even-lane-distribution PRIVATE fetch-ledger)
