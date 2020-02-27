@@ -40,7 +40,7 @@ using byte_array::ConstByteArray;
 
 using StringSet = std::unordered_set<ConstByteArray>;
 
-char const *               BOOTSTRAP_HOST = "http://127.0.0.1:8000";
+char const *               BOOTSTRAP_HOST = "https://bootstrap.fetch.ai";
 const std::chrono::seconds UPDATE_INTERVAL{30};
 constexpr char const *     LOGGING_NAME = "bootstrap";
 
