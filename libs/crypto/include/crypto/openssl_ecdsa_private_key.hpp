@@ -158,7 +158,7 @@ private:
   static UniquePointerType<BIGNUM, DeleteStrategyType::clearing> Convert2BIGNUM(
       byte_array::ConstByteArray const &key_data)
   {
-    if (EcdsaCurveType::privateKeySize < key_data.size())
+    if (EcdsaCurveType::privateKeySize != key_data.size())
     {
       throw std::runtime_error(
           "ECDSAPrivateKey::Convert2BIGNUM(const "
@@ -293,10 +293,15 @@ private:
       throw std::runtime_error("ECDSAPrivateKey::KeyAsBin(): EC_KEY_get0_private_key(...) failed.");
     }
 
-    byte_array::ByteArray key_as_bin;
-    key_as_bin.Resize(static_cast<std::size_t>(BN_num_bytes(key_as_BN)));
+    std::size_t const actual_key_size = static_cast<std::size_t>(BN_num_bytes(key_as_BN));
 
-    if (BN_bn2bin(key_as_BN, static_cast<uint8_t *>(key_as_bin.pointer())) == 0)
+    byte_array::ByteArray key_as_bin;
+    key_as_bin.Resize(EcdsaCurveType::privateKeySize);
+
+    assert(actual_key_size <= key_as_bin.size());
+    std::size_t const offset = key_as_bin.size() - actual_key_size;
+
+    if (BN_bn2bin(key_as_BN, key_as_bin.pointer() + offset) == 0)
     {
       throw std::runtime_error("ECDSAPrivateKey::KeyAsBin(...): BN_bn2bin(...) failed.");
     }
