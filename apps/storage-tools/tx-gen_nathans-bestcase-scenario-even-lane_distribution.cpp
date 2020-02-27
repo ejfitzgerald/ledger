@@ -371,38 +371,59 @@ int main(int argc, char **argv)
 
   std::cout << "Generating TXs: " << count << std::endl;
 
-  uint32_t lane = 0;
-  uint32_t total_generated = 0;
+  uint32_t threads_to_use = 16;
+  std::atomic<uint32_t> total_generated{0};
   std::vector<ConstByteArray> transactions;
+  std::vector<std::unique_ptr<std::thread>> threads;
+  std::mutex transactions_mutex;
 
-  while(total_generated < count)
+  auto closure = [&total_generated, &transactions, &transactions_mutex, &origin_addresses, count]()
   {
-    ECDSASigner signer{all_private[lane]};
-
-    if(lane != 79 && lane != 202)
+    for(;;)
     {
-      // build the transaction
-      auto const tx = TransactionBuilder()
-                          .From(Address{signer.identity()})
-                          .ValidUntil(500)
-                          .ChargeRate(1)
-                          .ChargeLimit(5)
-                          .Counter(total_generated + 8000)
-                          .Transfer(Address{origin_addresses[lane]->identity()}, 1)
-                          .Signer(signer.identity())
-                          .Seal()
-                          .Sign(signer)
-                          .Build();
+      uint32_t to_generate = ++total_generated;
+      uint32_t lane = to_generate % 256;
 
-      // serialise the transaction
-      TransactionSerializer serializer{};
-      serializer << *tx;
+      if(to_generate > count)
+      {
+        break;
+      }
 
-      transactions.emplace_back(serializer.data());
+      ECDSASigner signer{all_private[lane]};
+
+      if(lane != 79 && lane != 202)
+      {
+        // build the transaction
+        auto const tx = TransactionBuilder()
+                            .From(Address{signer.identity()})
+                            .ValidUntil(500)
+                            .ChargeRate(1)
+                            .ChargeLimit(5)
+                            .Counter(total_generated + 8000)
+                            .Transfer(Address{origin_addresses[lane]->identity()}, 1)
+                            .Signer(signer.identity())
+                            .Seal()
+                            .Sign(signer)
+                            .Build();
+
+        // serialise the transaction
+        TransactionSerializer serializer{};
+        serializer << *tx;
+
+        std::lock_guard<std::mutex> lock(transactions_mutex);
+        transactions.emplace_back(serializer.data());
+      }
     }
+  };
 
-    total_generated++;
-    lane = (lane + 1) % 256;
+  for (std::size_t i = 0; i < threads_to_use; ++i)
+  {
+    threads.emplace_back(std::make_unique<std::thread>(closure));
+  }
+
+  for(auto const &i : threads)
+  {
+    i->join();
   }
 
   std::cout << "Generating bitstream..." << std::endl;
@@ -424,49 +445,6 @@ int main(int argc, char **argv)
   stream.write(helper.data().char_pointer(), static_cast<std::streamsize>(helper.data().size()));
 
   std::cout << "Writing to disk ... complete" << std::endl;
-
-//#endif
-
-  //if (argc != 4)
-  //{
-  //  std::cerr << "Usage: " << argv[0] << "<count> <filename> <metapath>" << std::endl;
-  //  return 1;
-  //}
-
-  //auto const        count       = static_cast<std::size_t>(atoi(argv[1]));
-  //std::string const output_path = argv[2];
-  //std::string const meta_path   = argv[3];
-  //std::size_t const num_signers =
-  //    (count / 10u) + 2u;  // 10% of count with minimum of 2 signers (src and dest)
-
-  //auto const signers    = GenerateSigners(num_signers);
-  //auto const addresses  = GenerateAddresses(signers);
-  //auto const encoded_tx = GenerateTransactions(count, signers, addresses);
-
-  //std::cout << "Reference Address: " << addresses.at(0)->display() << std::endl;
-
-  //std::cout << "Generating bitstream..." << std::endl;
-  //LargeObjectSerializeHelper helper{};
-  //helper << encoded_tx;
-  //std::cout << "Generating bitstream...complete" << std::endl;
-
-  //// verify
-  //std::vector<ConstByteArray> verified{};
-  //LargeObjectSerializeHelper  helper2{helper.data()};
-  //helper2 >> verified;
-
-  //std::cout << "Count: " << verified.size() << std::endl;
-
-  //std::cout << "Writing to disk ..." << std::endl;
-
-  //// write out the binary file
-  //std::ofstream stream(output_path.c_str(), std::ios::out | std::ios::binary);
-  //stream.write(helper.data().char_pointer(), static_cast<std::streamsize>(helper.data().size()));
-
-  //std::cout << "Writing to disk ... complete" << std::endl;
-
-  //std::ofstream stream2(meta_path.c_str());
-  //stream2 << addresses.at(0)->display() << std::endl;
 
   return 0;
 }
