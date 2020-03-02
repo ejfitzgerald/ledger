@@ -16,11 +16,12 @@
 //
 //------------------------------------------------------------------------------
 
+#include "manifest_builder.hpp"
+
 #include "constants.hpp"
 #include "core/byte_array/const_byte_array.hpp"
 #include "core/byte_array/decoders.hpp"
 #include "core/filesystem/read_file_contents.hpp"
-#include "manifest_builder.hpp"
 #include "network/peer.hpp"
 #include "settings.hpp"
 #include "shards/manifest.hpp"
@@ -46,8 +47,8 @@ using fetch::network::Peer;
  * @param num_lanes The number of lanes to be configured
  * @param manifest The output manifest to be populated
  */
-void GenerateDefaultManifest(std::string const &external_address, std::string const &shard_prefix, uint16_t port, uint32_t num_lanes,
-                             Manifest &manifest)
+void GenerateDefaultManifest(std::string const &external_address, std::string const &shard_prefix,
+                             uint16_t port, uint32_t num_lanes, Manifest &manifest)
 {
   Peer peer;
 
@@ -63,18 +64,20 @@ void GenerateDefaultManifest(std::string const &external_address, std::string co
   peer.Update(external_address, static_cast<uint16_t>(port + DKG_PORT_OFFSET));
   manifest.AddService(ServiceIdentifier{ServiceIdentifier::Type::DKG}, ManifestEntry{peer});
 
-
   // register all of the lanes (storage shards)
   for (uint32_t i = 0; i < num_lanes; ++i)
   {
     // determine the address for the shards
     std::string lane_address = external_address;
+    auto        lane_port    = static_cast<uint16_t>(port + STORAGE_PORT_OFFSET + (2 * i));
+
     if (!shard_prefix.empty())
     {
       lane_address = shard_prefix + std::to_string(i);
+      lane_port    = port + STORAGE_PORT_OFFSET;
     }
 
-    peer.Update(std::move(lane_address), static_cast<uint16_t>(port + STORAGE_PORT_OFFSET + (2 * i)));
+    peer.Update(std::move(lane_address), lane_port);
 
     FETCH_LOG_INFO("ManifestGen", "Shard ", i, " Located @ ", peer.ToString());
 
