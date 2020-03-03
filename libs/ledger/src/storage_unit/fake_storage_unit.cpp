@@ -260,5 +260,9 @@ void FakeStorageUnit::PrefetchTXs(std::vector<Digest> const &/*digests*/)
 {
 }
 
+void FakeStorageUnit::WritebackState()
+{
+}
+
 }  // namespace ledger
 }  // namespace fetch

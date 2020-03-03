@@ -85,6 +85,7 @@ public:
   bool                       Lock(ShardIndex index) override;
   bool                       Unlock(ShardIndex index) override;
   void PrefetchTXs(std::vector<Digest> const &digests) override;
+  void WritebackState() override;
   /// @}
 
   StorageUnitClient &operator=(StorageUnitClient const &) = delete;

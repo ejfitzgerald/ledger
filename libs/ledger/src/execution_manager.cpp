@@ -233,21 +233,10 @@ bool ExecutionManager::PlanExecution(Block const &block)
   }
 
   // Tell the storage engine to prepare/fetch the TXs we will need
-  bool async_tx_fetch = true;
-
-  if(async_tx_fetch)
   {
-    thread_pool_->Post([this, digests]() {
-      MilliTimer const timer2{"Prefetch TXs ", 20};
-      storage_->PrefetchTXs(digests);
-    });
-  }
-  else
-  {
-    MilliTimer const timer2{"Prefetch TXs ", 20};
+    MilliTimer const timer2{"Prefetch TXs ", 350};
     storage_->PrefetchTXs(digests);
   }
-
 
   return true;
 }
@@ -661,7 +650,10 @@ void ExecutionManager::MonitorThreadEntrypoint()
     }
 
     case MonitorState::BOOKMARKING_STATE:
-      // finished processing the block
+      // finished processing the block - force the state database to write back
+      MilliTimer const timer2{"Writeback State ", 100};
+      storage_->WritebackState();
+
       monitor_state = MonitorState::IDLE;
       break;
     }

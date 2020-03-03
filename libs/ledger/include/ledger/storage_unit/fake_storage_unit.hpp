@@ -55,6 +55,7 @@ public:
   bool HasTransaction(Digest const &digest) override;
   void IssueCallForMissingTxs(DigestSet const &digests) override;
   void PrefetchTXs(std::vector<Digest> const &digests) override;
+  void WritebackState() override;
   /// @}
 
   /// @name Transaction History Poll

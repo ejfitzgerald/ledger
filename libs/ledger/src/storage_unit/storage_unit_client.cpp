@@ -660,6 +660,37 @@ void StorageUnitClient::PrefetchTXs(std::vector<Digest> const &digests)
   /* printer.Print(); */
 }
 
+void StorageUnitClient::WritebackState()
+{
+  try
+  {
+    FETCH_LOCK(cache_mutex_);
+    std::vector<service::Promise> promises;
+
+    for(auto const &item : cached_state_items_)
+    {
+      auto &key   = item.first;
+      auto &value = item.second;
+
+      // make the request to the RPC server
+      auto promise = rpc_client_->CallSpecificAddress(
+          LookupAddress(key), RPC_STATE, fetch::storage::RevertibleDocumentStoreProtocol::SET,
+          key.as_resource_id(), value);
+
+      promises.push_back(promise);
+    }
+
+    for(auto const &promise : promises)
+    {
+      promise->Wait();
+    }
+  }
+  catch (std::exception const &e)
+  {
+    FETCH_LOG_WARN(LOGGING_NAME, "Failed to call SET (store document, WritebackState), because: ", e.what());
+  }
+}
+
 bool StorageUnitClient::Lock(ShardIndex )
 {
   return true;
