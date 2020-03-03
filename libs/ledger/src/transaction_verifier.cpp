@@ -198,7 +198,7 @@ void TransactionVerifier::Verifier()
         FETCH_LOG_DEBUG(LOGGING_NAME, "Verifying TX: 0x", tx->digest().ToHex());
 
         // check the status
-        if (true || tx->Verify())
+        if (tx->Verify())
         {
           FETCH_LOG_DEBUG(LOGGING_NAME, "TX Verify Complete: 0x", tx->digest().ToHex());
 
