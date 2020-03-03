@@ -40,11 +40,13 @@ ResourceID CreateResourceId(Digest const &digest)
 void TransactionStore::New(std::string const &doc_file, std::string const &index_file, bool create)
 {
   archive_.New(doc_file, index_file, create);
+  archive_.DisableHashing(true);
 }
 
 void TransactionStore::Load(std::string const &doc_file, std::string const &index_file, bool create)
 {
   archive_.Load(doc_file, index_file, create);
+  archive_.DisableHashing(true);
 }
 
 /**

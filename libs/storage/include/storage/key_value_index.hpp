@@ -210,6 +210,11 @@ public:
     stack_.Load(std::forward<Args>(args)...);
   }
 
+  void DisableHashing(bool disable)
+  {
+    disable_hashing_ = disable;
+  }
+
   void BeforeFlushHandler()
   {
     if (!this->is_open())
@@ -795,6 +800,7 @@ public:
 
 private:
   StackType stack_;
+  bool disable_hashing_{false};
 
   uint64_t                                     root_ = 0;
   std::unordered_map<uint64_t, key_value_pair> schedule_update_;
@@ -809,6 +815,11 @@ private:
    */
   void UpdateParents(IndexType pid, IndexType cid, key_value_pair child)
   {
+    if(disable_hashing_)
+    {
+      return;
+    }
+
     key_value_pair parent, left, right;
 
     while (pid != IndexType(-1))

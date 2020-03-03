@@ -286,6 +286,11 @@ public:
     return Iterator(this, key_index_.end());
   }
 
+  void DisableHashing(bool disable)
+  {
+    key_index_.DisableHashing(disable);
+  }
+
   // Hash based functionality - note this will only work if both underlying files
   // have commit functionality
   ByteArrayType Commit()

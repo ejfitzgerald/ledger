@@ -84,6 +84,11 @@ public:
     store_.Load(doc_file, index_file, create);
   }
 
+  void DisableHashing(bool disable)
+  {
+    store_.DisableHashing(disable);
+  }
+
   /**
    * Assign object given a key (ResourceID)
    *
