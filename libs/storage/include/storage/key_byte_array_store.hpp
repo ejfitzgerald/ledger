@@ -19,6 +19,7 @@
 
 #include "storage/document_store.hpp"
 #include "storage/random_access_stack.hpp"
+#include "storage/cache_line_LRU_random_access_stack.hpp"
 
 namespace fetch {
 namespace storage {
@@ -29,12 +30,12 @@ template <std::size_t BLOCK_SIZE = 2048>
 struct ByteArrayMapConfigurator
 {
   using KVIPairType  = KeyValuePair<>;
-  using KVIStackType = RandomAccessStack<KVIPairType, uint64_t>;
+  using KVIStackType = CacheLineLRURandomAccessStack<KVIPairType, uint64_t>;
 
   using KVIStoreType = KeyValueIndex<KVIPairType, KVIStackType>;
 
   using SpecificFileBlockType = FileBlockType<BLOCK_SIZE>;
-  using DocumentStackType     = RandomAccessStack<SpecificFileBlockType>;
+  using DocumentStackType     = CacheLineLRURandomAccessStack<SpecificFileBlockType>;
   using FileObjectType        = FileObject<DocumentStackType>;
 
   using Type = DocumentStore<BLOCK_SIZE, SpecificFileBlockType, KVIStoreType, DocumentStackType,
