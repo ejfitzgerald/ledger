@@ -197,8 +197,11 @@ void TransactionVerifier::Verifier()
 
         FETCH_LOG_DEBUG(LOGGING_NAME, "Verifying TX: 0x", tx->digest().ToHex());
 
+#define DISABLE_VERIFICATION
+#ifndef DISABLE_VERIFICATION
         // check the status
         if (tx->Verify())
+#endif // !DISABLE_VERIFICATION
         {
           FETCH_LOG_DEBUG(LOGGING_NAME, "TX Verify Complete: 0x", tx->digest().ToHex());
 
@@ -206,6 +209,7 @@ void TransactionVerifier::Verifier()
           verified_queue_length_->increment();
           verified_tx_total_->increment();
         }
+#ifndef DISABLE_VERIFICATION
         else
         {
           FETCH_LOG_WARN(LOGGING_NAME, name_ + " Unable to verify transaction: 0x",
@@ -213,6 +217,7 @@ void TransactionVerifier::Verifier()
 
           discarded_tx_total_->increment();
         }
+#endif // !DISABLE_VERIFICATION
       }
     }
     catch (std::exception const &e)
