@@ -161,9 +161,12 @@ void Executor::SettleFees(chain::Address const &miner, BlockIndex block, TokenAm
 {
   telemetry::FunctionTimer const timer{*settle_fees_duration_};
 
-  FETCH_LOG_TRACE(LOGGING_NAME, "Settling fees");
+  //FETCH_LOG_TRACE(LOGGING_NAME, "Settling fees. Current tx: ", current_tx_);
 
-  fee_manager_.SettleFees(miner, amount, current_tx_->contract_address(), log2_num_lanes, block_,
+
+  auto contract_address = current_tx_ ? current_tx_->contract_address() : chain::Address();
+
+  fee_manager_.SettleFees(miner, amount, contract_address, log2_num_lanes, block,
                           *storage_);
 
   FETCH_LOG_TRACE(LOGGING_NAME, "Aggregating stake updates...");

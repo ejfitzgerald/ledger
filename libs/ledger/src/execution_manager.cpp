@@ -595,6 +595,7 @@ void ExecutionManager::MonitorThreadEntrypoint()
         }
         else
         {
+          timer_printer_.Stop("01 executor main execution");
           monitor_state = MonitorState::SETTLE_FEES;
         }
       }
@@ -606,8 +607,7 @@ void ExecutionManager::MonitorThreadEntrypoint()
       moment::DeadlineTimer executor_deadline("ExecMgr");
       executor_deadline.Restart(1000u);
 
-      MilliTimer const timer2{"SettleFees", 1};
-      std::this_thread::sleep_for(std::chrono::milliseconds(5));
+      MilliTimer const timer2{"SettleFees", 50};
 
       // In rare cases due to scheduling, no executors might have been returned to the idle queue.
       // This busy wait loop will catch this event and has a fixed duration.
@@ -618,6 +618,8 @@ void ExecutionManager::MonitorThreadEntrypoint()
           FETCH_LOG_WARN(LOGGING_NAME, "Unable to locate free executor to settle miner fees");
           break;
         }
+
+        FETCH_LOG_INFO(LOGGING_NAME, "Settling fees...");
 
         // attempt to settle the fees using one of the free executors
         {
