@@ -469,7 +469,7 @@ void StorageUnitClient::IssueCallForMissingTxs(DigestSet const &digest_set)
 
 StorageUnitClient::Document StorageUnitClient::GetOrCreate(ResourceAddress const &key)
 {
-  FETCH_LOG_INFO(LOGGING_NAME, "get or create!");
+  FETCH_LOG_INFO(LOGGING_NAME, "get or create! (never called it seems)");
 
   // make the request to the RPC client
   auto promise = rpc_client_->CallSpecificAddress(LookupAddress(key), RPC_STATE,
