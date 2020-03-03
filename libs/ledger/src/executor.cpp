@@ -32,6 +32,7 @@
 #include "telemetry/histogram.hpp"
 #include "telemetry/registry.hpp"
 #include "telemetry/utils/timer.hpp"
+#include "network/generics/milli_timer.hpp"
 
 #include <algorithm>
 #include <exception>
@@ -43,6 +44,7 @@ static constexpr uint64_t    TRANSFER_CHARGE = 1;
 
 using fetch::telemetry::Histogram;
 using fetch::telemetry::Registry;
+using fetch::generics::MilliTimer;
 
 namespace fetch {
 namespace ledger {
@@ -82,6 +84,8 @@ Executor::Executor(StorageUnitPtr storage)
 Executor::Result Executor::Execute(Digest const &digest, BlockIndex block, SliceIndex slice,
                                    BitVector const &shards)
 {
+  MilliTimer const timer2{"Executorexecution ", 20};
+
   telemetry::FunctionTimer const timer{*overall_duration_};
 
   FETCH_LOG_DEBUG(LOGGING_NAME, "Executing tx 0x", digest.ToHex());
@@ -94,13 +98,19 @@ Executor::Result Executor::Execute(Digest const &digest, BlockIndex block, Slice
   allowed_shards_ = shards;
   log2_num_lanes_ = shards.log2_size();
 
-  // attempt to retrieve the transaction from the storage
-  if (!RetrieveTransaction(digest))
+
   {
-    // signal that the contract failed to be executed
-    result.status = Status::TX_LOOKUP_FAILURE;
+    MilliTimer const timer3{"RetrieveTx ", 5};
+
+    // attempt to retrieve the transaction from the storage
+    if (!RetrieveTransaction(digest))
+    {
+      // signal that the contract failed to be executed
+      result.status = Status::TX_LOOKUP_FAILURE;
+      return result;
+    }
   }
-  else
+
   {
     // update the charge related data provided by Tx sender
     result.charge_rate  = current_tx_->charge_rate();
@@ -109,6 +119,8 @@ Executor::Result Executor::Execute(Digest const &digest, BlockIndex block, Slice
     // create the storage cache
     storage_cache_ = std::make_shared<CachedStorageAdapter>(*storage_);
 
+    {
+    MilliTimer const timer4{"TrueExecution ", 20};
     // follow the three step process for executing a transaction
     //
     // 0. Validation checks (does the originator have correct funds)
@@ -119,18 +131,24 @@ Executor::Result Executor::Execute(Digest const &digest, BlockIndex block, Slice
     bool const success =
         ValidationChecks(result) && ExecuteTransactionContract(result) && ProcessTransfers(result);
 
-    if (!success)
-    {
-      // in addition to avoid indeterminate data being partially flushed. In the case of the when
-      // the transaction execution fails then we also clear all the cached data.
-      storage_cache_->Clear();
+      if (!success)
+      {
+        // in addition to avoid indeterminate data being partially flushed. In the case of the when
+        // the transaction execution fails then we also clear all the cached data.
+        storage_cache_->Clear();
+      }
     }
+
 
     FeeManager::TransactionDetails tx_details{*current_tx_, allowed_shards_};
 
-    // deduct the fees from the originator
-    fee_manager_.Execute(tx_details, result, block_, *storage_cache_);
+    {
+      MilliTimer const timer5{"Feededuct ", 20};
+      // deduct the fees from the originator
+      fee_manager_.Execute(tx_details, result, block_, *storage_cache_);
+    }
 
+    MilliTimer const timer6{"WritebackTXresult ", 20};
     // flush the storage so that all changes are now persistent
     storage_cache_->Flush();
   }
