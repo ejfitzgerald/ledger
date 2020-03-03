@@ -39,6 +39,7 @@
 #include "telemetry/gauge.hpp"
 #include "telemetry/histogram.hpp"
 #include "telemetry/registry.hpp"
+#include "moment/clocks.hpp"
 
 #include <cassert>
 #include <chrono>
@@ -74,6 +75,11 @@ const uint32_t                  THRESHOLD_FOR_FAST_SYNCING{100u};
 const std::size_t               MAX_ATTEMPTED_PANIC_REVERTS{10};
 
 }  // namespace
+
+uint64_t GetTimeHelper()
+{
+  return GetTime(fetch::moment::GetClock("default", fetch::moment::ClockType::SYSTEM), moment::TimeAccuracy::MILLISECONDS);
+}
 
 /**
  * Construct the Block Coordinator
@@ -537,6 +543,8 @@ BlockCoordinator::State BlockCoordinator::OnSynchronised(State current, State pr
                   " beacon: ", next_block_->block_entropy.EntropyAsU64());
 
   start_block_packing_ = Clock::now();
+  info_.Reset();
+  info_.Start(GetTimeHelper(), "00 Full Block lifecycle");
 
   // Attach current DAG state
   if (dag_)
@@ -553,7 +561,7 @@ BlockCoordinator::State BlockCoordinator::OnSynchronised(State current, State pr
 
 BlockCoordinator::State BlockCoordinator::OnPreExecBlockValidation()
 {
-  MilliTimer const timer{"OnPreExecBlockValidation ", 1000};
+  MilliTimer const timer{"OnPreExecBlockValidation ", 100};
   current_block_coord_state_->set(static_cast<uint64_t>(state_machine_->state()));
   pre_valid_state_count_->increment();
 
@@ -649,7 +657,7 @@ BlockCoordinator::State BlockCoordinator::OnPreExecBlockValidation()
 
 BlockCoordinator::State BlockCoordinator::OnSynergeticExecution()
 {
-  MilliTimer const timer{"OnSynergeticExecution ", 1000};
+  MilliTimer const timer{"OnSynergeticExecution ", 100};
   current_block_coord_state_->set(static_cast<uint64_t>(state_machine_->state()));
   syn_exec_state_count_->count();
 
@@ -689,7 +697,7 @@ BlockCoordinator::State BlockCoordinator::OnSynergeticExecution()
 
 BlockCoordinator::State BlockCoordinator::OnWaitForTransactions(State current, State previous)
 {
-  MilliTimer const timer{"OnWaitForTransactions ", 1000};
+  MilliTimer const timer{"OnWaitForTransactions ", 100};
   current_block_coord_state_->set(static_cast<uint64_t>(state_machine_->state()));
   wait_tx_state_count_->increment();
 
@@ -951,7 +959,7 @@ void BlockCoordinator::Panic()
 
 BlockCoordinator::State BlockCoordinator::OnScheduleBlockExecution()
 {
-  MilliTimer const timer{"OnScheduleBlockExecution ", 1000};
+  MilliTimer const timer{"OnScheduleBlockExecution ", 100};
   sch_block_state_count_->increment();
 
   State next_state{State::RESET};
@@ -969,7 +977,7 @@ BlockCoordinator::State BlockCoordinator::OnScheduleBlockExecution()
 
 BlockCoordinator::State BlockCoordinator::OnWaitForExecution()
 {
-  MilliTimer const timer{"OnWaitForExecution ", 1000};
+  MilliTimer const timer{"OnWaitForExecution ", 100};
   current_block_coord_state_->set(static_cast<uint64_t>(state_machine_->state()));
   wait_exec_state_count_->increment();
 
@@ -1006,7 +1014,7 @@ BlockCoordinator::State BlockCoordinator::OnWaitForExecution()
 
 BlockCoordinator::State BlockCoordinator::OnPostExecBlockValidation()
 {
-  MilliTimer const timer{"OnPostExecBlockValidation ", 1000};
+  MilliTimer const timer{"OnPostExecBlockValidation ", 100};
   current_block_coord_state_->set(static_cast<uint64_t>(state_machine_->state()));
   post_valid_state_count_->increment();
 
@@ -1080,6 +1088,7 @@ BlockCoordinator::State BlockCoordinator::OnPostExecBlockValidation()
 
 BlockCoordinator::State BlockCoordinator::OnPackNewBlock()
 {
+  info_.Start(GetTimeHelper(), "02 Pack block");
   MilliTimer const timer{"OnPackNewBlock ", 1000};
   current_block_coord_state_->set(static_cast<uint64_t>(state_machine_->state()));
   pack_block_state_count_->increment();
@@ -1090,6 +1099,8 @@ BlockCoordinator::State BlockCoordinator::OnPackNewBlock()
   {
     // call the block packer
     block_packer_.GenerateBlock(*next_block_, num_lanes_, num_slices_, chain_);
+
+    info_.Stop(GetTimeHelper(), "02 Pack block");
 
     // trigger the execution of the block
     next_state = State::EXECUTE_NEW_BLOCK;
@@ -1104,9 +1115,10 @@ BlockCoordinator::State BlockCoordinator::OnPackNewBlock()
 
 BlockCoordinator::State BlockCoordinator::OnNewSynergeticExecution()
 {
-  MilliTimer const timer{"OnNewSynergeticExecution ", 1000};
+  MilliTimer const timer{"OnNewSynergeticExecution ", 100};
   current_block_coord_state_->set(static_cast<uint64_t>(state_machine_->state()));
   new_syn_state_count_->increment();
+  info_.Start(GetTimeHelper(), "01 Syn execution");
 
   if (synergetic_exec_mgr_ && dag_)
   {
@@ -1131,12 +1143,15 @@ BlockCoordinator::State BlockCoordinator::OnNewSynergeticExecution()
     }
   }
 
+  info_.Stop(GetTimeHelper(), "01 Syn execution");
   return State::PACK_NEW_BLOCK;
 }
 
 BlockCoordinator::State BlockCoordinator::OnExecuteNewBlock()
 {
-  MilliTimer const timer{"OnExecuteNewBlock ", 1000};
+  info_.Start(GetTimeHelper(), "03 Execution");
+
+  MilliTimer const timer{"OnExecuteNewBlock ", 5000};
   current_block_coord_state_->set(static_cast<uint64_t>(state_machine_->state()));
   new_exec_state_count_->increment();
 
@@ -1155,7 +1170,7 @@ BlockCoordinator::State BlockCoordinator::OnExecuteNewBlock()
 
 BlockCoordinator::State BlockCoordinator::OnWaitForNewBlockExecution()
 {
-  MilliTimer const timer{"OnWaitForNewBlockExecution ", 1000};
+  MilliTimer const timer{"OnWaitForNewBlockExecution ", 100};
   current_block_coord_state_->set(static_cast<uint64_t>(state_machine_->state()));
   new_wait_exec_state_count_->increment();
 
@@ -1171,8 +1186,15 @@ BlockCoordinator::State BlockCoordinator::OnWaitForNewBlockExecution()
 
     FETCH_LOG_DEBUG(LOGGING_NAME, "Merkle Hash: ", ToBase64(next_block_->merkle_hash));
 
+    info_.Stop(GetTimeHelper(), "03 Execution");
+
+    info_.Start(GetTimeHelper(), "04 Commit");
+
     // Commit the state generated by this block
     storage_unit_.Commit(next_block_->block_number);
+
+    info_.Stop(GetTimeHelper(), "04 Commit");
+    info_.Start(GetTimeHelper(), "05 Transmit");
 
     // Notify the DAG of this epoch
     if (dag_)
@@ -1208,7 +1230,7 @@ BlockCoordinator::State BlockCoordinator::OnWaitForNewBlockExecution()
 
 BlockCoordinator::State BlockCoordinator::OnTransmitBlock()
 {
-  MilliTimer const timer{"OnTransmitBlock ", 1000};
+  MilliTimer const timer{"OnTransmitBlock ", 100};
   current_block_coord_state_->set(static_cast<uint64_t>(state_machine_->state()));
   transmit_state_count_->increment();
 
@@ -1225,9 +1247,13 @@ BlockCoordinator::State BlockCoordinator::OnTransmitBlock()
     // block that is executed because the merkle hash was not known at this point.
     execution_manager_.SetLastProcessedBlock(next_block_->hash);
 
+    info_.Start(GetTimeHelper(), "06 Main chain add");
+
     // ensure that the main chain is aware of the block
     if (BlockStatus::ADDED == chain_.AddBlock(*next_block_))
     {
+      info_.Stop(GetTimeHelper(), "06 Main chain add");
+
       // update the telemetry
       mined_block_count_->increment();
       executed_block_count_->increment();
@@ -1245,9 +1271,16 @@ BlockCoordinator::State BlockCoordinator::OnTransmitBlock()
       block_sink_.OnBlock(*next_block_);
 
       // Metrics on block time
+      auto total_time_to_create = ToSeconds(Clock::now() - start_block_packing_);
       total_time_to_create_block_->set(
-          static_cast<uint64_t>(ToSeconds(Clock::now() - start_block_packing_)));
+          static_cast<uint64_t>(total_time_to_create));
       blocks_minted_->add(1);
+
+      info_.Stop(GetTimeHelper(), "05 Transmit");
+      info_.Stop(GetTimeHelper(), "00 Full Block lifecycle");
+      info_.Print();
+
+      FETCH_LOG_INFO(LOGGING_NAME, "***** Time to create: ", total_time_to_create, " TX/sec: ", next_block_->GetTransactionCount()/total_time_to_create, " milliseconds/TX: ", 1000*(total_time_to_create/next_block_->GetTransactionCount()),"\n\n");
     }
     else
     {

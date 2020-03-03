@@ -60,6 +60,38 @@ class MainChain;
 class StorageUnitInterface;
 class BlockSinkInterface;
 
+class BlockExecutionInfo
+{
+public:
+  void Start(uint64_t start_time, std::string const &action)
+  {
+    action_start_[action] = start_time;
+  }
+
+  void Stop(uint64_t start_time, std::string const &action)
+  {
+    action_stop_[action] = start_time;
+  }
+
+  void Reset()
+  {
+    action_start_.clear();
+    action_stop_.clear();
+  }
+
+  void Print()
+  {
+    for(auto const &i : action_start_)
+    {
+      FETCH_LOG_INFO("BlockExeInfos", "Action: ", i.first, " time taken: ", action_stop_[i.first] - action_start_[i.first], " at: ", action_start_[i.first]);
+    }
+  }
+
+private:
+  std::unordered_map<std::string, uint64_t> action_start_;
+  std::unordered_map<std::string, uint64_t> action_stop_;
+};
+
 /**
  * The Block Coordinator is in charge of executing all the blocks that come into the system. It will
  * also decide when best to generate a new block into the network. The following diagram illustrates
@@ -378,6 +410,7 @@ private:
   telemetry::GaugePtr<uint64_t> current_block_weight_;
   telemetry::GaugePtr<uint64_t> last_block_interval_s_;
   telemetry::GaugePtr<uint64_t> current_block_coord_state_;
+  BlockExecutionInfo info_;
   /// @}
 };
 
