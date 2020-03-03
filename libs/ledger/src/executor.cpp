@@ -84,7 +84,7 @@ Executor::Executor(StorageUnitPtr storage)
 Executor::Result Executor::Execute(Digest const &digest, BlockIndex block, SliceIndex slice,
                                    BitVector const &shards)
 {
-  MilliTimer const timer2{"Executorexecution ", 20};
+  MilliTimer const timer2{"Executorexecution ", 200};
 
   telemetry::FunctionTimer const timer{*overall_duration_};
 
@@ -100,7 +100,7 @@ Executor::Result Executor::Execute(Digest const &digest, BlockIndex block, Slice
 
 
   {
-    MilliTimer const timer3{"RetrieveTx ", 5};
+    MilliTimer const timer3{"RetrieveTx ", 500};
 
     // attempt to retrieve the transaction from the storage
     if (!RetrieveTransaction(digest))
@@ -120,7 +120,7 @@ Executor::Result Executor::Execute(Digest const &digest, BlockIndex block, Slice
     storage_cache_ = std::make_shared<CachedStorageAdapter>(*storage_);
 
     {
-    MilliTimer const timer4{"TrueExecution ", 20};
+    MilliTimer const timer4{"TrueExecution ", 200};
     // follow the three step process for executing a transaction
     //
     // 0. Validation checks (does the originator have correct funds)
@@ -143,12 +143,12 @@ Executor::Result Executor::Execute(Digest const &digest, BlockIndex block, Slice
     FeeManager::TransactionDetails tx_details{*current_tx_, allowed_shards_};
 
     {
-      MilliTimer const timer5{"Feededuct ", 20};
+      MilliTimer const timer5{"Feededuct ", 200};
       // deduct the fees from the originator
       fee_manager_.Execute(tx_details, result, block_, *storage_cache_);
     }
 
-    MilliTimer const timer6{"WritebackTXresult ", 20};
+    MilliTimer const timer6{"WritebackTXresult ", 200};
     // flush the storage so that all changes are now persistent
     storage_cache_->Flush();
   }

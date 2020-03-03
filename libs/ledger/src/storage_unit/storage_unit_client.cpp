@@ -469,6 +469,8 @@ void StorageUnitClient::IssueCallForMissingTxs(DigestSet const &digest_set)
 
 StorageUnitClient::Document StorageUnitClient::GetOrCreate(ResourceAddress const &key)
 {
+  FETCH_LOG_INFO(LOGGING_NAME, "get or create!");
+
   // make the request to the RPC client
   auto promise = rpc_client_->CallSpecificAddress(LookupAddress(key), RPC_STATE,
                                                   RevertibleDocumentStoreProtocol::GET_OR_CREATE,
@@ -655,7 +657,7 @@ void StorageUnitClient::PrefetchTXs(std::vector<Digest> const &digests)
   }
 
   printer.Stop(GetTimeHelper(), "00 Full prefetch");
-  printer.Print();
+  /* printer.Print(); */
 }
 
 bool StorageUnitClient::Lock(ShardIndex )

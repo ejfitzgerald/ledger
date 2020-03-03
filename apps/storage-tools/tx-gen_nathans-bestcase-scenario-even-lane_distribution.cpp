@@ -354,26 +354,12 @@ int main(int argc, char **argv)
     }
   }
 
-  // check for balance easily with python script
-  std::ofstream output_file("testme.key", std::ios::out | std::ios::binary);
-
-  if (output_file.is_open())
-  {
-    ECDSASigner signer{all_private[202]};
-
-    auto const private_key_data = signer.private_key();
-
-    output_file.write(private_key_data.char_pointer(),
-                      static_cast<std::streamsize>(private_key_data.size()));
-  }
-
   // Now use these to create TXs that are entirely within 1 lane
 
   std::cout << "Generating TXs: " << count << std::endl;
 
   uint32_t threads_to_use = 16;
   std::atomic<uint32_t> total_generated{0};
-  std::vector<ConstByteArray> transactions;
   std::vector<std::unique_ptr<std::thread>> threads;
   std::mutex transactions_mutex;
 
@@ -381,7 +367,7 @@ int main(int argc, char **argv)
   std::vector<fetch::chain::Transaction> original_txs{};
   FETCH_UNUSED(original_txs);
 
-  auto closure = [&total_generated, &transactions, &transactions_mutex, &origin_addresses, count, &original_txs]()
+  auto closure = [&total_generated, &transactions_mutex, &origin_addresses, count, &original_txs]()
   {
     for(;;)
     {
@@ -395,29 +381,25 @@ int main(int argc, char **argv)
 
       ECDSASigner signer{all_private[lane]};
 
-      if(lane != 999)
-      {
-        // build the transaction
-        auto const tx = TransactionBuilder()
-                            .From(Address{signer.identity()})
-                            .ValidUntil(500)
-                            .ChargeRate(1)
-                            .ChargeLimit(5)
-                            .Counter(to_generate + 10001)
-                            .Transfer(Address{origin_addresses[lane]->identity()}, 1)
-                            .Signer(signer.identity())
-                            .Seal()
-                            .Sign(signer)
-                            .Build();
+      // build the transaction
+      auto const tx = TransactionBuilder()
+                          .From(Address{signer.identity()})
+                          .ValidUntil(500)
+                          .ChargeRate(1)
+                          .ChargeLimit(5)
+                          .Counter(to_generate + 10001)
+                          .Transfer(Address{origin_addresses[lane]->identity()}, 1)
+                          .Signer(signer.identity())
+                          .Seal()
+                          .Sign(signer)
+                          .Build();
 
-        // serialise the transaction
-        TransactionSerializer serializer{};
-        serializer << *tx;
+      // serialise the transaction
+      TransactionSerializer serializer{};
+      serializer << *tx;
 
-        std::lock_guard<std::mutex> lock(transactions_mutex);
-        transactions.emplace_back(serializer.data());
-        original_txs.emplace_back(*tx);
-      }
+      std::lock_guard<std::mutex> lock(transactions_mutex);
+      original_txs.emplace_back(*tx);
     }
   };
 
@@ -430,8 +412,6 @@ int main(int argc, char **argv)
   {
     i->join();
   }
-
-  std::cout << "size now: " << transactions.size() << std::endl;
 
   std::cout << "Generating bitstream..." << std::endl;
   LargeObjectSerializeHelper helper{};
