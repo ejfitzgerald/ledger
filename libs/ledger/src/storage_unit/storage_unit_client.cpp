@@ -23,7 +23,7 @@
 #include "ledger/storage_unit/storage_unit_client.hpp"
 #include "ledger/storage_unit/transaction_finder_protocol.hpp"
 #include "ledger/storage_unit/transaction_storage_protocol.hpp"
-#include "moment/clocks.hpp"
+#include "core/timer_printer.hpp"
 
 #include <cstddef>
 #include <iterator>
@@ -36,6 +36,7 @@
 using fetch::storage::ResourceID;
 using fetch::storage::RevertibleDocumentStoreProtocol;
 using fetch::service::Promise;
+using fetch::core::TimerPrinter;
 
 namespace fetch {
 namespace ledger {
@@ -542,45 +543,6 @@ void StorageUnitClient::Set(ResourceAddress const &key, StateValue const &value)
 //  }
 }
 
-class TimerPrinter
-{
-public:
-  void Start(uint64_t start_time, std::string const &action)
-  {
-    action_start_[action] = start_time;
-  }
-
-  void Stop(uint64_t start_time, std::string const &action)
-  {
-    action_stop_[action] = start_time;
-  }
-
-  void Reset()
-  {
-    action_start_.clear();
-    action_stop_.clear();
-  }
-
-  void Print()
-  {
-    for(auto const &i : action_start_)
-    {
-      FETCH_LOG_INFO("BlockExeInfos", "Action: ", i.first, " time taken: ", action_stop_[i.first] - action_start_[i.first], " at: ", action_start_[i.first]);
-    }
-  }
-
-private:
-  std::map<std::string, uint64_t> action_start_;
-  std::map<std::string, uint64_t> action_stop_;
-};
-
-namespace
-{
-uint64_t GetTimeHelper()
-{
-  return GetTime(fetch::moment::GetClock("default", fetch::moment::ClockType::SYSTEM), moment::TimeAccuracy::MILLISECONDS);
-}
-}
 
 void StorageUnitClient::PrefetchTXs(std::vector<Digest> const &digests)
 {
@@ -589,16 +551,16 @@ void StorageUnitClient::PrefetchTXs(std::vector<Digest> const &digests)
   vectors_by_lane.resize(1 << log2_num_lanes_);
   TimerPrinter printer;
 
-  printer.Start(GetTimeHelper(), "00 Full prefetch");
+  printer.Start("00 Full prefetch");
 
-  printer.Start(GetTimeHelper(), "01 vector split");
+  printer.Start("01 vector split");
   for(auto const &digest : digests)
   {
     ResourceID resource{digest};
     auto const lane = resource.lane(log2_num_lanes_);
     vectors_by_lane[lane].push_back(digest);
   }
-  printer.Stop(GetTimeHelper(), "01 vector split");
+  printer.Stop("01 vector split");
 
   // Now make bulk calls to get the TXs
   std::vector<service::Promise> promises;
@@ -610,7 +572,7 @@ void StorageUnitClient::PrefetchTXs(std::vector<Digest> const &digests)
     {
       continue;
     }
-    printer.Start(GetTimeHelper(), std::string("02 ") + std::to_string(counter) + " promise make");
+    printer.Start(std::string("02 ") + std::to_string(counter) + " promise make");
 
     // Assume that the vector has been correctly populated
     ResourceID resource{vector.front()};
@@ -618,7 +580,7 @@ void StorageUnitClient::PrefetchTXs(std::vector<Digest> const &digests)
                                                   TransactionStorageProtocol::GET_BULK, vector);
 
     promises.push_back(promise);
-    printer.Stop(GetTimeHelper(), std::string("02 ") + std::to_string(counter++) + " promise make");
+    printer.Stop(std::string("02 ") + std::to_string(counter++) + " promise make");
   }
 
   auto &cache_mutex = cache_mutex_;
@@ -656,7 +618,7 @@ void StorageUnitClient::PrefetchTXs(std::vector<Digest> const &digests)
     thread->join();
   }
 
-  printer.Stop(GetTimeHelper(), "00 Full prefetch");
+  printer.Stop("00 Full prefetch");
   /* printer.Print(); */
 }
 

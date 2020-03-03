@@ -31,6 +31,7 @@
 #include "storage/object_store.hpp"
 #include "telemetry/telemetry.hpp"
 #include "transaction_status_cache.hpp"
+#include "core/timer_printer.hpp"
 
 #include <atomic>
 #include <condition_variable>
@@ -146,6 +147,8 @@ private:
   CounterPtr   fees_settled_count_;
   CounterPtr   blocks_completed_count_;
   HistogramPtr execution_duration_;
+
+  core::TimerPrinter timer_printer_;
 
   void MonitorThreadEntrypoint();
 

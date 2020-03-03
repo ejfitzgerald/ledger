@@ -456,6 +456,8 @@ void ExecutionManager::MonitorThreadEntrypoint()
       // schedule the next slice if we have been triggered
       if (running_)
       {
+        timer_printer_.Start("00 executor full cycle");
+        timer_printer_.Start("01 executor main execution");
         monitor_state        = MonitorState::SCHEDULE_NEXT_SLICE;
         current_slice        = 0;
         aggregate_block_fees = 0;
@@ -473,6 +475,7 @@ void ExecutionManager::MonitorThreadEntrypoint()
 
       if (execution_plan_.empty())
       {
+        timer_printer_.Stop("01 executor main execution");
         monitor_state = MonitorState::SETTLE_FEES;
       }
       else
@@ -650,10 +653,16 @@ void ExecutionManager::MonitorThreadEntrypoint()
     }
 
     case MonitorState::BOOKMARKING_STATE:
+
+      timer_printer_.Start("03 executor writeback");
       // finished processing the block - force the state database to write back
       MilliTimer const timer2{"Writeback State ", 100};
       storage_->WritebackState();
+      timer_printer_.Stop("03 executor writeback");
 
+
+      timer_printer_.Stop("00 executor full cycle");
+      timer_printer_.Print();
       monitor_state = MonitorState::IDLE;
       break;
     }
