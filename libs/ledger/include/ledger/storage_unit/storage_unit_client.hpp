@@ -84,6 +84,7 @@ public:
   bool                       HashExists(Hash const &hash, uint64_t index) override;
   bool                       Lock(ShardIndex index) override;
   bool                       Unlock(ShardIndex index) override;
+  void PrefetchTXs(std::vector<Digest> const &digests) override;
   /// @}
 
   StorageUnitClient &operator=(StorageUnitClient const &) = delete;
@@ -114,6 +115,13 @@ private:
   mutable Mutex        merkle_mutex_;
   MerkleTree           current_merkle_;
   PermanentMerkleStack permanent_state_merkle_stack_{};
+  /// @}
+
+  /// @name Performance optimisations
+  /// @{
+  mutable Mutex                                   cache_mutex_;
+  std::unordered_map<ResourceAddress, StateValue> cached_state_items_;
+  std::unordered_map<Digest, chain::Transaction>  cached_txs_;
   /// @}
 };
 

@@ -23,6 +23,7 @@
 #include "ledger/storage_unit/storage_unit_client.hpp"
 #include "ledger/storage_unit/transaction_finder_protocol.hpp"
 #include "ledger/storage_unit/transaction_storage_protocol.hpp"
+#include "moment/clocks.hpp"
 
 #include <cstddef>
 #include <iterator>
@@ -405,6 +406,17 @@ StorageUnitClient::TxLayouts StorageUnitClient::PollRecentTx(uint32_t max_to_pol
 bool StorageUnitClient::GetTransaction(byte_array::ConstByteArray const &digest,
                                        chain::Transaction &              tx)
 {
+  // First check if it is cached
+  {
+    FETCH_LOCK(cache_mutex_);
+
+    if(cached_txs_.find(digest) != cached_txs_.end())
+    {
+      tx = cached_txs_.at(digest);
+      return true;
+    }
+  }
+
   ResourceID resource{digest};
 
   // make the request to the RPC server
@@ -475,13 +487,24 @@ StorageUnitClient::Document StorageUnitClient::GetOrCreate(ResourceAddress const
 
 StorageUnitClient::Document StorageUnitClient::Get(ResourceAddress const &key) const
 {
+  Document doc;
+
+  // attempt to use the cache as a priority
+  {
+    FETCH_LOCK(cache_mutex_);
+    if(cached_state_items_.find(key) != cached_state_items_.end())
+    {
+      doc.document = cached_state_items_.at(key);
+      return doc;
+    }
+  }
+
   // make the request to the RPC server
   auto promise = rpc_client_->CallSpecificAddress(
       LookupAddress(key), RPC_STATE, fetch::storage::RevertibleDocumentStoreProtocol::GET,
       key.as_resource_id());
 
   // wait for the document response
-  Document doc;
   if (!promise->GetResult(doc))
   {
     FETCH_LOG_WARN(LOGGING_NAME, "Unable to get document");
@@ -495,62 +518,154 @@ StorageUnitClient::Document StorageUnitClient::Get(ResourceAddress const &key) c
 
 void StorageUnitClient::Set(ResourceAddress const &key, StateValue const &value)
 {
-  try
+  // Set this value to the cache
   {
-    // make the request to the RPC server
-    auto promise = rpc_client_->CallSpecificAddress(
-        LookupAddress(key), RPC_STATE, fetch::storage::RevertibleDocumentStoreProtocol::SET,
-        key.as_resource_id(), value);
+    FETCH_LOCK(cache_mutex_);
+    cached_state_items_[key] = value;
+  }
 
-    // wait for the response
-    promise->Wait();
-  }
-  catch (std::exception const &e)
-  {
-    FETCH_LOG_WARN(LOGGING_NAME, "Failed to call SET (store document), because: ", e.what());
-  }
+//  try
+//  {
+//    // make the request to the RPC server
+//    auto promise = rpc_client_->CallSpecificAddress(
+//        LookupAddress(key), RPC_STATE, fetch::storage::RevertibleDocumentStoreProtocol::SET,
+//        key.as_resource_id(), value);
+//
+//    // wait for the response
+//    promise->Wait();
+//  }
+//  catch (std::exception const &e)
+//  {
+//    FETCH_LOG_WARN(LOGGING_NAME, "Failed to call SET (store document), because: ", e.what());
+//  }
 }
 
-bool StorageUnitClient::Lock(ShardIndex index)
+class TimerPrinter
 {
-  bool success{false};
-
-  try
+public:
+  void Start(uint64_t start_time, std::string const &action)
   {
-    // make the request to the RPC server
-    auto promise = rpc_client_->CallSpecificAddress(LookupAddress(index), RPC_STATE,
-                                                    RevertibleDocumentStoreProtocol::LOCK);
-
-    // wait for the promise
-    success = promise->GetResult(success) && success;
-  }
-  catch (std::exception const &e)
-  {
-    FETCH_LOG_WARN(LOGGING_NAME, "Failed to call Lock, because: ", e.what());
+    action_start_[action] = start_time;
   }
 
-  return success;
+  void Stop(uint64_t start_time, std::string const &action)
+  {
+    action_stop_[action] = start_time;
+  }
+
+  void Reset()
+  {
+    action_start_.clear();
+    action_stop_.clear();
+  }
+
+  void Print()
+  {
+    for(auto const &i : action_start_)
+    {
+      FETCH_LOG_INFO("BlockExeInfos", "Action: ", i.first, " time taken: ", action_stop_[i.first] - action_start_[i.first], " at: ", action_start_[i.first]);
+    }
+  }
+
+private:
+  std::map<std::string, uint64_t> action_start_;
+  std::map<std::string, uint64_t> action_stop_;
+};
+
+namespace
+{
+uint64_t GetTimeHelper()
+{
+  return GetTime(fetch::moment::GetClock("default", fetch::moment::ClockType::SYSTEM), moment::TimeAccuracy::MILLISECONDS);
+}
 }
 
-bool StorageUnitClient::Unlock(ShardIndex index)
+void StorageUnitClient::PrefetchTXs(std::vector<Digest> const &digests)
 {
-  bool success{false};
+  // Split the vector into vectors corresponding to lanes
+  std::vector<std::vector<Digest>> vectors_by_lane;
+  vectors_by_lane.resize(1 << log2_num_lanes_);
+  TimerPrinter printer;
 
-  try
+  printer.Start(GetTimeHelper(), "00 Full prefetch");
+
+  printer.Start(GetTimeHelper(), "01 vector split");
+  for(auto const &digest : digests)
   {
-    // make the request to the RPC server
-    auto promise = rpc_client_->CallSpecificAddress(LookupAddress(index), RPC_STATE,
-                                                    RevertibleDocumentStoreProtocol::UNLOCK);
-
-    // wait for the result
-    success = promise->GetResult(success) && success;
+    ResourceID resource{digest};
+    auto const lane = resource.lane(log2_num_lanes_);
+    vectors_by_lane[lane].push_back(digest);
   }
-  catch (std::exception const &e)
+  printer.Stop(GetTimeHelper(), "01 vector split");
+
+  // Now make bulk calls to get the TXs
+  std::vector<service::Promise> promises;
+  uint64_t counter = 0;
+
+  for(auto const &vector : vectors_by_lane)
   {
-    FETCH_LOG_WARN(LOGGING_NAME, "Failed to call Unlock, because: ", e.what());
+    if(vector.empty())
+    {
+      continue;
+    }
+    printer.Start(GetTimeHelper(), std::string("02 ") + std::to_string(counter) + " promise make");
+
+    // Assume that the vector has been correctly populated
+    ResourceID resource{vector.front()};
+    auto promise = rpc_client_->CallSpecificAddress(LookupAddress(resource), RPC_TX_STORE,
+                                                  TransactionStorageProtocol::GET_BULK, vector);
+
+    promises.push_back(promise);
+    printer.Stop(GetTimeHelper(), std::string("02 ") + std::to_string(counter++) + " promise make");
   }
 
-  return success;
+  auto &cache_mutex = cache_mutex_;
+  auto &cached_txs = cached_txs_;
+
+  auto cb = [&cache_mutex, &cached_txs, &promises](uint64_t index)
+  {
+    auto &prom = promises[index];
+    std::vector<chain::Transaction> promise_returned;
+
+    if (prom->GetResult(promise_returned))
+    {
+      FETCH_LOCK(cache_mutex);
+      for(auto const &transac : promise_returned)
+      {
+        cached_txs[transac.digest()] = transac;
+      }
+    }
+    else
+    {
+      FETCH_LOG_WARN(LOGGING_NAME, "Failed to resolve GET_BULK on TX store!");
+    }
+  };
+
+  std::vector<std::unique_ptr<std::thread>> threads;
+
+  for (std::size_t i = 0; i < promises.size(); ++i)
+  {
+    auto thread_ptr = std::make_unique<std::thread>(cb, i);
+    threads.emplace_back(std::move(thread_ptr));
+  }
+
+  for(auto const &thread : threads)
+  {
+    thread->join();
+  }
+
+  printer.Stop(GetTimeHelper(), "00 Full prefetch");
+  printer.Print();
+}
+
+bool StorageUnitClient::Lock(ShardIndex )
+{
+  return true;
+}
+
+bool StorageUnitClient::Unlock(ShardIndex )
+{
+  return true;
 }
 
 void StorageUnitClient::Reset()

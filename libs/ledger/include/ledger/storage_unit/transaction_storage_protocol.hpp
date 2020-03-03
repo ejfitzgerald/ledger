@@ -43,6 +43,7 @@ public:
     ADD = 0,
     HAS,
     GET,
+    GET_BULK,
     GET_COUNT,
     GET_RECENT
   };
@@ -59,6 +60,7 @@ private:
   void               Add(chain::Transaction const &tx);
   bool               Has(Digest const &tx_digest);
   chain::Transaction Get(Digest const &tx_digest);
+  std::vector<chain::Transaction> GetBulk(std::vector<Digest> const &tx_digests);
   uint64_t           GetCount();
   TxLayouts          GetRecent(uint32_t max_to_poll);
 

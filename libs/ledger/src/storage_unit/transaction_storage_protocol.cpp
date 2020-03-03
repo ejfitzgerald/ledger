@@ -26,8 +26,11 @@
 #include "telemetry/histogram.hpp"
 #include "telemetry/registry.hpp"
 #include "telemetry/utils/timer.hpp"
+#include "network/generics/milli_timer.hpp"
 
 #include <sstream>
+
+using fetch::generics::MilliTimer;
 
 namespace fetch {
 namespace ledger {
@@ -62,6 +65,7 @@ TransactionStorageProtocol::TransactionStorageProtocol(TransactionStorageEngineI
   Expose(ADD, this, &TransactionStorageProtocol::Add);
   Expose(HAS, this, &TransactionStorageProtocol::Has);
   Expose(GET, this, &TransactionStorageProtocol::Get);
+  Expose(GET_BULK, this, &TransactionStorageProtocol::GetBulk);
   Expose(GET_COUNT, this, &TransactionStorageProtocol::GetCount);
   Expose(GET_RECENT, this, &TransactionStorageProtocol::GetRecent);
 }
@@ -154,6 +158,38 @@ chain::Transaction TransactionStorageProtocol::Get(Digest const &tx_digest)
   storage_.Confirm(tx_digest);
 
   return tx;
+}
+
+/**
+ * Retrieve multiple transactions from the storage engine
+ *
+ * @param tx_digests The digests of the transaction being queried
+ * @param tx The output transactions to be populated
+ * @return As many transactions as are found
+ */
+std::vector<chain::Transaction> TransactionStorageProtocol::GetBulk(std::vector<Digest> const &tx_digests)
+{
+  get_total_->add(tx_digests.size());
+  MilliTimer const timer2{"Get Bulk TXs ", 20};
+
+  FunctionTimer      timer{*get_durations_};
+
+  std::vector<chain::Transaction> ret;
+  chain::Transaction tx;
+
+  for(auto const &tx_digest : tx_digests)
+  {
+    if (!storage_.Get(tx_digest, tx))
+    {
+      FETCH_LOG_WARN(LOGGING_NAME, "Unable to lookup transaction 0x", tx_digest.ToHex(), " during bulk get");
+      continue;
+    }
+
+    storage_.Confirm(tx_digest);
+    ret.push_back(tx);
+  }
+
+  return ret;
 }
 
 /**

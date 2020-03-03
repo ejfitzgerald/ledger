@@ -76,6 +76,7 @@ public:
   virtual bool GetTransaction(Digest const &digest, chain::Transaction &tx) = 0;
   virtual bool HasTransaction(Digest const &digest)                         = 0;
   virtual void IssueCallForMissingTxs(DigestSet const &tx_set)              = 0;
+  virtual void PrefetchTXs(std::vector<Digest> const &digests)              = 0;
   /// @}
 
   virtual TxLayouts PollRecentTx(uint32_t) = 0;

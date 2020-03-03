@@ -54,6 +54,7 @@ public:
   bool GetTransaction(Digest const &digest, Transaction &tx) override;
   bool HasTransaction(Digest const &digest) override;
   void IssueCallForMissingTxs(DigestSet const &digests) override;
+  void PrefetchTXs(std::vector<Digest> const &digests) override;
   /// @}
 
   /// @name Transaction History Poll
@@ -68,6 +69,7 @@ public:
   bool RevertToHash(Hash const &hash, uint64_t index) override;
   Hash Commit(uint64_t index) override;
   bool HashExists(Hash const &hash, uint64_t index) override;
+  //void Writeback() override;
   /// @}
 
   // Useful for test to force the hash

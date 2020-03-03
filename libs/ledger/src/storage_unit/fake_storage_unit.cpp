@@ -256,5 +256,9 @@ void FakeStorageUnit::Reset()
   transaction_store_.clear();
 }
 
+void FakeStorageUnit::PrefetchTXs(std::vector<Digest> const &/*digests*/)
+{
+}
+
 }  // namespace ledger
 }  // namespace fetch
