@@ -51,7 +51,7 @@ public:
   settings::Setting<uint32_t> num_lanes;
   settings::Setting<uint32_t> num_slices;
   settings::Setting<uint32_t> block_interval;
-  settings::Setting<bool> external_lanes;
+  settings::Setting<bool>     external_lanes;
   /// @}
 
   /// @name Network Mode
@@ -70,6 +70,7 @@ public:
   settings::Setting<uint16_t>    port;
   settings::Setting<PeerList>    peers;
   settings::Setting<std::string> external;
+  settings::Setting<std::string> shard_prefix;
   settings::Setting<std::string> config;
   settings::Setting<uint32_t>    max_peers;
   settings::Setting<uint32_t>    transient_peers;
