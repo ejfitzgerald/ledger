@@ -34,11 +34,14 @@
 #include "telemetry/histogram.hpp"
 #include "telemetry/registry.hpp"
 #include "telemetry/utils/timer.hpp"
+#include "network/generics/milli_timer.hpp"
 
 #include <chrono>
 #include <memory>
 #include <thread>
 #include <vector>
+
+using fetch::generics::MilliTimer;
 
 static constexpr char const *LOGGING_NAME              = "ExecutionManager";
 static constexpr std::size_t MAX_STARTUP_ITERATIONS    = 20;
@@ -129,8 +132,6 @@ ExecutionManager::ExecutionManager(std::size_t num_executors, uint32_t log2_num_
 
   // setup the executor pool
   {
-    FETCH_LOCK(idle_executors_lock_);
-
     // ensure lists are reserved
     idle_executors_.reserve(num_executors);
 
@@ -207,6 +208,8 @@ bool ExecutionManager::PlanExecution(Block const &block)
   execution_plan_.clear();
   execution_plan_.resize(block.slices.size());
 
+  std::vector<Digest> digests;
+
   uint64_t slice_index = 0;
   for (auto const &slice : block.slices)
   {
@@ -222,10 +225,29 @@ bool ExecutionManager::PlanExecution(Block const &block)
       // insert the item into the execution plan
       slice_plan.emplace_back(
           std::make_unique<ExecutionItem>(tx.digest(), block.block_number, slice_index, tx.mask()));
+
+      digests.push_back(tx.digest());
     }
 
     ++slice_index;
   }
+
+  // Tell the storage engine to prepare/fetch the TXs we will need
+  bool async_tx_fetch = true;
+
+  if(async_tx_fetch)
+  {
+    thread_pool_->Post([this, digests]() {
+      MilliTimer const timer2{"Prefetch TXs ", 20};
+      storage_->PrefetchTXs(digests);
+    });
+  }
+  else
+  {
+    MilliTimer const timer2{"Prefetch TXs ", 20};
+    storage_->PrefetchTXs(digests);
+  }
+
 
   return true;
 }
@@ -261,7 +283,10 @@ void ExecutionManager::DispatchExecution(ExecutionItem &item)
     counters_.ApplyVoid([](auto &counters) { ++counters.active; });
 
     // execute the item
-    item.Execute(*executor);
+     {
+      MilliTimer const timer2{"ExeExe ", 20};
+      item.Execute(*executor);
+     }
     auto const &result{item.result()};
 
     // determine what the status is
@@ -463,7 +488,7 @@ void ExecutionManager::MonitorThreadEntrypoint()
       }
       else
       {
-        auto const &slice_plan = execution_plan_[current_slice];
+        auto const &slice_plan = execution_plan_[current_slice]; // TODO(HUT): look at this.
 
         // determine the target number of executions being expected (must be
         // done before the thread pool dispatch)
@@ -471,13 +496,13 @@ void ExecutionManager::MonitorThreadEntrypoint()
           counters = Counters{0, slice_plan.size()};
         });
 
-        auto self = shared_from_this();
         for (auto &item : slice_plan)
         {
           // create the closure and dispatch to the thread pool
-          thread_pool_->Post([self, &item]() {
-            telemetry::FunctionTimer const timer{*(self->execution_duration_)};
-            self->DispatchExecution(*item);
+          thread_pool_->Post([this, &item]() {
+            MilliTimer const timer2{"DispatchExe ", 20};
+            telemetry::FunctionTimer const timer{*(this->execution_duration_)};
+            this->DispatchExecution(*item);
           });
         }
 
@@ -588,6 +613,9 @@ void ExecutionManager::MonitorThreadEntrypoint()
     {
       moment::DeadlineTimer executor_deadline("ExecMgr");
       executor_deadline.Restart(1000u);
+
+      MilliTimer const timer2{"SettleFees", 1};
+      std::this_thread::sleep_for(std::chrono::milliseconds(5));
 
       // In rare cases due to scheduling, no executors might have been returned to the idle queue.
       // This busy wait loop will catch this event and has a fixed duration.
