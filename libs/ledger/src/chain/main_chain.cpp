@@ -2064,7 +2064,7 @@ DigestSet MainChain::DetectDuplicateTransactions(BlockHash const &           sta
 #ifndef NDEBUG
       // Sanity check - there should be the continuation of this on disk
       IntBlockPtr block_dummy;
-      assert(LookupBlock(block->previous_hash, block_dummy));
+      /* assert(LookupBlock(block->previous_hash, block_dummy)); */
 #endif
       break;
     }
@@ -2098,6 +2098,14 @@ DigestSet MainChain::DetectDuplicateTransactions(BlockHash const &           sta
       bloom_filter_query_count_->increment();
     }
   }
+
+  // Quit here if there are no duplicates to avoid a disk access
+  if(potential_duplicates.empty())
+  {
+    return duplicates;
+  }
+
+  FETCH_LOG_INFO(LOGGING_NAME, "***** Determining whether duplicates: ", potential_duplicates.size());
 
   // filter the potential duplicates by traversing back down the chain (continue where left off)
   uint64_t blocks_walked = 0;

@@ -251,6 +251,11 @@ void BasicMiner::GenerateSlices(Queue &transactions, Block &block, std::size_t o
 
   for (std::size_t slice_idx = offset; slice_idx < block.slices.size(); slice_idx += interval)
   {
+    if(transactions.empty())
+    {
+      break;
+    }
+
     auto &slice = block.slices[slice_idx];
 
     // generate the slice
