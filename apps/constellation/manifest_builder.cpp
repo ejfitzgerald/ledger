@@ -73,7 +73,9 @@ void GenerateDefaultManifest(std::string const &external_address, std::string co
 
     if (!shard_prefix.empty())
     {
-      lane_address = shard_prefix + std::to_string(i);
+      std::string const shard_index = (i < 10) ? "0" + std::to_string(i) : std::to_string(i);
+
+      lane_address = shard_prefix + shard_index;
       lane_port    = port + STORAGE_PORT_OFFSET;
     }
 
