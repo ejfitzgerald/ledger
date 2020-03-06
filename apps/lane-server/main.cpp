@@ -183,6 +183,16 @@ void InterruptHandler(int /*signal*/)
   }
 }
 
+void WaitForTermination()
+{
+  // wait for the process to stop
+  while (global_running)
+  {
+    global_ready = true;  // signal that the server is up and ready
+    std::this_thread::sleep_for(std::chrono::milliseconds{100});
+  }
+}
+
 int Run(int argc, char const *const *argv)
 {
   // build the configuration
@@ -205,11 +215,7 @@ int Run(int argc, char const *const *argv)
   lane_service->StartInternal();
 
   // wait for the process to stop
-  while (global_running)
-  {
-    global_ready = true; // signal that the server is up and ready
-    std::this_thread::sleep_for(std::chrono::milliseconds{100});
-  }
+  WaitForTermination();
 
   lane_service->StopInternal();
 
@@ -223,10 +229,46 @@ int Run(int argc, char const *const *argv)
   return EXIT_SUCCESS;
 }
 
+int MaintenanceMode(int /*argc*/, char const *const */*argv*/)
+{
+  FETCH_LOG_INFO(LOGGING_NAME, "Service down for maintenance...");
+  WaitForTermination();
+  FETCH_LOG_INFO(LOGGING_NAME, "Shutting down...");
+
+  return EXIT_SUCCESS;
+}
+
+struct EnvironmentVariable
+{
+  bool        present{false};
+  std::string value{};
+};
+
+EnvironmentVariable GetEnv(std::string const &name)
+{
+  char *value = std::getenv(name.c_str());
+
+  if (value == nullptr)
+  {
+    return {};
+  }
+
+  return {true, value};
+}
+
+bool IsMaintenanceMode()
+{
+  auto const env = GetEnv("CONSTELLATION_MAINTENANCE_MODE");
+
+  return env.present && env.value == "1";
+}
+
 }  // namespace
 
 int main(int argc, char const *const *argv)
 {
+  using Handler = int(*)(int, char const * const *);
+
   int exit_code{EXIT_FAILURE};
 
   try
@@ -234,7 +276,10 @@ int main(int argc, char const *const *argv)
     std::signal(SIGINT, InterruptHandler);
     std::signal(SIGTERM, InterruptHandler);
 
-    exit_code = Run(argc, argv);
+    // select the handler based on what mode we are running under
+    Handler handler = (IsMaintenanceMode()) ? MaintenanceMode : Run;
+
+    exit_code = handler(argc, argv);
   }
   catch (std::exception const &ex)
   {
