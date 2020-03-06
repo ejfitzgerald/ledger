@@ -308,6 +308,12 @@ byte_array::ConstByteArray StorageUnitClient::Commit(uint64_t const commit_index
     permanent_state_merkle_stack_.Flush(false);
   }
 
+  // after a successful execution of the block trim the transaction cache
+  {
+    FETCH_LOCK(cache_mutex_);
+    cached_txs_.clear();
+  }
+
   return tree_root;
 }
 
