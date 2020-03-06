@@ -47,7 +47,8 @@ public:
 
   // Construction / Destruction
   TransactionProcessor(DAGPtr dag, StorageUnitInterface &storage, BlockPackerInterface &packer,
-                       TxStatusCachePtr tx_status_cache, std::size_t num_threads);
+                       TxStatusCachePtr tx_status_cache, std::size_t num_verifier_threads,
+                       std::size_t num_dispatch_threads);
   TransactionProcessor(TransactionProcessor const &) = delete;
   TransactionProcessor(TransactionProcessor &&)      = delete;
   ~TransactionProcessor() override;

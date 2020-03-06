@@ -16,11 +16,12 @@
 //
 //------------------------------------------------------------------------------
 
+#include "ledger/transaction_verifier.hpp"
+
 #include "chain/transaction.hpp"
 #include "core/set_thread_name.hpp"
 #include "core/string/to_lower.hpp"
 #include "ledger/storage_unit/transaction_sinks.hpp"
-#include "ledger/transaction_verifier.hpp"
 #include "logging/logging.hpp"
 #include "network/generics/milli_timer.hpp"
 #include "telemetry/counter.hpp"
@@ -80,11 +81,13 @@ telemetry::CounterPtr CreateCounter(std::string const &prefix, std::string const
  *
  * @param sink The destination for verified transactions
  * @param verifying_threads The number of verifying threads to be used
+ * @param dispatching_threads The number of dispatching threads to be used
  * @param name The name of the verifier
  */
 TransactionVerifier::TransactionVerifier(TransactionSink &sink, std::size_t verifying_threads,
-                                         std::string const &name)
+                                         std::size_t dispatching_threads, std::string const &name)
   : verifying_threads_(verifying_threads)
+  , dispatching_threads_(dispatching_threads)
   , name_(name)
   , sink_(sink)
   , unverified_queue_length_(
@@ -122,7 +125,7 @@ TransactionVerifier::~TransactionVerifier()
 void TransactionVerifier::Start()
 {
   // reserve the space required for all threads
-  threads_.reserve(verifying_threads_ + 1);
+  threads_.reserve(verifying_threads_ + dispatching_threads_);
 
   // create the verifier threads
   for (std::size_t i = 0, end = verifying_threads_; i < end; ++i)
@@ -134,7 +137,14 @@ void TransactionVerifier::Start()
   }
 
   // create the dispatcher
-  threads_.emplace_back(std::make_unique<std::thread>(&TransactionVerifier::Dispatcher, this));
+  for (std::size_t i = 0, end = dispatching_threads_; i < end; ++i)
+  {
+    threads_.emplace_back(std::make_unique<std::thread>([this, i]() {
+      SetThreadName(name_ + "-D:", i);
+      Dispatcher();
+    }));
+  }
+
   num_threads_->increment(threads_.size());
 }
 
@@ -201,7 +211,7 @@ void TransactionVerifier::Verifier()
 #ifndef DISABLE_VERIFICATION
         // check the status
         if (tx->Verify())
-#endif // !DISABLE_VERIFICATION
+#endif  // !DISABLE_VERIFICATION
         {
           FETCH_LOG_DEBUG(LOGGING_NAME, "TX Verify Complete: 0x", tx->digest().ToHex());
 
@@ -217,7 +227,7 @@ void TransactionVerifier::Verifier()
 
           discarded_tx_total_->increment();
         }
-#endif // !DISABLE_VERIFICATION
+#endif  // !DISABLE_VERIFICATION
       }
     }
     catch (std::exception const &e)
@@ -233,8 +243,6 @@ void TransactionVerifier::Verifier()
  */
 void TransactionVerifier::Dispatcher()
 {
-  SetThreadName(name_ + "-D");
-
   while (active_)
   {
     try

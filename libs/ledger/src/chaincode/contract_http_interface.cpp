@@ -324,7 +324,9 @@ http::HTTPResponse ContractHttpInterface::OnTransaction(http::HTTPRequest const 
       unknown_format = false;
     }
 
-#if 0
+#if 1
+    (void) expected_contract;
+#else
     // record the transaction in the access log
     RecordTransaction(submitted, request, expected_contract);
 #endif

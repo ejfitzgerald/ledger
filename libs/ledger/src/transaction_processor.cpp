@@ -48,12 +48,13 @@ constexpr char const *LOGGING_NAME = "TransactionProcessor";
 TransactionProcessor::TransactionProcessor(DAGPtr dag, StorageUnitInterface &storage,
                                            BlockPackerInterface &packer,
                                            TxStatusCachePtr      tx_status_cache,
-                                           std::size_t           num_threads)
+                                           std::size_t           num_verifier_threads,
+                                           std::size_t           num_dispatch_threads)
   : dag_{std::move(dag)}
   , storage_{storage}
   , packer_{packer}
   , status_cache_{std::move(tx_status_cache)}
-  , verifier_{*this, num_threads, "TxV-P"}
+  , verifier_{*this, num_verifier_threads, num_dispatch_threads, "TxV-P"}
   , running_{false}
 {}
 

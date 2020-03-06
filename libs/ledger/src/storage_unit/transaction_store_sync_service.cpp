@@ -85,7 +85,7 @@ TransactionStoreSyncService::TransactionStoreSyncService(Config const &cfg, Mudd
   , client_(std::make_shared<Client>("R:TxSync-L" + std::to_string(cfg_.lane_id), muddle,
                                      SERVICE_LANE, CHANNEL_RPC))
   , store_(store)
-  , verifier_(*this, cfg_.verification_threads, "TxV-L" + std::to_string(cfg_.lane_id))
+  , verifier_(*this, cfg_.verification_threads, 1, "TxV-L" + std::to_string(cfg_.lane_id))
   , stored_transactions_{telemetry::Registry::Instance().CreateCounter(
         "ledger_tx_store_sync_service_stored_transactions_total",
         "Total number of all transactions received & stored by TransactionStoreSyncService")}
