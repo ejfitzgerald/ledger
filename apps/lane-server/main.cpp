@@ -229,7 +229,7 @@ int Run(int argc, char const *const *argv)
   return EXIT_SUCCESS;
 }
 
-int MaintenanceMode(int /*argc*/, char const *const */*argv*/)
+int MaintenanceMode(int /*argc*/, char const *const * /*argv*/)
 {
   FETCH_LOG_INFO(LOGGING_NAME, "Service down for maintenance...");
   WaitForTermination();
@@ -267,7 +267,7 @@ bool IsMaintenanceMode()
 
 int main(int argc, char const *const *argv)
 {
-  using Handler = int(*)(int, char const * const *);
+  using Handler = int (*)(int, char const *const *);
 
   int exit_code{EXIT_FAILURE};
 
