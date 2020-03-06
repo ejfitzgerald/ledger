@@ -611,21 +611,14 @@ void StorageUnitClient::PrefetchTXs(std::vector<Digest> const &digests)
     }
   };
 
-  std::vector<std::unique_ptr<std::thread>> threads;
-
   for (std::size_t i = 0; i < promises.size(); ++i)
   {
-    auto thread_ptr = std::make_unique<std::thread>(cb, i);
-    threads.emplace_back(std::move(thread_ptr));
+    background_pool_.Dispatch(cb, i);
   }
 
-  for(auto const &thread : threads)
-  {
-    thread->join();
-  }
+  background_pool_.Wait();
 
   printer.Stop("00 Full prefetch");
-  /* printer.Print(); */
 }
 
 void StorageUnitClient::WritebackState()
