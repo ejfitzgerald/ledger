@@ -167,14 +167,14 @@ chain::Transaction TransactionStorageProtocol::Get(Digest const &tx_digest)
  * @param tx The output transactions to be populated
  * @return As many transactions as are found
  */
-std::vector<chain::Transaction> TransactionStorageProtocol::GetBulk(std::vector<Digest> const &tx_digests)
+BulkItems TransactionStorageProtocol::GetBulk(std::vector<Digest> const &tx_digests)
 {
   get_total_->add(tx_digests.size());
   MilliTimer const timer2{"Get Bulk TXs ", 20};
 
   FunctionTimer      timer{*get_durations_};
 
-  std::vector<chain::Transaction> ret;
+  BulkItems ret;
   chain::Transaction tx;
 
   for(auto const &tx_digest : tx_digests)

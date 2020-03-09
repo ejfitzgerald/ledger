@@ -21,6 +21,7 @@
 #include "chain/transaction_layout.hpp"
 #include "network/service/protocol.hpp"
 #include "telemetry/telemetry.hpp"
+#include "ledger/storage_unit/bulk_items.hpp"
 
 #include <vector>
 
@@ -51,16 +52,17 @@ public:
   TransactionStorageProtocol(TransactionStorageEngineInterface &storage, uint32_t lane);
   ~TransactionStorageProtocol() override = default;
 
+  void               Add(chain::Transaction const &tx);
+
 private:
   static constexpr char const *LOGGING_NAME = "TxStorageProto";
 
   telemetry::CounterPtr   CreateCounter(char const *operation) const;
   telemetry::HistogramPtr CreateHistogram(char const *operation) const;
 
-  void               Add(chain::Transaction const &tx);
   bool               Has(Digest const &tx_digest);
   chain::Transaction Get(Digest const &tx_digest);
-  std::vector<chain::Transaction> GetBulk(std::vector<Digest> const &tx_digests);
+  BulkItems                     GetBulk(std::vector<Digest> const &tx_digests);
   uint64_t           GetCount();
   TxLayouts          GetRecent(uint32_t max_to_poll);
 

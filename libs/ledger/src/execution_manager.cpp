@@ -62,7 +62,7 @@ ExecutionManager::ExecutionManager(std::size_t num_executors, uint32_t log2_num_
                                    TransactionStatusCache::ShrdPtr tx_status_cache)
   : log2_num_lanes_{log2_num_lanes}
   , storage_{std::move(storage)}
-  , thread_pool_{network::MakeThreadPool(num_executors, "Executor")}
+  , thread_pool_{network::MakeThreadPool(num_executors + 1, "Executor")}
   , tx_status_cache_{std::move(tx_status_cache)}
   , tx_executed_count_(Registry::Instance().CreateCounter(
         "ledger_exec_mgr_tx_executed_total", "The total number of executed transactions"))
@@ -233,6 +233,16 @@ bool ExecutionManager::PlanExecution(Block const &block)
   }
 
   // Tell the storage engine to prepare/fetch the TXs we will need
+  bool async_tx_fetch = true;
+
+  if(async_tx_fetch)
+  {
+    thread_pool_->Post([this, digests]() {
+      MilliTimer const timer2{"Prefetch TXs ", 20};
+      storage_->PrefetchTXs(digests);
+    });
+  }
+  else
   {
     MilliTimer const timer2{"Prefetch TXs ", 350};
     storage_->PrefetchTXs(digests);

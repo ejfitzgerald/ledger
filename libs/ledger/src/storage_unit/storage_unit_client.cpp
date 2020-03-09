@@ -24,6 +24,8 @@
 #include "ledger/storage_unit/transaction_finder_protocol.hpp"
 #include "ledger/storage_unit/transaction_storage_protocol.hpp"
 #include "core/timer_printer.hpp"
+#include "ledger/storage_unit/bulk_items.hpp"
+#include "network/generics/milli_timer.hpp"
 
 #include <cstddef>
 #include <iterator>
@@ -37,6 +39,7 @@ using fetch::storage::ResourceID;
 using fetch::storage::RevertibleDocumentStoreProtocol;
 using fetch::service::Promise;
 using fetch::core::TimerPrinter;
+using fetch::generics::MilliTimer;
 
 namespace fetch {
 namespace ledger {
@@ -409,6 +412,7 @@ bool StorageUnitClient::GetTransaction(byte_array::ConstByteArray const &digest,
 {
   // First check if it is cached
   {
+    MilliTimer const timer2{"TXCacheLock ", 10};
     FETCH_LOCK(cache_mutex_);
 
     if(cached_txs_.find(digest) != cached_txs_.end())
@@ -494,7 +498,7 @@ StorageUnitClient::Document StorageUnitClient::Get(ResourceAddress const &key) c
 
   // attempt to use the cache as a priority
   {
-    FETCH_LOCK(cache_mutex_);
+    /* FETCH_LOCK(cache_mutex_); */
     if(cached_state_items_.find(key) != cached_state_items_.end())
     {
       doc.document = cached_state_items_.at(key);
@@ -583,20 +587,41 @@ void StorageUnitClient::PrefetchTXs(std::vector<Digest> const &digests)
     printer.Stop(std::string("02 ") + std::to_string(counter++) + " promise make");
   }
 
+  {
+    FETCH_LOCK(cache_mutex_);
+    cached_txs_.clear();
+    cached_txs_.reserve(digests.size());
+  }
+
   auto &cache_mutex = cache_mutex_;
   auto &cached_txs = cached_txs_;
 
   auto cb = [&cache_mutex, &cached_txs, &promises](uint64_t index)
   {
     auto &prom = promises[index];
-    std::vector<chain::Transaction> promise_returned;
+    BulkItems promise_returned;
 
     if (prom->GetResult(promise_returned))
     {
-      FETCH_LOCK(cache_mutex);
-      for(auto const &transac : promise_returned)
+      bool piecewise_tx_deser = true;
+
+      if(piecewise_tx_deser)
       {
-        cached_txs[transac.digest()] = transac;
+        for (std::size_t i = 0; i < promise_returned.size(); ++i)
+        {
+          chain::Transaction transac = promise_returned.Get<chain::Transaction>(i);
+          FETCH_LOCK(cache_mutex);
+          cached_txs[transac.digest()] = std::move(transac);
+        }
+      }
+      else
+      {
+        std::vector<chain::Transaction> transacs = promise_returned.GetAll<chain::Transaction>();
+        for(auto const &transac : transacs)
+        {
+          FETCH_LOCK(cache_mutex);
+          cached_txs[transac.digest()] = std::move(transac);
+        }
       }
     }
     else
