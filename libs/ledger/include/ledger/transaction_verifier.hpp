@@ -40,7 +40,7 @@ public:
   using TransactionPtr = std::shared_ptr<chain::Transaction>;
 
   // Construction / Destruction
-  TransactionVerifier(TransactionSink &sink, std::size_t verifying_threads,
+  TransactionVerifier(TransactionSink &sink, std::size_t verifying_threads, std::size_t dispatching_threads,
                       std::string const &name);
   TransactionVerifier(TransactionVerifier const &) = delete;
   TransactionVerifier(TransactionVerifier &&)      = delete;
@@ -66,7 +66,7 @@ private:
   static constexpr std::size_t QUEUE_SIZE = 1u << 20u;  // ~1M
 
   using Flag            = std::atomic<bool>;
-  using VerifiedQueue   = core::MPSCQueue<TransactionPtr, QUEUE_SIZE>;
+  using VerifiedQueue   = core::MPMCQueue<TransactionPtr, QUEUE_SIZE>;
   using UnverifiedQueue = core::MPMCQueue<TransactionPtr, QUEUE_SIZE>;
   using ThreadPtr       = std::unique_ptr<std::thread>;
   using Threads         = std::vector<ThreadPtr>;
@@ -78,6 +78,7 @@ private:
   void Dispatcher();
 
   std::size_t const verifying_threads_;
+  std::size_t const dispatching_threads_;
   std::string const name_;
   Sink &            sink_;
   Flag              active_{true};

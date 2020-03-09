@@ -32,6 +32,7 @@
 #include "network/generics/has_worker_thread.hpp"
 #include "storage/document_store_protocol.hpp"
 #include "storage/object_stack.hpp"
+#include "vectorise/threading/pool.hpp"
 
 #include <array>
 #include <cassert>
@@ -116,6 +117,11 @@ private:
   mutable Mutex        merkle_mutex_;
   MerkleTree           current_merkle_;
   PermanentMerkleStack permanent_state_merkle_stack_{};
+  /// @}
+
+  /// @name Background Work
+  /// @{
+  threading::Pool background_pool_{1u << log2_num_lanes_};
   /// @}
 
   /// @name Performance optimisations

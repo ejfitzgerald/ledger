@@ -385,10 +385,16 @@ int main(int argc, char **argv)
   std::vector<fetch::chain::Transaction> original_txs{};
   FETCH_UNUSED(original_txs);
 
-  auto closure = [&total_generated, &transactions, &transactions_mutex, &origin_addresses, count, &original_txs]()
+  auto closure = [&total_generated, &transactions, &transactions_mutex, &origin_addresses, count]()
   {
+    using SignerMap = std::unordered_map<uint32_t, SignerPtr>;
+
+    SignerMap cached_signers{};
+
     for(;;)
     {
+
+
       uint32_t to_generate = ++total_generated;
       uint32_t lane = to_generate % 256;
 
@@ -397,33 +403,28 @@ int main(int argc, char **argv)
         break;
       }
 
-      ECDSASigner signer{all_private[lane]};
+      // correctly set or copy the signer
+      SignerPtr &signer = cached_signers[lane];
+      if (!signer)
+      {
+        signer = std::make_unique<ECDSASigner>(all_private[lane]);
+      }
+
+      fetch::crypto::Identity const signer_public_key = signer->identity();
+      Address const signer_address{signer_public_key};
 
       // build the transaction
       auto const tx = TransactionBuilder()
-                          .From(Address{signer.identity()})
+                          .From(signer_address)
                           .ValidUntil(500)
                           .ChargeRate(1)
                           .ChargeLimit(5)
                           .Counter(to_generate + 10001)
                           .Transfer(Address{origin_addresses[lane]->identity()}, 1)
-                          .Signer(signer.identity())
+                          .Signer(signer_public_key)
                           .Seal()
-                          .Sign(signer)
+                          .Sign(*signer)
                           .Build();
-
-      /*
-      auto tx_layout_16 = fetch::chain::TransactionLayout{*tx, 4};
-      auto tx_layout_256 = fetch::chain::TransactionLayout{*tx, 8};
-
-      FETCH_UNUSED(tx_layout_16);
-      FETCH_UNUSED(tx_layout_256);
-
-      if(tx_layout_16.mask().PopCount() != 1)
-      {
-        FETCH_LOG_INFO(std::to_string(lane).c_str(), "thing thing thing", tx_layout_16.mask().PopCount());
-      }
-      */
 
       // serialise the transaction
       TransactionSerializer serializer{};
@@ -431,7 +432,6 @@ int main(int argc, char **argv)
 
       std::lock_guard<std::mutex> lock(transactions_mutex);
       transactions.emplace_back(serializer.data());
-      /* original_txs.emplace_back(*tx); */
     }
   };
 

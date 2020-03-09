@@ -324,18 +324,24 @@ http::HTTPResponse ContractHttpInterface::OnTransaction(http::HTTPRequest const 
       unknown_format = false;
     }
 
+#if 1
+    (void) expected_contract;
+#else
     // record the transaction in the access log
     RecordTransaction(submitted, request, expected_contract);
+#endif
 
     // update the response with the counts
     json["counts"]              = Variant::Object();
     json["counts"]["submitted"] = submitted.processed;
     json["counts"]["received"]  = submitted.received;
+#if 0
     json["txs"]                 = Variant::Array(txs.size());
     for (std::size_t i = 0; i < txs.size(); ++i)
     {
       json["txs"][i] = ToHex(txs[i]);
     }
+#endif
 
     if (unknown_format)
     {

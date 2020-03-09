@@ -607,7 +607,7 @@ bool Constellation::OnBringUpExternalNetwork(
           dag_, 1u, [this]() { return std::make_shared<ledger::SynergeticExecutor>(*storage_); }));
 
   tx_processor_ = std::make_unique<ledger::TransactionProcessor>(
-      dag_, *storage_, *block_packer_, tx_status_cache_, cfg_.processor_threads);
+      dag_, *storage_, *block_packer_, tx_status_cache_, cfg_.processor_threads, cfg_.num_lanes());
 
   agent_network_ = CreateMessengerNetwork(cfg_, external_identity_, network_manager_);
 
