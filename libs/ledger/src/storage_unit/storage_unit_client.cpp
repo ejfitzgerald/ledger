@@ -151,8 +151,6 @@ void StorageUnitClient::PrecacheLoop()
           continue;
         }
 
-        FETCH_LOG_INFO(LOGGING_NAME, "Making a request for: ", request.requested_resources.size());
-
         request.promise = rpc_client_->CallSpecificAddress(LookupAddress(i), RPC_STATE, fetch::storage::RevertibleDocumentStoreProtocol::GET_BULK, request.requested_resources);
 
         promises_of_data_.emplace_back(std::move(request));
