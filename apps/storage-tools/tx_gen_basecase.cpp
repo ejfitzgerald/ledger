@@ -318,6 +318,62 @@ uint64_t GetIndex(ConstByteArray const &pub_key)
   return resource_address.lane(log2_num_lanes);
 }
 
+class CertificateFactory
+{
+public:
+  CertificateFactory()
+  {
+    for (std::size_t i = 0; i < 16; ++i)
+    {
+      threads_.emplace_back(std::make_unique<std::thread>(&CertificateFactory::GenerateLoop, this));
+    }
+  }
+
+  ~CertificateFactory()
+  {
+    stop_ = true;
+
+    for(auto const &i : threads_)
+    {
+      i->join();
+    }
+  }
+
+  void GenerateLoop()
+  {
+    while(!stop_)
+    {
+      SignerPtr certificate        = std::make_unique<ECDSASigner>();
+      std::lock_guard<std::mutex> lock(mutex_);
+      queue_.emplace_back(std::move(certificate));
+    }
+  }
+
+  SignerPtr GetNext()
+  {
+    for(;;)
+    {
+      std::unique_lock<std::mutex> lock(mutex_);
+
+      if(queue_.empty())
+      {
+        lock.unlock();
+        std::this_thread::sleep_for(std::chrono::milliseconds(10));
+        continue;
+      }
+
+      SignerPtr ret = std::move(queue_.back());
+      queue_.pop_back();
+      return ret;
+    }
+  }
+
+  std::mutex            mutex_;
+  std::deque<SignerPtr> queue_;
+  bool stop_{false};
+  std::vector<std::unique_ptr<std::thread>> threads_;
+};
+
 int main(int argc, char **argv)
 {
   if (argc != 3)
@@ -329,45 +385,54 @@ int main(int argc, char **argv)
   auto const        count       = static_cast<std::size_t>(atoi(argv[1]));
   std::string const output_path = argv[2];
 
-  bool print_addresses = false;
+  bool print_addresses       = false;
 
   // Generate identities that are evenly distributed across lanes
-  std::vector<SignerPtr> origin_addresses;
+  // we want 256 by N such that it is greater than or equal to number
+  // of TXs
+  std::vector<std::vector<SignerPtr>> origin_addresses(256);
   uint32_t populated = 0;
-  origin_addresses.resize(256);
+  uint64_t const addresses_per_lane = (uint64_t)std::ceil((double)count/256.0);
+  //uint64_t const addresses_per_lane = (uint64_t)std::ceil((double)count/256.0);
 
-  while(populated < 256)
   {
-    SignerPtr certificate        = std::make_unique<ECDSASigner>();
-    certificate->GenerateKeys();
+    CertificateFactory factory;
 
-    auto pub_key = certificate->public_key();
-
-    // Lane index when 256
-    uint64_t lane_index = GetIndex(pub_key);
-
-    if(origin_addresses[lane_index] == nullptr)
+    // This will create exactly count origin addresses, but the number per lane might not
+    // be identical due to rounding
+    while(populated < count)
     {
-      origin_addresses[lane_index] = std::move(certificate);
-      populated++;
+      //SignerPtr certificate        = std::make_unique<ECDSASigner>();
+      SignerPtr certificate        = factory.GetNext();
+
+      auto pub_key = certificate->public_key();
+
+      // Lane index when 256
+      uint64_t lane_index         = GetIndex(pub_key);
+
+      if(origin_addresses[lane_index].size() < addresses_per_lane)
+      {
+        origin_addresses[lane_index].emplace_back(std::move(certificate));
+        populated++;
+      }
     }
   }
 
-  // if you want to populate genesis file and this file to match.
+  // if you want to populate genesis file and this file to match (column 0).
   if(print_addresses)
   {
     std::cout << "public: " << std::endl;
 
     for(auto const &i : origin_addresses)
     {
-      std::cout << Address(fetch::crypto::Identity{i->public_key()}).display() << std::endl;
+      std::cout << Address(fetch::crypto::Identity{i[0]->public_key()}).display() << std::endl;
     }
 
     std::cout << "private: " << std::endl;
 
     for(auto const &i : origin_addresses)
     {
-      std::cout << i->private_key().ToBase64() << std::endl;
+      std::cout << i[0]->private_key().ToBase64() << std::endl;
     }
   }
 
@@ -375,8 +440,6 @@ int main(int argc, char **argv)
 
   std::cout << "Generating TXs: " << count << std::endl;
 
-  uint32_t threads_to_use = 16;
-  std::atomic<uint32_t> total_generated{0};
   std::vector<ConstByteArray> transactions;
   std::vector<std::unique_ptr<std::thread>> threads;
   std::mutex transactions_mutex;
@@ -385,33 +448,17 @@ int main(int argc, char **argv)
   std::vector<fetch::chain::Transaction> original_txs{};
   FETCH_UNUSED(original_txs);
 
-  auto closure = [&total_generated, &transactions, &transactions_mutex, &origin_addresses, count]()
+  // To generate the TXs, do it by lane (threads = lanes)
+  auto closure = [&transactions, &transactions_mutex, &origin_addresses](uint64_t lane_index)
   {
-    using SignerMap = std::unordered_map<uint32_t, SignerPtr>;
+    auto      &lane_addresses = origin_addresses[lane_index];
+    SignerPtr signer = std::make_unique<ECDSASigner>(all_private[lane_index]);
+    fetch::crypto::Identity const signer_public_key = signer->identity();
+    Address const signer_address{signer_public_key};
 
-    SignerMap cached_signers{};
-
-    for(;;)
+    for (std::size_t i = 0; i < lane_addresses.size(); ++i)
     {
-
-
-      uint32_t to_generate = ++total_generated;
-      uint32_t lane = to_generate % 256;
-
-      if(to_generate > count)
-      {
-        break;
-      }
-
-      // correctly set or copy the signer
-      SignerPtr &signer = cached_signers[lane];
-      if (!signer)
-      {
-        signer = std::make_unique<ECDSASigner>(all_private[lane]);
-      }
-
-      fetch::crypto::Identity const signer_public_key = signer->identity();
-      Address const signer_address{signer_public_key};
+      auto &destination = origin_addresses[lane_index][i];
 
       // build the transaction
       auto const tx = TransactionBuilder()
@@ -419,8 +466,8 @@ int main(int argc, char **argv)
                           .ValidUntil(500)
                           .ChargeRate(1)
                           .ChargeLimit(5)
-                          .Counter(to_generate + 10001)
-                          .Transfer(Address{origin_addresses[lane]->identity()}, 1)
+                          .Counter(i + 1)
+                          .Transfer(Address{destination->identity()}, 1)
                           .Signer(signer_public_key)
                           .Seal()
                           .Sign(*signer)
@@ -435,9 +482,9 @@ int main(int argc, char **argv)
     }
   };
 
-  for (std::size_t i = 0; i < threads_to_use; ++i)
+  for (std::size_t i = 0; i < 256; ++i)
   {
-    threads.emplace_back(std::make_unique<std::thread>(closure));
+    threads.emplace_back(std::make_unique<std::thread>(closure, i));
   }
 
   for(auto const &i : threads)
