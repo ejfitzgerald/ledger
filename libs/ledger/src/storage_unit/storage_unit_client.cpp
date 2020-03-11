@@ -151,6 +151,8 @@ void StorageUnitClient::PrecacheLoop()
           continue;
         }
 
+        FETCH_LOG_INFO(LOGGING_NAME, "Making a request for: ", request.requested_resources.size());
+
         request.promise = rpc_client_->CallSpecificAddress(LookupAddress(i), RPC_STATE, fetch::storage::RevertibleDocumentStoreProtocol::GET_BULK, request.requested_resources);
 
         promises_of_data_.emplace_back(std::move(request));
@@ -195,6 +197,7 @@ void StorageUnitClient::PrecacheLoop()
       for (std::size_t j = 0; j < bulk_item.size(); ++j)
       {
         StateValue val = bulk_item.Get<StateValue>(j);
+        FETCH_LOG_DEBUG(LOGGING_NAME, "Recv size: ", val.size());
         AddToCache(rids[j], val);
       }
     }
@@ -518,6 +521,8 @@ StorageUnitClient::TxLayouts StorageUnitClient::PollRecentTx(uint32_t max_to_pol
   {
     TxLayouts txs{};
 
+    promise->Wait(true, 120);
+
     if (promise->GetResult(txs))
     {
       layouts.insert(layouts.end(), std::make_move_iterator(txs.begin()),
@@ -626,7 +631,14 @@ StorageUnitClient::Document StorageUnitClient::Get(ResourceAddress const &key) c
     FETCH_LOCK(cache_mutex_);
     if(cached_state_items_.find(key) != cached_state_items_.end())
     {
-      doc.document = cached_state_items_.at(key);
+      auto &item = cached_state_items_.at(key);
+      doc.document = item;
+
+      if(item.size() == 0)
+      {
+        doc.failed = true;
+      }
+
       return doc;
     }
   }
@@ -865,7 +877,7 @@ uint32_t StorageUnitClient::num_lanes() const
  */
 void StorageUnitClient::NotifyArrived(chain::Transaction const &tx)
 {
-  bool precache_data = false;
+  bool precache_data = true;
 
   if(precache_data)
   {

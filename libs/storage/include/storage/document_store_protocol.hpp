@@ -234,6 +234,7 @@ private:
     for(auto const &rid : rids)
     {
       auto const doc = doc_store_->Get(rid);
+      FETCH_LOG_DEBUG(LOGGING_NAME, "doc size: ", doc.document.size());
       ret.push_back(doc.document);
     }
 
