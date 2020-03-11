@@ -80,6 +80,125 @@ StorageUnitClient::StorageUnitClient(MuddleEndpoint &muddle, ShardConfigs const 
   permanent_state_merkle_stack_.Load(MERKLE_FILENAME_DOC, MERKLE_FILENAME_INDEX, true);
   FETCH_LOG_INFO(LOGGING_NAME,
                  "After recovery, size of merkle stack is: ", permanent_state_merkle_stack_.size());
+
+  precache_thread_ = std::make_unique<std::thread>(&StorageUnitClient::PrecacheLoop, this);
+}
+
+StorageUnitClient::~StorageUnitClient()
+{
+  running_ = false;
+  precache_thread_->join();
+}
+
+storage::ResourceAddress ToResourceAddress(byte_array::ConstByteArray const &address)
+{
+  byte_array::ConstByteArray const resource = "fetch.token.state." + address;
+  storage::ResourceAddress const resource_address{resource};
+
+  return resource_address;
+}
+
+void StorageUnitClient::PrecacheLoop()
+{
+  while(running_)
+  {
+    // Crude way to make sure rpc calls are batched to some degree
+    std::this_thread::sleep_for(std::chrono::milliseconds(50));
+
+    FETCH_LOCK(thread_running_mutex_);
+
+    // Go through all of the newly arrived TXs and fetch the from and to for them
+    // if it does not exist in the precache (TODO(HUT): the does it exist check.)
+    {
+      std::vector<BulkDataRequest> bulk_data_requests;
+      bulk_data_requests.resize(num_lanes());
+
+      {
+        FETCH_LOCK(precache_data_mutex_);
+
+        for(auto const &tx : data_newly_available_)
+        {
+          ResourceAddress from_address = ToResourceAddress(tx.from().display());
+          auto const from_lane = from_address.lane(log2_num_lanes_);
+
+          if(!IsInCache(from_address))
+          {
+            bulk_data_requests[from_lane].requested_resources.emplace_back(std::move(from_address));
+          }
+
+          for(auto const &transfer : tx.transfers())
+          {
+            ResourceAddress to_address = ToResourceAddress(transfer.to.display());
+            auto const to_lane = to_address.lane(log2_num_lanes_);
+
+            if(!IsInCache(to_address))
+            {
+              bulk_data_requests[to_lane].requested_resources.emplace_back(std::move(to_address));
+            }
+          }
+        }
+
+        data_newly_available_.clear();
+      }
+
+      // We now have a number of requests we can make
+      for (uint32_t i = 0; i < num_lanes(); ++i)
+      {
+        auto &request = bulk_data_requests[i];
+
+        if(request.requested_resources.empty())
+        {
+          continue;
+        }
+
+        request.promise = rpc_client_->CallSpecificAddress(LookupAddress(i), RPC_STATE, fetch::storage::RevertibleDocumentStoreProtocol::GET_BULK, request.requested_resources);
+
+        promises_of_data_.emplace_back(std::move(request));
+      }
+    }
+
+    // Loop through and attempt to resolve pending promises
+    std::vector<BulkItems> all_items;
+    std::vector<std::vector<ResourceID>> corresponding_rids;
+    {
+      FETCH_LOCK(precache_data_mutex_);
+      for (auto it = promises_of_data_.begin(); it != promises_of_data_.end();)
+      {
+        if(it->promise->IsSuccessful())
+        {
+          all_items.push_back(BulkItems{});
+          it->promise->GetResult(all_items.back());
+          corresponding_rids.emplace_back(it->requested_resources);
+        }
+
+        if(it->promise->IsFailed())
+        {
+          FETCH_LOG_WARN(LOGGING_NAME, "Failed precache data lookup!");
+        }
+
+        if(it->promise->IsSuccessful() || it->promise->IsFailed())
+        {
+          it = promises_of_data_.erase(it);
+        }
+        else
+        {
+          ++it;
+        }
+      }
+    }
+
+    for (std::size_t i = 0; i < all_items.size(); ++i)
+    {
+      auto &bulk_item = all_items[i];
+      auto &rids      = corresponding_rids[i];
+
+      for (std::size_t j = 0; j < bulk_item.size(); ++j)
+      {
+        StateValue val = bulk_item.Get<StateValue>(j);
+        AddToCache(rids[j], val);
+      }
+    }
+  }
 }
 
 // Get the current hash of the world state (merkle tree root)
@@ -504,7 +623,7 @@ StorageUnitClient::Document StorageUnitClient::Get(ResourceAddress const &key) c
 
   // attempt to use the cache as a priority
   {
-    /* FETCH_LOCK(cache_mutex_); */
+    FETCH_LOCK(cache_mutex_);
     if(cached_state_items_.find(key) != cached_state_items_.end())
     {
       doc.document = cached_state_items_.at(key);
@@ -535,6 +654,7 @@ void StorageUnitClient::Set(ResourceAddress const &key, StateValue const &value)
   {
     FETCH_LOCK(cache_mutex_);
     cached_state_items_[key] = value;
+    dirty_cached_state_items_.insert(key);
   }
 
 //  try
@@ -602,32 +722,19 @@ void StorageUnitClient::PrefetchTXs(std::vector<Digest> const &digests)
   auto &cache_mutex = cache_mutex_;
   auto &cached_txs = cached_txs_;
 
-  auto cb = [&cache_mutex, &cached_txs, &promises](uint64_t index)
+  auto cb = [this, &cache_mutex, &cached_txs, &promises](uint64_t index)
   {
     auto &prom = promises[index];
     BulkItems promise_returned;
 
     if (prom->GetResult(promise_returned))
     {
-      bool piecewise_tx_deser = true;
-
-      if(piecewise_tx_deser)
+      for (std::size_t i = 0; i < promise_returned.size(); ++i)
       {
-        for (std::size_t i = 0; i < promise_returned.size(); ++i)
-        {
-          chain::Transaction transac = promise_returned.Get<chain::Transaction>(i);
-          FETCH_LOCK(cache_mutex);
-          cached_txs[transac.digest()] = std::move(transac);
-        }
-      }
-      else
-      {
-        std::vector<chain::Transaction> transacs = promise_returned.GetAll<chain::Transaction>();
-        for(auto const &transac : transacs)
-        {
-          FETCH_LOCK(cache_mutex);
-          cached_txs[transac.digest()] = std::move(transac);
-        }
+        chain::Transaction transac = promise_returned.Get<chain::Transaction>(i);
+        this->NotifyArrived(transac);
+        FETCH_LOCK(cache_mutex);
+        cached_txs[transac.digest()] = std::move(transac);
       }
     }
     else
@@ -648,27 +755,60 @@ void StorageUnitClient::PrefetchTXs(std::vector<Digest> const &digests)
 
 void StorageUnitClient::WritebackState()
 {
+  // Clear the prefetching TXs and TX data on writeback
+  {
+    MilliTimer const timer2{"StopPrecaching ", 10};
+    background_pool_.Wait();
+
+    FETCH_LOCK(thread_running_mutex_);
+    data_newly_available_.clear();
+    FETCH_LOG_INFO(LOGGING_NAME, "\nkilling: ", promises_of_data_.size());
+    promises_of_data_.clear();
+  }
+
   try
   {
     FETCH_LOCK(cache_mutex_);
     std::vector<service::Promise> promises;
+
+    std::vector<std::vector<ResourceID>> bulk_data_sets_rids(num_lanes());
+    std::vector<std::vector<byte_array::ConstByteArray>> bulk_data_sets_data(num_lanes());
 
     for(auto const &item : cached_state_items_)
     {
       auto &key   = item.first;
       auto &value = item.second;
 
+      if(dirty_cached_state_items_.find(key) == dirty_cached_state_items_.end())
+      {
+        continue;
+      }
+
+      bulk_data_sets_rids[key.lane(log2_num_lanes_)].emplace_back(key);
+      bulk_data_sets_data[key.lane(log2_num_lanes_)].emplace_back(value);
+    }
+
+    dirty_cached_state_items_.clear();
+
+    for (std::size_t i = 0; i < num_lanes(); ++i)
+    {
+      if(bulk_data_sets_rids[i].empty())
+      {
+        continue;
+      }
+
       // make the request to the RPC server
       auto promise = rpc_client_->CallSpecificAddress(
-          LookupAddress(key), RPC_STATE, fetch::storage::RevertibleDocumentStoreProtocol::SET,
-          key.as_resource_id(), value);
+          LookupAddress(bulk_data_sets_rids[i][0]), RPC_STATE, fetch::storage::RevertibleDocumentStoreProtocol::SET_BULK,
+          bulk_data_sets_rids[i], bulk_data_sets_data[i]);
 
       promises.push_back(promise);
     }
 
+
     for(auto const &promise : promises)
     {
-      promise->Wait();
+      promise->Wait(true, 120);
     }
   }
   catch (std::exception const &e)
@@ -714,6 +854,48 @@ void StorageUnitClient::Reset()
 uint32_t StorageUnitClient::num_lanes() const
 {
   return 1u << log2_num_lanes_;
+}
+
+/**
+ * As transactions are received via bulk prefetch, notify
+ * the precache loop that these can be queried
+ *
+ * @param: tx The transaction that has just arrived
+ *
+ */
+void StorageUnitClient::NotifyArrived(chain::Transaction const &tx)
+{
+  bool precache_data = false;
+
+  if(precache_data)
+  {
+    FETCH_LOCK(precache_data_mutex_);
+    data_newly_available_.push_back(tx);
+  }
+}
+
+bool StorageUnitClient::IsInCache(storage::ResourceID const &key)
+{
+  FETCH_LOCK(cache_mutex_);
+  return cached_state_items_.find(key) != cached_state_items_.end();
+}
+
+bool StorageUnitClient::IsInCache(storage::ResourceAddress const &key)
+{
+  return IsInCache(key.as_resource_id());
+}
+
+/**
+ * Add a recently fetched item to the cache. Do not add it if it already
+ * exists, to maintain cache coherency.
+ */
+void StorageUnitClient::AddToCache(ResourceID const &key, StateValue const &value)
+{
+  FETCH_LOCK(cache_mutex_);
+  if(cached_state_items_.find(key) == cached_state_items_.end())
+  {
+    cached_state_items_[key] = value;
+  }
 }
 
 }  // namespace ledger

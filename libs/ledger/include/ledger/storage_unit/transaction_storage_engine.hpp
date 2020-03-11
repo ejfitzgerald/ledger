@@ -68,8 +68,10 @@ public:
   TransactionStorageEngine &operator=(TransactionStorageEngine const &) = delete;
   TransactionStorageEngine &operator=(TransactionStorageEngine &&) = delete;
 
+  TransactionStore &GetArchive() { return archive_;};
+
 private:
-  static const std::size_t MAX_NUM_RECENT_TX = 1u << 15u;
+  static const std::size_t MAX_NUM_RECENT_TX = 1u << 19u;
 
   uint32_t const             lane_;
   TransactionMemoryPool      mem_pool_;

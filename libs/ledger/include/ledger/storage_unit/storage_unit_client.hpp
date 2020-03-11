@@ -42,6 +42,7 @@
 #include <memory>
 #include <string>
 #include <vector>
+#include <list>
 
 namespace fetch {
 namespace ledger {
@@ -51,6 +52,7 @@ class StorageUnitClient final : public StorageUnitInterface
 public:
   using MuddleEndpoint = muddle::MuddleEndpoint;
   using Address        = muddle::Address;
+  using ResourceID     = storage::ResourceID;
 
   static constexpr char const *LOGGING_NAME = "StorageUnitClient";
 
@@ -58,7 +60,7 @@ public:
   StorageUnitClient(MuddleEndpoint &muddle, ShardConfigs const &shards, uint32_t log2_num_lanes);
   StorageUnitClient(StorageUnitClient const &) = delete;
   StorageUnitClient(StorageUnitClient &&)      = delete;
-  ~StorageUnitClient() override                = default;
+  ~StorageUnitClient() override;
 
   // Helpers
   uint32_t num_lanes() const;
@@ -104,6 +106,11 @@ private:
   Address const &LookupAddress(storage::ResourceID const &resource) const;
 
   bool HashInStack(Hash const &hash, uint64_t index);
+  void NotifyArrived(chain::Transaction const &tx);
+  void PrecacheLoop();
+  void AddToCache(ResourceID const &key, StateValue const &value);
+  bool IsInCache(ResourceID const &key);
+  bool IsInCache(ResourceAddress const &key);
 
   /// @name Client Information
   /// @{
@@ -127,9 +134,24 @@ private:
   /// @name Performance optimisations
   /// @{
   mutable Mutex                                   cache_mutex_;
-  std::unordered_map<ResourceAddress, StateValue> cached_state_items_;
+  std::unordered_map<ResourceID, StateValue>      cached_state_items_;
+  std::set<ResourceID>                            dirty_cached_state_items_;
   std::unordered_map<Digest, chain::Transaction>  cached_txs_;
   /// @}
+
+  struct BulkDataRequest
+  {
+    service::Promise             promise;
+    std::vector<storage::ResourceID>      requested_resources;
+  };
+
+  mutable Mutex                                   precache_data_mutex_;
+  std::atomic<bool>                               running_{true};
+  std::unique_ptr<std::thread>                    precache_thread_;
+  std::vector<chain::Transaction>                 data_newly_available_;
+
+  mutable Mutex                    thread_running_mutex_;
+  std::list<BulkDataRequest>       promises_of_data_;
 };
 
 }  // namespace ledger

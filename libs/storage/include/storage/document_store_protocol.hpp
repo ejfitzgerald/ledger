@@ -29,6 +29,7 @@
 #include "telemetry/histogram.hpp"
 #include "telemetry/registry.hpp"
 #include "telemetry/utils/timer.hpp"
+#include "ledger/storage_unit/bulk_items.hpp"
 
 #include <map>
 
@@ -51,6 +52,9 @@ public:
     GET = 0,
     GET_OR_CREATE,
     SET,
+
+    GET_BULK,
+    SET_BULK,
 
     COMMIT,
     REVERT_TO_HASH,
@@ -92,6 +96,8 @@ public:
     this->Expose(GET, this, &RevertibleDocumentStoreProtocol::Get);
     this->Expose(GET_OR_CREATE, this, &RevertibleDocumentStoreProtocol::GetOrCreate);
     this->Expose(SET, this, &RevertibleDocumentStoreProtocol::Set);
+    this->Expose(GET_BULK, this, &RevertibleDocumentStoreProtocol::GetBulk);
+    this->Expose(SET_BULK, this, &RevertibleDocumentStoreProtocol::SetBulk);
 
     // Functionality for hashing/state
     this->Expose(COMMIT, this, &RevertibleDocumentStoreProtocol::Commit);
@@ -221,6 +227,19 @@ private:
         name, description, {{"lane", std::to_string(lane)}});
   }
 
+  ledger::BulkItems GetBulk(std::vector<ResourceID> const &rids)
+  {
+    ledger::BulkItems ret;
+
+    for(auto const &rid : rids)
+    {
+      auto const doc = doc_store_->Get(rid);
+      ret.push_back(doc.document);
+    }
+
+    return ret;
+  }
+
   Document Get(ResourceID const &rid)
   {
     telemetry::FunctionTimer const timer{*get_durations_};
@@ -245,6 +264,17 @@ private:
 
     doc_store_->Set(rid, data);
     set_count_->increment();
+  }
+
+  void SetBulk(std::vector<ResourceID> const &rids, std::vector<byte_array::ConstByteArray> const &items)
+  {
+    telemetry::FunctionTimer const timer{*set_durations_};
+
+    for (std::size_t i = 0; i < std::min(rids.size(), items.size()); ++i)
+    {
+      set_count_->increment();
+      doc_store_->Set(rids[i], items[i]);
+    }
   }
 
   NewRevertibleDocumentStore::Hash Commit()

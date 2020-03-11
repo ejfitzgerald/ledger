@@ -233,20 +233,10 @@ bool ExecutionManager::PlanExecution(Block const &block)
   }
 
   // Tell the storage engine to prepare/fetch the TXs we will need
-  bool async_tx_fetch = true;
-
-  if(async_tx_fetch)
-  {
-    thread_pool_->Post([this, digests]() {
-      MilliTimer const timer2{"Prefetch TXs ", 20};
-      storage_->PrefetchTXs(digests);
-    });
-  }
-  else
-  {
-    MilliTimer const timer2{"Prefetch TXs ", 350};
+  thread_pool_->Post([this, digests]() {
+    MilliTimer const timer2{"Prefetch TXs ", 1000};
     storage_->PrefetchTXs(digests);
-  }
+  });
 
   return true;
 }
@@ -283,7 +273,7 @@ void ExecutionManager::DispatchExecution(ExecutionItem &item)
 
     // execute the item
      {
-      MilliTimer const timer2{"ExeExe ", 20};
+      MilliTimer const timer2{"ExeExe ", 200};
       item.Execute(*executor);
      }
     auto const &result{item.result()};
@@ -502,7 +492,7 @@ void ExecutionManager::MonitorThreadEntrypoint()
         {
           // create the closure and dispatch to the thread pool
           thread_pool_->Post([this, &item]() {
-            MilliTimer const timer2{"DispatchExe ", 20};
+            MilliTimer const timer2{"DispatchExe ", 200};
             telemetry::FunctionTimer const timer{*(this->execution_duration_)};
             this->DispatchExecution(*item);
           });
