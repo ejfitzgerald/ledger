@@ -77,6 +77,9 @@ class BeaconService : public ledger::EntropyGeneratorInterface
 public:
   constexpr static char const *LOGGING_NAME = "BeaconService";
 
+  static void ResetStateToBlock(BlockEntropy const &entropy);
+  static void DebugState();
+
   enum class State
   {
     RELOAD_ON_STARTUP,

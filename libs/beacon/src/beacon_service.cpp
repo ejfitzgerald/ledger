@@ -33,6 +33,8 @@
 #include <iterator>
 #include <random>
 
+#include <iostream>
+
 using namespace std::chrono_literals;
 
 using fetch::generics::MilliTimer;
@@ -40,6 +42,19 @@ using fetch::generics::MilliTimer;
 namespace fetch {
 
 namespace beacon {
+
+using ActiveExeUnitPtr = std::shared_ptr<AeonExecutionUnit>;
+using AeonExeQueue     = std::deque<ActiveExeUnitPtr>;
+using BlockEntropyPtr  = std::shared_ptr<beacon::BlockEntropy>;
+
+struct BeaconServiceState
+{
+  ActiveExeUnitPtr active_exe_unit_;
+  AeonExeQueue     aeon_exe_queue_;
+  BlockEntropyPtr  block_entropy_previous_;
+  BlockEntropyPtr  block_entropy_being_created_;
+};
+
 namespace {
 
 template <typename T>
@@ -88,6 +103,12 @@ struct BeaconServiceSerializeWrapper
 {
   BeaconService &beacon_service;
   uint16_t       current_state{0};
+};
+
+struct BeaconServiceSerializeWrapperEx
+{
+  BeaconServiceState beacon_service;
+  uint16_t           current_state{0};
 };
 
 BeaconService::BeaconService(MuddleInterface &muddle, const CertificatePtr &certificate,
@@ -231,6 +252,52 @@ void BeaconService::SaveState()
   }
 }
 
+void BeaconService::ResetStateToBlock(BlockEntropy const &entropy)
+{
+  StateStore state;
+  state.Load("beacon_state_v2.db");
+
+  // load the previous state
+  BeaconServiceSerializeWrapperEx data{};
+  state.Get(data);
+
+  BlockEntropyPtr &previous = data.beacon_service.block_entropy_previous_;
+  BlockEntropyPtr &current  = data.beacon_service.block_entropy_being_created_;
+
+  // the previously created entropy is the one being present
+  previous = std::make_shared<BlockEntropy>(entropy);
+
+  // create a fresh block entropy for the next block
+  current = std::make_shared<BlockEntropy>();
+  current->SelectCopy(*previous);
+  current->block_number = previous->block_number + 1;
+
+  // clear the state back down to the begining again so we can pick up where we left off
+  data.current_state = static_cast<uint16_t>(State::PREPARE_ENTROPY_GENERATION);
+
+  // store the data back down into the database
+  state.Set(data);
+}
+
+
+void BeaconService::DebugState()
+{
+  StateStore state;
+  state.Load("beacon_state_v2.db");
+
+  BeaconServiceSerializeWrapperEx data{};
+  state.Get(data);
+
+  std::cout << "State Summary\n\n";
+
+  std::cout << "Current State: " << data.current_state << '\n';
+  std::cout << "[Beacon] Aeon: " << data.beacon_service.active_exe_unit_->aeon.round_start << " - "
+            << data.beacon_service.active_exe_unit_->aeon.round_end << '\n';
+  std::cout << data.beacon_service.active_exe_unit_->block_entropy.block_number << '\n';
+  std::cout << data.beacon_service.block_entropy_previous_->block_number << '\n';
+  std::cout << data.beacon_service.block_entropy_being_created_->block_number << '\n';
+}
+
 void BeaconService::ReloadState(State &next_state)
 {
   FETCH_LOG_INFO(LOGGING_NAME, "Loading signatures!");
@@ -271,7 +338,6 @@ void BeaconService::ReloadState(State &next_state)
     FETCH_LOG_INFO(LOGGING_NAME, "Loaded signatures. Attempting loading of the rest of the class.");
 
     BeaconServiceSerializeWrapper wrapper{*this, 0};
-
     saved_state_.Get(wrapper);
 
     next_state = static_cast<State>(wrapper.current_state);
@@ -827,6 +893,39 @@ char const *ToString(BeaconService::State state)
 // We put this serializer in the cpp since it is serializing itself
 namespace serializers {
 
+template <typename D>
+struct MapSerializer<beacon::BeaconServiceState, D>
+{
+public:
+  using Type       = beacon::BeaconServiceState;
+  using DriverType = D;
+
+  static uint8_t const ACTIVE_EXE_UNIT             = 1;
+  static uint8_t const AEON_EXE_QUEUE              = 2;
+  static uint8_t const BLOCK_ENTROPY_PREVIOUS      = 3;
+  static uint8_t const BLOCK_ENTROPY_BEING_CREATED = 4;
+
+  template <typename Constructor>
+  static void Serialize(Constructor &map_constructor, Type const &beacon_service)
+  {
+    auto map = map_constructor(4);
+    map.Append(ACTIVE_EXE_UNIT, beacon_service.active_exe_unit_);
+    map.Append(AEON_EXE_QUEUE, beacon_service.aeon_exe_queue_);
+    map.Append(BLOCK_ENTROPY_PREVIOUS, beacon_service.block_entropy_previous_);
+    map.Append(BLOCK_ENTROPY_BEING_CREATED, beacon_service.block_entropy_being_created_);
+  }
+
+  template <typename MapDeserializer>
+  static void Deserialize(MapDeserializer &map, Type &beacon_service)
+  {
+    map.ExpectKeyGetValue(ACTIVE_EXE_UNIT, beacon_service.active_exe_unit_);
+    map.ExpectKeyGetValue(AEON_EXE_QUEUE, beacon_service.aeon_exe_queue_);
+
+    map.ExpectKeyGetValue(BLOCK_ENTROPY_PREVIOUS, beacon_service.block_entropy_previous_);
+    map.ExpectKeyGetValue(BLOCK_ENTROPY_BEING_CREATED, beacon_service.block_entropy_being_created_);
+  }
+};
+
 // Note that this serializer saves the current state, and on deser will
 // populate state_after_reload_
 template <typename D>
@@ -859,6 +958,32 @@ public:
 
     map.ExpectKeyGetValue(BLOCK_ENTROPY_PREVIOUS, beacon_service.block_entropy_previous_);
     map.ExpectKeyGetValue(BLOCK_ENTROPY_BEING_CREATED, beacon_service.block_entropy_being_created_);
+  }
+};
+
+template <typename D>
+struct MapSerializer<beacon::BeaconServiceSerializeWrapperEx, D>
+{
+public:
+  using Type       = beacon::BeaconServiceSerializeWrapperEx;
+  using DriverType = D;
+
+  static uint8_t const BEACON_SERVICE = 1;
+  static uint8_t const CURRENT_STATE  = 2;
+
+  template <typename Constructor>
+  static void Serialize(Constructor &map_constructor, Type const &wrapper)
+  {
+    auto map = map_constructor(2);
+    map.Append(BEACON_SERVICE, wrapper.beacon_service);
+    map.Append(CURRENT_STATE, wrapper.current_state);
+  }
+
+  template <typename MapDeserializer>
+  static void Deserialize(MapDeserializer &map, Type &wrapper)
+  {
+    map.ExpectKeyGetValue(BEACON_SERVICE, wrapper.beacon_service);
+    map.ExpectKeyGetValue(CURRENT_STATE, wrapper.current_state);
   }
 };
 

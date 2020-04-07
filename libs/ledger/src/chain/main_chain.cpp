@@ -98,7 +98,7 @@ MainChain::MainChain(Mode mode, Config const &cfg)
     block_store_ = std::make_unique<BlockStore>();
 
     FETCH_LOG_INFO(LOGGING_NAME, "Starting main chain recovery...");
-    RecoverFromFile(mode_);
+    RecoverFromFile(mode_, cfg.fast_load);
     FETCH_LOG_INFO(LOGGING_NAME, "Starting main chain recovery...complete");
   }
 
@@ -1001,7 +1001,7 @@ MainChain::BlockHashSet MainChain::GetTips() const
  *
  * @param mode The storage mode for the chain
  */
-void MainChain::RecoverFromFile(Mode mode)
+void MainChain::RecoverFromFile(Mode mode, bool fast_load)
 {
   // TODO(private issue 667): Complete loading of chain on startup ill-advised
 
@@ -1037,6 +1037,12 @@ void MainChain::RecoverFromFile(Mode mode)
 
   // clear the transaction bloom filter
   bloom_filter_.Reset();
+
+  // quickly exit after if we are fast loading
+  if (fast_load)
+  {
+    return;
+  }
 
   using Clock     = std::chrono::steady_clock;
   using Timepoint = Clock::time_point;

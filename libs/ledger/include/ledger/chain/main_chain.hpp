@@ -163,6 +163,7 @@ public:
     bool        enable_dirty_blocks{false};
     uint64_t    bloom_filter_window{chain::Transaction::MAXIMUM_TX_VALIDITY_PERIOD};
     std::size_t bloom_filter_cached_buckets{3u};
+    bool        fast_load{false};
   };
 
   // Construction / Destruction
@@ -265,7 +266,7 @@ private:
 
   /// @name Persistence Management
   /// @{
-  void RecoverFromFile(Mode mode);
+  void RecoverFromFile(Mode mode, bool fast_load = false);
   void WriteToFile();
   void TrimCache();
   void FlushBlock(IntBlockPtr const &block);
