@@ -1158,7 +1158,7 @@ void MainChain::WriteToFile()
     MilliTimer myTimer("MainChain::WriteToFile", 750);
 
     // Add confirmed blocks to file, minus finality
-
+#if 0
     // Find the block N back from our heaviest
     bool failed = false;
     for (std::size_t i = 0; i < chain::FINALITY_PERIOD; ++i)
@@ -1177,6 +1177,7 @@ void MainChain::WriteToFile()
                      block_chain_.at(heaviest_.Hash())->block_number);
       return;
     }
+#endif
 
     // This block will now become the head in our file
     // Corner case - block is genesis
