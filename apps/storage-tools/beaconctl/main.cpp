@@ -36,7 +36,7 @@ int main()
   auto const genesis_merkle_root =
       ConstByteArray{"e7f41d14ac9657a34b0aeb09aa635291dce52e8f067caa057e8dd4e620d0c9f4"}.FromHex();
   auto const target_hash =
-      ConstByteArray{"65cce4b3bdff2a4709be93c19e61d7766b125c7bf89ece30a4294b74875e5404"}.FromHex();
+      ConstByteArray{"248b38fd6a97e13345a15ba40737d2d2ad64d99f943cc7b981718c11c2b5e096"}.FromHex();
 
   // ensure the chain constants are golden
   fetch::chain::SetGenesisDigest(genesis_hash);
