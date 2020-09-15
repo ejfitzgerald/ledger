@@ -16,3 +16,6 @@ target_link_libraries(tx-ctl PRIVATE fetch-ledger)
 
 add_executable(beacon-ctl beaconctl/main.cpp)
 target_link_libraries(beacon-ctl PRIVATE fetch-beacon fetch-ledger)
+
+add_executable(chain-ctl chainctl/main.cpp)
+target_link_libraries(chain-ctl PRIVATE fetch-beacon fetch-ledger)

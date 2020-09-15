@@ -87,7 +87,10 @@ public:
   {
     for (auto &lane : lanes_)
     {
-      lane->StopInternal();
+      if (lane)
+      {
+        lane->StopInternal();
+      }
     }
 
     lanes_.clear();

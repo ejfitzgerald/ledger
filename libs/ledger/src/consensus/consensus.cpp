@@ -75,6 +75,7 @@ using BlockPtr        = Consensus::BlockPtr;
 
 using fetch::ledger::MainChain;
 using fetch::ledger::Block;
+using fetch::byte_array::ConstByteArray;
 
 using DRNG = fetch::random::LinearCongruentialGenerator;
 
@@ -157,6 +158,20 @@ Consensus::WeightedQual QualWeightedByEntropy(Consensus::BlockEntropy::Cabinet c
 Consensus::CabinetPtr Consensus::GetCabinet(Block const &previous) const
 {
   MilliTimer const timer{"GetCabinet ", 1000};
+
+  if (previous.block_number >= 1443700u)
+  {
+    // select the fixed cabinet
+    Cabinet fixed_cabinet{
+        Identity{ConstByteArray{"SUBOKZCh1UtfN99wSTtcmDj0gfWOQ5ms8feAygnnPc9nuhVDwtu7hVoodNQ9nvxsCFtaRwbhbZztOV9rMMr93g"}.FromBase64()},
+        Identity{ConstByteArray{"2UxKUU8INdW0IHKQQW7C3Ou9o7zXYx2wAzTvOhxvBlprZwbYOc8lPG4SYbfwLyurfC1aUhV5tRqR7IWY"}.FromBase64()},
+    };
+
+    DeterministicShuffle(fixed_cabinet, previous.block_entropy.EntropyAsU64());
+
+    return std::make_shared<Cabinet>(fixed_cabinet);
+  }
+
   // Calculate the last relevant snapshot
   uint64_t const last_snapshot = previous.block_number - (previous.block_number % aeon_period_);
 
@@ -512,6 +527,12 @@ void Consensus::UpdateCurrentBlock(Block const &current)
 
   if (ShouldTriggerNewCabinet(current_block_))
   {
+#if 0
+    if (current_block_.block_number >= 1443700) {
+
+    }
+#endif
+
     // attempt to build the cabinet from
     auto cabinet = stake_->BuildCabinet(current_block_, max_cabinet_size_, whitelist_);
 
@@ -528,7 +549,7 @@ void Consensus::UpdateCurrentBlock(Block const &current)
     bool member_of_cabinet{false};
     for (auto const &staker : *cabinet)
     {
-      FETCH_LOG_DEBUG(LOGGING_NAME, "Adding staker: ", staker.identifier().ToBase64());
+      FETCH_LOG_INFO(LOGGING_NAME, "Adding staker: ", staker.identifier().ToBase64());
 
       if (staker == mining_identity_)
       {

@@ -31,6 +31,8 @@ namespace fetch {
 namespace ledger {
 namespace {
 
+using fetch::byte_array::ConstByteArray;
+
 constexpr char const *LOGGING_NAME = "StakeMgr";
 
 storage::ResourceAddress const STAKE_STORAGE_ADDRESS{"fetch.token.state.aggregation.stake"};
@@ -64,23 +66,34 @@ StakeManager::CabinetPtr StakeManager::BuildCabinet(
     Block const &current, uint64_t cabinet_size,
     ConsensusInterface::Minerwhitelist const &whitelist)
 {
-  CabinetPtr cabinet{};
-
-  auto snapshot = LookupStakeSnapshot(current.block_number);
-  if (snapshot)
-  {
-    cabinet = snapshot->BuildCabinet(current.block_entropy.EntropyAsU64(), cabinet_size, whitelist);
-  }
-
-  return cabinet;
+  return BuildCabinet(current.block_number, current.block_entropy.EntropyAsU64(), cabinet_size, whitelist);
 }
 
 StakeManager::CabinetPtr StakeManager::BuildCabinet(
     uint64_t block_number, uint64_t entropy, uint64_t cabinet_size,
     ConsensusInterface::Minerwhitelist const &whitelist) const
 {
+  CabinetPtr cabinet{};
+
+  if (block_number >= 1443700u)
+  {
+    // select the fixed cabinet
+    Cabinet fixed_cabinet{
+        Identity{ConstByteArray{"SUBOKZCh1UtfN99wSTtcmDj0gfWOQ5ms8feAygnnPc9nuhVDwtu7hVoodNQ9nvxsCFtaRwbhbZztOV9rMMr93g"}.FromBase64()},
+        Identity{ConstByteArray{"2UxKUU8INdW0IHKQQW7C3Ou9o7zXYx2wAzTvOhxvBlprZwbYOc8lPG4SYbfwLyurfC1aUhV5tRqR7IWY"}.FromBase64()},
+    };
+
+    return std::make_shared<Cabinet>(fixed_cabinet);
+  }
+
+
   auto snapshot = LookupStakeSnapshot(block_number);
-  return snapshot->BuildCabinet(entropy, cabinet_size, whitelist);
+  if (snapshot)
+  {
+    cabinet = snapshot->BuildCabinet(entropy, cabinet_size, whitelist);
+  }
+
+  return cabinet;
 }
 
 bool StakeManager::Save(StorageInterface &storage)
