@@ -68,6 +68,7 @@ public:
   uint64_t     timestamp{0u};      ///< The number of seconds elapsed since the Unix epoch
   BlockEntropy block_entropy;      ///< Entropy that determines miner priority for the next block
   Weight       weight = 1;         ///< Block weight
+  Block::Index block_offset{0};    ///< The block number offset that is useful when working with checkpoints
 
   // Hash of the above
   Digest hash;
@@ -118,11 +119,12 @@ public:
   static uint8_t const DAG_EPOCH       = 11;
   static uint8_t const TIMESTAMP       = 12;
   static uint8_t const ENTROPY         = 13;
+  static uint8_t const BLOCK_OFFSET    = 14;
 
   template <typename Constructor>
   static void Serialize(Constructor &map_constructor, Type const &block)
   {
-    auto map = map_constructor(13);
+    auto map = map_constructor(14);
     map.Append(WEIGHT, block.weight);
     map.Append(TOTAL_WEIGHT, block.total_weight);
     map.Append(MINER_SIGNATURE, block.miner_signature);
@@ -136,6 +138,7 @@ public:
     map.Append(DAG_EPOCH, block.dag_epoch);
     map.Append(TIMESTAMP, block.timestamp);
     map.Append(ENTROPY, block.block_entropy);
+    map.Append(BLOCK_OFFSET, block.block_offset);
   }
 
   template <typename MapDeserializer>
@@ -154,6 +157,7 @@ public:
     map.ExpectKeyGetValue(DAG_EPOCH, block.dag_epoch);
     map.ExpectKeyGetValue(TIMESTAMP, block.timestamp);
     map.ExpectKeyGetValue(ENTROPY, block.block_entropy);
+    map.ExpectKeyGetValue(BLOCK_OFFSET, block.block_offset);
   }
 };
 
