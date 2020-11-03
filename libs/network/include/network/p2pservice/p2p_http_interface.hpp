@@ -214,6 +214,7 @@ private:
     output["timestamp"]    = block->timestamp;
     output["entropy"]      = block->block_entropy.EntropyAsU64();
     output["weight"]       = block->weight;
+    output["blockOffset"]  = block->block_offset;
 
     if (include_transactions)
     {
