@@ -80,6 +80,7 @@ public:
 private:
   bool LoadState(variant::Variant const &object, ConsensusParameters const *consensus = nullptr);
   bool LoadConsensus(variant::Variant const &object, ConsensusParameters &params);
+  bool LoadRaw(variant::Variant const &array);
 
   CertificatePtr        certificate_;
   StorageUnitInterface &storage_unit_;

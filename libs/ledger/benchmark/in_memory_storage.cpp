@@ -101,6 +101,16 @@ void InMemoryStorageUnit::Reset()
   throw std::runtime_error("Not implemented by design");
 }
 
+Document InMemoryStorageUnit::GetRaw(ResourceID const &) const
+{
+  throw std::runtime_error("Not implemented by design");
+}
+
+void InMemoryStorageUnit::SetRaw(ResourceID const &, StateValue const &)
+{
+  throw std::runtime_error("Not implemented by design");
+}
+
 void InMemoryStorageUnit::AddTransaction(Transaction const &tx)
 {
   tx_store_[tx.digest()] = std::make_shared<Transaction>(tx);

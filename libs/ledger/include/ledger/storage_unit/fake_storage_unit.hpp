@@ -48,6 +48,12 @@ public:
   bool     Unlock(ShardIndex index) override;
   /// @}
 
+  /// @name Raw State Access - used for genesis init
+  /// @{
+  Document GetRaw(ResourceID const &resource_id) const override;
+  void     SetRaw(ResourceID const &resource_id, StateValue const &value) override;
+  /// @}
+
   /// @name Transaction Interface
   /// @{
   void AddTransaction(Transaction const &tx) override;

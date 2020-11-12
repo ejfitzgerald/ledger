@@ -86,6 +86,12 @@ public:
   bool                       Unlock(ShardIndex index) override;
   /// @}
 
+  /// @name Raw State Access - used for genesis init
+  /// @{
+  Document GetRaw(storage::ResourceID const &resource_id) const override;
+  void     SetRaw(storage::ResourceID const &resource_id, StateValue const &value) override;
+  /// @}
+
   StorageUnitClient &operator=(StorageUnitClient const &) = delete;
   StorageUnitClient &operator=(StorageUnitClient &&) = delete;
 
@@ -101,6 +107,10 @@ private:
   Address const &LookupAddress(storage::ResourceID const &resource) const;
 
   bool HashInStack(Hash const &hash, uint64_t index);
+
+  Document GetRawInternal(storage::ResourceID const &resource_id) const;
+  void     SetRawInternal(storage::ResourceID const &resource_id, StateValue const &value);
+
 
   /// @name Client Information
   /// @{

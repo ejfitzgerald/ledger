@@ -182,7 +182,7 @@ GenesisFileCreator::Result GenesisFileCreator::LoadContents(ConstByteArray const
         FETCH_LOG_WARN(LOGGING_NAME, "No consensus information inside genesis file");
       }
 
-      success &= LoadState(doc["accounts"], consensus_params);
+      success &= LoadState(doc.root(), consensus_params);
     }
     else
     {
@@ -210,86 +210,108 @@ GenesisFileCreator::Result GenesisFileCreator::LoadContents(ConstByteArray const
  *
  * @param object The reference state to be restored
  */
-bool GenesisFileCreator::LoadState(Variant const &object, ConsensusParameters const *consensus)
+bool GenesisFileCreator::LoadState(Variant const &input, ConsensusParameters const *consensus)
 {
-  // Expecting an array of record entries
-  if (!object.IsArray())
+  bool const has_accounts = input.Has("accounts");
+  bool const has_raw = input.Has("raw");
+
+  if (has_accounts == has_raw)
   {
+    FETCH_LOG_ERROR(LOGGING_NAME, "Expected only one of either an accounts section or a raw section");
     return false;
   }
 
-  // iterate over all of the Identity + stake amount mappings
-  uint64_t remaining_supply{TOTAL_SUPPLY};
-  for (std::size_t i = 0, end = object.size(); i < end; ++i)
+  if (has_raw)
   {
-    chain::Address address{};
-    ConstByteArray address_raw{};
-    uint64_t       balance{0};
-    uint64_t       stake{0};
-
-    auto const &obj{object[i]};
-
-    if (variant::Extract(obj, "address", address_raw) &&
-        variant::Extract(obj, "balance", balance) && variant::Extract(obj, "stake", stake) &&
-        chain::Address::Parse(address_raw, address))
+    if(!LoadRaw(input["raw"]))
     {
-      ledger::WalletRecord record;
-
-      // adjust record values to be correct FET integer ranges
-      balance *= FET_MULTIPLIER;
-      stake *= FET_MULTIPLIER;
-
-      // check the remaining supply
-      if (balance > remaining_supply)
-      {
-        FETCH_LOG_WARN(LOGGING_NAME, "Invalid genesis configuration");
-        return false;
-      }
-      remaining_supply -= balance;
-
-      if (stake > remaining_supply)
-      {
-        FETCH_LOG_WARN(LOGGING_NAME, "Invalid genesis configuration");
-        return false;
-      }
-      remaining_supply -= stake;
-
-      // populate the record
-      record.balance = balance;
-      record.stake   = stake;
-
-      Variant v_deed;
-      if (obj.Has("deed"))
-      {
-        if (!record.CreateDeed(obj["deed"]))
-        {
-          return false;
-        }
-      }
-
-      ResourceAddress const wallet_key{"fetch.token.state." + address.display()};
-
-      {
-        // serialize the record to the buffer
-        serializers::LargeObjectSerializeHelper buffer;
-        buffer << record;
-
-        // store the buffer
-        storage_unit_.Set(wallet_key, buffer.data());
-      }
-    }
-    else
-    {
-      FETCH_LOG_WARN(LOGGING_NAME, "Unable to extract section from genesis file");
+      FETCH_LOG_ERROR(LOGGING_NAME, "Unable to load raw state");
       return false;
     }
   }
-
-  // ensure all token supply is taken
-  if (remaining_supply > 0)
+  else //if (has_accounts)
   {
-    FETCH_LOG_WARN(LOGGING_NAME, "Remaining token supply still available");
-    return false;
+    variant::Variant const &object = input["accounts"];
+
+    // Expecting an array of record entries
+    if (!object.IsArray())
+    {
+      return false;
+    }
+
+    // iterate over all of the Identity + stake amount mappings
+    uint64_t remaining_supply{TOTAL_SUPPLY};
+    for (std::size_t i = 0, end = object.size(); i < end; ++i)
+    {
+      chain::Address address{};
+      ConstByteArray address_raw{};
+      uint64_t       balance{0};
+      uint64_t       stake{0};
+
+      auto const &obj{object[i]};
+
+      if (variant::Extract(obj, "address", address_raw) &&
+          variant::Extract(obj, "balance", balance) && variant::Extract(obj, "stake", stake) &&
+          chain::Address::Parse(address_raw, address))
+      {
+        ledger::WalletRecord record;
+
+        // adjust record values to be correct FET integer ranges
+        balance *= FET_MULTIPLIER;
+        stake *= FET_MULTIPLIER;
+
+        // check the remaining supply
+        if (balance > remaining_supply)
+        {
+          FETCH_LOG_WARN(LOGGING_NAME, "Invalid genesis configuration");
+          return false;
+        }
+        remaining_supply -= balance;
+
+        if (stake > remaining_supply)
+        {
+          FETCH_LOG_WARN(LOGGING_NAME, "Invalid genesis configuration");
+          return false;
+        }
+        remaining_supply -= stake;
+
+        // populate the record
+        record.balance = balance;
+        record.stake   = stake;
+
+        Variant v_deed;
+        if (obj.Has("deed"))
+        {
+          if (!record.CreateDeed(obj["deed"]))
+          {
+            return false;
+          }
+        }
+
+        ResourceAddress const wallet_key{"fetch.token.state." + address.display()};
+
+        {
+          // serialize the record to the buffer
+          serializers::LargeObjectSerializeHelper buffer;
+          buffer << record;
+
+          // store the buffer
+          storage_unit_.Set(wallet_key, buffer.data());
+        }
+      }
+      else
+      {
+        FETCH_LOG_WARN(LOGGING_NAME, "Unable to extract section from genesis file");
+        return false;
+      }
+    }
+
+    // ensure all token supply is taken
+    if (remaining_supply > 0)
+    {
+      FETCH_LOG_WARN(LOGGING_NAME, "Remaining token supply still available");
+      return false;
+    }
   }
 
   // if we have been configured for consensus then we need to also write the stake information to
@@ -380,6 +402,58 @@ bool GenesisFileCreator::LoadConsensus(Variant const &object, ConsensusParameter
   }
 
   params.whitelist = genesis_block_.block_entropy.qualified;
+
+  return true;
+}
+
+bool GenesisFileCreator::LoadRaw(variant::Variant const &array)
+{
+  // ensure the the input value is correct
+  if (!array.IsArray())
+  {
+    FETCH_LOG_ERROR(LOGGING_NAME, "Unexpected non-array found as raw state value");
+    return false;
+  }
+
+  for (std::size_t i = 0; i < array.size(); ++i)
+  {
+    variant::Variant const &obj = array[i];
+    if (!obj.IsObject())
+    {
+      FETCH_LOG_ERROR(LOGGING_NAME, "Unexpected non-object found as raw state array entry");
+      return false;
+    }
+
+    // check that the keys are present
+    if (!(obj.Has("key") && obj.Has("value")))
+    {
+      FETCH_LOG_ERROR(LOGGING_NAME, "Missing key and/or value element in raw state entry");
+      return false;
+    }
+
+    variant::Variant const &key   = obj["key"];
+    variant::Variant const &value = obj["value"];
+
+    if (!(key.IsString() && value.IsString()))
+    {
+      FETCH_LOG_ERROR(LOGGING_NAME,
+                      "Unexpected types for key and/or value raw state entries, expected string");
+      return false;
+    }
+
+    // convert the key and values into
+    ConstByteArray const raw_key   = key.As<ConstByteArray>().FromBase64();
+    ConstByteArray const raw_value = key.As<ConstByteArray>().FromBase64();
+
+    if (raw_key.size() != storage::ResourceID::RESOURCE_ID_SIZE_IN_BYTES)
+    {
+      FETCH_LOG_ERROR(LOGGING_NAME, "Unexpected key length");
+      return false;
+    }
+
+    // update the storage with the key and the value
+    storage_unit_.SetRaw(storage::ResourceID{raw_key}, raw_value);
+  }
 
   return true;
 }

@@ -53,6 +53,13 @@ public:
   void     Reset() override;
   /// @}
 
+  /// @name Raw State Access - used for genesis init
+  /// @{
+  Document GetRaw(storage::ResourceID const &resource_id) const override;
+  void     SetRaw(storage::ResourceID const &resource_id, StateValue const &value) override;
+  /// @}
+
+
 private:
   struct CacheEntry
   {

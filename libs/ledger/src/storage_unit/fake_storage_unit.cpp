@@ -16,11 +16,12 @@
 //
 //------------------------------------------------------------------------------
 
+#include "ledger/storage_unit/fake_storage_unit.hpp"
+
 #include "chain/constants.hpp"
 #include "core/byte_array/byte_array.hpp"
 #include "core/macros.hpp"
 #include "crypto/sha256.hpp"
-#include "ledger/storage_unit/fake_storage_unit.hpp"
 
 #include <algorithm>
 #include <cassert>
@@ -85,6 +86,19 @@ bool FakeStorageUnit::Unlock(ShardIndex index)
 {
   FETCH_UNUSED(index);
   return true;
+}
+
+FakeStorageUnit::Document FakeStorageUnit::GetRaw(storage::ResourceID const &resource_id) const
+{
+  FETCH_UNUSED(resource_id);
+
+  return Document::Failure();
+}
+
+void FakeStorageUnit::SetRaw(storage::ResourceID const &resource_id, StateValue const &value)
+{
+  FETCH_UNUSED(resource_id);
+  FETCH_UNUSED(value);
 }
 
 void FakeStorageUnit::AddTransaction(Transaction const &tx)

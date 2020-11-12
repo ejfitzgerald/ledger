@@ -16,11 +16,12 @@
 //
 //------------------------------------------------------------------------------
 
+#include "ledger/storage_unit/storage_unit_client.hpp"
+
 #include "chain/constants.hpp"
 #include "chain/transaction.hpp"
 #include "chain/transaction_layout_rpc_serializers.hpp"
 #include "chain/transaction_rpc_serializers.hpp"
-#include "ledger/storage_unit/storage_unit_client.hpp"
 #include "ledger/storage_unit/transaction_finder_protocol.hpp"
 #include "ledger/storage_unit/transaction_storage_protocol.hpp"
 
@@ -475,40 +476,12 @@ StorageUnitClient::Document StorageUnitClient::GetOrCreate(ResourceAddress const
 
 StorageUnitClient::Document StorageUnitClient::Get(ResourceAddress const &key) const
 {
-  // make the request to the RPC server
-  auto promise = rpc_client_->CallSpecificAddress(
-      LookupAddress(key), RPC_STATE, fetch::storage::RevertibleDocumentStoreProtocol::GET,
-      key.as_resource_id());
-
-  // wait for the document response
-  Document doc;
-  if (!promise->GetResult(doc))
-  {
-    FETCH_LOG_WARN(LOGGING_NAME, "Unable to get document");
-
-    // signal the failure
-    doc.failed = true;
-  }
-
-  return doc;
+  return GetRawInternal(key.as_resource_id());
 }
 
 void StorageUnitClient::Set(ResourceAddress const &key, StateValue const &value)
 {
-  try
-  {
-    // make the request to the RPC server
-    auto promise = rpc_client_->CallSpecificAddress(
-        LookupAddress(key), RPC_STATE, fetch::storage::RevertibleDocumentStoreProtocol::SET,
-        key.as_resource_id(), value);
-
-    // wait for the response
-    promise->Wait();
-  }
-  catch (std::exception const &e)
-  {
-    FETCH_LOG_WARN(LOGGING_NAME, "Failed to call SET (store document), because: ", e.what());
-  }
+  SetRawInternal(key.as_resource_id(), value);
 }
 
 bool StorageUnitClient::Lock(ShardIndex index)
@@ -575,6 +548,56 @@ void StorageUnitClient::Reset()
   FETCH_LOCK(merkle_mutex_);
   current_merkle_ = MerkleTree{num_lanes()};
   permanent_state_merkle_stack_.New(MERKLE_FILENAME_DOC, MERKLE_FILENAME_INDEX);
+}
+
+StorageUnitClient::Document StorageUnitClient::GetRaw(storage::ResourceID const &resource_id) const
+{
+  return GetRawInternal(resource_id);
+}
+
+void StorageUnitClient::SetRaw(storage::ResourceID const &resource_id, StateValue const &value)
+{
+  SetRawInternal(resource_id, value);
+}
+
+StorageUnitClient::Document StorageUnitClient::GetRawInternal(
+    storage::ResourceID const &resource_id) const
+{
+  // make the request to the RPC server
+  auto promise = rpc_client_->CallSpecificAddress(
+      LookupAddress(resource_id), RPC_STATE, fetch::storage::RevertibleDocumentStoreProtocol::GET,
+      resource_id);
+
+  // wait for the document response
+  Document doc;
+  if (!promise->GetResult(doc))
+  {
+    FETCH_LOG_WARN(LOGGING_NAME, "Unable to get document");
+
+    // signal the failure
+    doc.failed = true;
+  }
+
+  return doc;
+}
+
+void StorageUnitClient::SetRawInternal(storage::ResourceID const &resource_id,
+                                       StateValue const &         value)
+{
+  try
+  {
+    // make the request to the RPC server
+    auto promise = rpc_client_->CallSpecificAddress(
+        LookupAddress(resource_id), RPC_STATE, fetch::storage::RevertibleDocumentStoreProtocol::SET,
+        resource_id, value);
+
+    // wait for the response
+    promise->Wait();
+  }
+  catch (std::exception const &e)
+  {
+    FETCH_LOG_WARN(LOGGING_NAME, "Failed to call SET (store document), because: ", e.what());
+  }
 }
 
 uint32_t StorageUnitClient::num_lanes() const

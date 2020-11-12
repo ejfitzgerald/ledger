@@ -217,5 +217,16 @@ void CachedStorageAdapter::Reset()
   return storage_.Reset();
 }
 
+CachedStorageAdapter::Document CachedStorageAdapter::GetRaw(
+    storage::ResourceID const &resource_id) const
+{
+  return storage_.GetRaw(resource_id);
+}
+
+void CachedStorageAdapter::SetRaw(storage::ResourceID const &resource_id, StateValue const &value)
+{
+  storage_.SetRaw(resource_id, value);
+}
+
 }  // namespace ledger
 }  // namespace fetch

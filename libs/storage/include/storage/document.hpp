@@ -27,6 +27,14 @@ namespace storage {
 
 struct Document
 {
+  static Document Failure()
+  {
+    Document doc{};
+    doc.failed = true;
+
+    return doc;
+  }
+
   explicit operator byte_array::ConstByteArray() const
   {
     return document;

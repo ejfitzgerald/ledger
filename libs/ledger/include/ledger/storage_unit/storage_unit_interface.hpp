@@ -40,9 +40,10 @@ class StorageInterface
 public:
   using Document        = storage::Document;
   using ResourceAddress = storage::ResourceAddress;
+  using ResourceID      = storage::ResourceID;
   using StateValue      = byte_array::ConstByteArray;
   using ShardIndex      = uint32_t;
-  using Keys            = std::vector<storage::ResourceID>;
+  using Keys            = std::vector<ResourceID>;
 
   // Construction / Destruction
   StorageInterface()          = default;
@@ -56,6 +57,12 @@ public:
   virtual bool     Lock(ShardIndex shard)                                   = 0;
   virtual bool     Unlock(ShardIndex shard)                                 = 0;
   virtual void     Reset()                                                  = 0;
+  /// @}
+
+  /// @name Raw State Access - used for genesis init
+  /// @{
+  virtual Document GetRaw(ResourceID const &resource_id) const = 0;
+  virtual void     SetRaw(ResourceID const &resource_id, StateValue const &value) = 0;
   /// @}
 };
 

@@ -39,6 +39,8 @@ public:
   MOCK_METHOD2(Set, void(ResourceAddress const &, StateValue const &));
   MOCK_METHOD1(Lock, bool(ShardIndex));
   MOCK_METHOD1(Unlock, bool(ShardIndex));
+  MOCK_CONST_METHOD1(GetRaw, Document(ResourceID const &));
+  MOCK_METHOD2(SetRaw, void(ResourceID const &, StateValue const &));
   MOCK_METHOD0(Reset, void());
 };
 

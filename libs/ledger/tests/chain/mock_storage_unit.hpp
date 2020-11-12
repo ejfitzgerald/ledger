@@ -39,6 +39,8 @@ public:
     ON_CALL(*this, Set(_, _)).WillByDefault(Invoke(&fake, &FakeStorageUnit::Set));
     ON_CALL(*this, Lock(_)).WillByDefault(Invoke(&fake, &FakeStorageUnit::Lock));
     ON_CALL(*this, Unlock(_)).WillByDefault(Invoke(&fake, &FakeStorageUnit::Unlock));
+    ON_CALL(*this, GetRaw(_)).WillByDefault(Invoke(&fake, &FakeStorageUnit::GetRaw));
+    ON_CALL(*this, SetRaw(_, _)).WillByDefault(Invoke(&fake, &FakeStorageUnit::SetRaw));
 
     ON_CALL(*this, AddTransaction(_))
         .WillByDefault(Invoke(&fake, &FakeStorageUnit::AddTransaction));
@@ -61,6 +63,8 @@ public:
   MOCK_METHOD2(Set, void(ResourceAddress const &, StateValue const &));
   MOCK_METHOD1(Lock, bool(ShardIndex));
   MOCK_METHOD1(Unlock, bool(ShardIndex));
+  MOCK_CONST_METHOD1(GetRaw, Document(ResourceID const &));
+  MOCK_METHOD2(SetRaw, void(ResourceID const &, StateValue const &));
 
   MOCK_METHOD1(AddTransaction, void(Transaction const &));
   MOCK_METHOD2(GetTransaction, bool(Digest const &, Transaction &));

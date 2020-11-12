@@ -37,6 +37,9 @@ public:
     ON_CALL(*this, Lock(_)).WillByDefault(Invoke(&fake_, &FakeStorageUnit::Lock));
     ON_CALL(*this, Unlock(_)).WillByDefault(Invoke(&fake_, &FakeStorageUnit::Unlock));
 
+    ON_CALL(*this, GetRaw(_)).WillByDefault(Invoke(&fake_, &FakeStorageUnit::GetRaw));
+    ON_CALL(*this, SetRaw(_, _)).WillByDefault(Invoke(&fake_, &FakeStorageUnit::SetRaw));
+
     ON_CALL(*this, CurrentHash()).WillByDefault(Invoke(&fake_, &FakeStorageUnit::CurrentHash));
     ON_CALL(*this, LastCommitHash())
         .WillByDefault(Invoke(&fake_, &FakeStorageUnit::LastCommitHash));
@@ -57,6 +60,8 @@ public:
   MOCK_METHOD2(Set, void(ResourceAddress const &, StateValue const &));
   MOCK_METHOD1(Lock, bool(ShardIndex));
   MOCK_METHOD1(Unlock, bool(ShardIndex));
+  MOCK_CONST_METHOD1(GetRaw, Document(ResourceID const &));
+  MOCK_METHOD2(SetRaw, void(ResourceID const &, StateValue const &));
 
   MOCK_METHOD0(CurrentHash, Hash());
   MOCK_METHOD0(LastCommitHash, Hash());
