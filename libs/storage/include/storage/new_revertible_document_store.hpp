@@ -22,6 +22,7 @@
 
 #include <cstddef>
 #include <string>
+#include <functional>
 
 namespace fetch {
 namespace storage {
@@ -51,6 +52,8 @@ public:
   Hash CurrentHash();
   bool HashExists(Hash const &hash);
   void Reset();
+
+  void IterateThrough(std::function<void(ByteArray const&, ByteArray const &)> callback);
 
   std::size_t size() const;
 

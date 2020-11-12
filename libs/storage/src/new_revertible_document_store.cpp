@@ -153,5 +153,18 @@ void NewRevertibleDocumentStore::Reset()
   storage_.New(state_path_, state_history_path_, index_path_, index_history_path_);
 }
 
+void NewRevertibleDocumentStore::IterateThrough(
+    std::function<void(ByteArray const &, ByteArray const &)> callback)
+{
+  for (auto it = storage_.begin(), end = storage_.end(); it != end; ++it)
+  {
+    auto key = it.GetKey();
+    auto doc = *it;
+
+    callback(key, doc.document);
+
+  }
+}
+
 }  // namespace storage
 }  // namespace fetch
