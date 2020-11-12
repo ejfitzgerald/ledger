@@ -443,7 +443,7 @@ bool GenesisFileCreator::LoadRaw(variant::Variant const &array)
 
     // convert the key and values into
     ConstByteArray const raw_key   = key.As<ConstByteArray>().FromBase64();
-    ConstByteArray const raw_value = key.As<ConstByteArray>().FromBase64();
+    ConstByteArray const raw_value = value.As<ConstByteArray>().FromBase64();
 
     if (raw_key.size() != storage::ResourceID::RESOURCE_ID_SIZE_IN_BYTES)
     {
