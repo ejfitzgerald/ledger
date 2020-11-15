@@ -1,6 +1,7 @@
 #include "storage/new_revertible_document_store.hpp"
 
 #include <iostream>
+#include <fstream>
 
 using fetch::storage::NewRevertibleDocumentStore;
 using fetch::byte_array::ConstByteArray;
@@ -13,20 +14,22 @@ int main()
                       "node_storage_lane000_state_index.db",
                       "node_storage_lane000_state_index_deltas.db", false);
 
+  std::ofstream storage_dump_file{"storage-dump.json"};
+
   // iterate through the values and generate some JSON compatible outputs
-  std::cout << "[\n";
+  storage_dump_file << "[\n";
   std::size_t i = 0;
-  document_store.IterateThrough([&i](ConstByteArray const &key, ConstByteArray const &value) {
+  document_store.IterateThrough([&i, &storage_dump_file](ConstByteArray const &key, ConstByteArray const &value) {
     if (i > 0)
     {
-      std::cout << ",\n";
+      storage_dump_file << ",\n";
     }
 
-    std::cout << R"(  {"key": ")" << key.ToBase64() << R"(", "value": ")" << value.ToBase64() << "\"}";
+    storage_dump_file << R"(  {"key": ")" << key.ToBase64() << R"(", "value": ")" << value.ToBase64() << "\"}";
 
     ++i;
   });
-  std::cout << "\n]" << std::endl;
+  storage_dump_file << "\n]" << std::endl;
 
   return 0;
 }
