@@ -36,6 +36,7 @@ const uint32_t DEFAULT_NUM_EXECUTORS      = DEFAULT_NUM_LANES;
 const uint16_t DEFAULT_PORT               = 8000;
 const uint16_t DEFAULT_MESSENGER_PORT     = 9010;
 const uint32_t DEFAULT_BLOCK_INTERVAL     = 0;  // milliseconds - zero means no mining
+const uint32_t DEFAULT_BLOCK_OFFSET       = 0;
 const uint32_t DEFAULT_CABINET_SIZE       = 10;
 const uint32_t DEFAULT_STAKE_DELAY_PERIOD = 5;
 const uint32_t DEFAULT_AEON_PERIOD        = 25;
@@ -91,6 +92,7 @@ Settings::Settings()
   : num_lanes             {*this, "lanes",                   DEFAULT_NUM_LANES,            "The number of lanes to be used"}
   , num_slices            {*this, "slices",                  DEFAULT_NUM_SLICES,           "The number of slices to be used"}
   , block_interval        {*this, "block-interval",          DEFAULT_BLOCK_INTERVAL,       "The block interval is milliseconds"}
+  , block_offset          {*this, "block-offset",            DEFAULT_BLOCK_OFFSET,         "The block offset to signal in the block header"}
   , standalone            {*this, "standalone",              false,                        "Signal the network should run in standalone mode"}
   , private_network       {*this, "private-network",         false,                        "Signal the network should run as part of a private network"}
   , db_prefix             {*this, "db-prefix",               "node_storage",               "The prefix for filenames related to constellation databases"}

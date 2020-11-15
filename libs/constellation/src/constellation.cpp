@@ -571,7 +571,7 @@ bool Constellation::OnBringUpExternalNetwork(
 
   block_coordinator_ = std::make_unique<ledger::BlockCoordinator>(
       *chain_, dag_, *execution_manager_, *storage_, *block_packer_, *this, external_identity_,
-      cfg_.log2_num_lanes, cfg_.num_slices, consensus_,
+      cfg_.log2_num_lanes, cfg_.num_slices, cfg_.block_offset, consensus_,
       std::make_unique<ledger::SynergeticExecutionManager>(
           dag_, 1u, [this]() { return std::make_shared<ledger::SynergeticExecutor>(*storage_); }));
 

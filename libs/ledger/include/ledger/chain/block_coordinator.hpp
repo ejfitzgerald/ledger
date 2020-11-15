@@ -185,7 +185,7 @@ public:
   BlockCoordinator(MainChain &chain, DAGPtr dag, ExecutionManagerInterface &execution_manager,
                    StorageUnitInterface &storage_unit, BlockPackerInterface &packer,
                    BlockSinkInterface &block_sink, ProverPtr prover, uint32_t log2_num_lanes,
-                   std::size_t num_slices, ConsensusPtr consensus,
+                   std::size_t num_slices, uint64_t block_offset, ConsensusPtr consensus,
                    SynergeticExecMgrPtr synergetic_exec_manager);
   BlockCoordinator(BlockCoordinator const &) = delete;
   BlockCoordinator(BlockCoordinator &&)      = delete;
@@ -322,6 +322,7 @@ private:
   uint32_t        log2_num_lanes_{};
   std::size_t     num_lanes_{1u << log2_num_lanes_};  ///< The current number of lanes
   std::size_t     num_slices_;                        ///< The current number of slices
+  uint64_t        block_header_offset_{0};
   BlockPtr        current_block_{};         ///< The pointer to the current block (read only)
   NextBlockPtr    next_block_{};            ///< The next block being created (read / write)
   TxDigestSetPtr  pending_txs_{};           ///< The list of pending txs that are being waited on

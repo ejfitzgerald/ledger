@@ -102,6 +102,7 @@ public:
     uint64_t       stake_delay_period{0};
     uint64_t       aeon_period{0};
     uint32_t       peers_update_cycle_ms{0};
+    uint64_t       block_offset{0};
     bool           disable_signing{false};
     bool           sign_broadcasts{false};
     bool           kademlia_routing{true};

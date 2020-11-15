@@ -109,7 +109,7 @@ protected:
 
     block_coordinator_ = std::make_unique<BlockCoordinator>(
         *main_chain_, DAGPtr{}, *execution_manager_, *storage_unit_, *packer_, *block_sink_, signer,
-        LOG2_NUM_LANES, NUM_SLICES, consensus_, nullptr);
+        LOG2_NUM_LANES, NUM_SLICES, 0, consensus_, nullptr);
   }
 
   /**
@@ -1224,7 +1224,7 @@ protected:
 
     block_coordinator_ = std::make_unique<BlockCoordinator>(
         *main_chain_, DAGPtr{}, *execution_manager_, *storage_unit_, *packer_, *block_sink_, signer,
-        LOG2_NUM_LANES, NUM_SLICES, consensus_, nullptr);
+        LOG2_NUM_LANES, NUM_SLICES, 0, consensus_, nullptr);
   }
 
   fetch::moment::AdjustableClockPtr clock_;

@@ -86,7 +86,7 @@ BlockCoordinator::BlockCoordinator(MainChain &chain, DAGPtr dag,
                                    StorageUnitInterface &storage_unit, BlockPackerInterface &packer,
                                    BlockSinkInterface &block_sink, ProverPtr prover,
                                    uint32_t log2_num_lanes, std::size_t num_slices,
-                                   ConsensusPtr         consensus,
+                                   uint64_t block_offset, ConsensusPtr consensus,
                                    SynergeticExecMgrPtr synergetic_exec_manager)
   : chain_{chain}
   , dag_{std::move(dag)}
@@ -103,6 +103,7 @@ BlockCoordinator::BlockCoordinator(MainChain &chain, DAGPtr dag,
                                                   [](State state) { return ToString(state); })}
   , log2_num_lanes_{log2_num_lanes}
   , num_slices_{num_slices}
+  , block_header_offset_{block_offset}
   , tx_wait_periodic_{TX_SYNC_NOTIFY_INTERVAL}
   , exec_wait_periodic_{EXEC_NOTIFY_INTERVAL}
   , syncing_periodic_{NOTIFY_INTERVAL}
@@ -481,6 +482,7 @@ BlockCoordinator::State BlockCoordinator::OnSynchronised(State current, State pr
   next_block_->previous_hash  = current_block_->hash;
   next_block_->block_number   = current_block_->block_number + 1;
   next_block_->log2_num_lanes = log2_num_lanes_;
+  next_block_->block_offset   = block_header_offset_;
 
   FETCH_LOG_DEBUG(LOGGING_NAME, "Minting new block! Number: ", next_block_->block_number,
                   " beacon: ", next_block_->block_entropy.EntropyAsU64());

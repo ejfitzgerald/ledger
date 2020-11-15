@@ -51,6 +51,7 @@ public:
   settings::Setting<uint32_t> num_lanes;
   settings::Setting<uint32_t> num_slices;
   settings::Setting<uint32_t> block_interval;
+  settings::Setting<uint64_t> block_offset;
   /// @}
 
   /// @name Network Mode
